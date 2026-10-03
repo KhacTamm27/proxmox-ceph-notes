@@ -54,6 +54,9 @@ for folder in ("proxmox", "ceph", "cases"):
     p = ROOT / "docs" / folder
     shutil.rmtree(p, ignore_errors=True)
     p.mkdir(parents=True)
+for sc in ("ceph", "pve"):
+    (ROOT / "docs/cases" / sc).mkdir(parents=True, exist_ok=True)
+SCOPE_LABEL = {"ceph": "Ceph", "pve": "Proxmox cluster"}
 
 # ---- từng file .md ----
 for side, branches in data.items():
@@ -84,14 +87,14 @@ for side, branches in data.items():
 
 # ---- case study .md ----
 for c in cases:
-    o = [f"# {c['title']}", "", "[← Mục lục](../../README.md)", "",
+    o = [f"# {c['title']}", "", f"[← Mục lục](../../../README.md) · Case study {SCOPE_LABEL[c['scope']]}", "",
          f"**Triệu chứng:** {c['symptoms']}", "", f"**Nguyên nhân hay gặp:** {c['causes']}", "",
          "## Các bước xử lý", ""]
     for i, st in enumerate(c["steps"], 1):
         o += [f"{i}. {st['t']}", "", "```bash"] + st["cmds"] + ["```", ""]
     o += ["## Lưu ý", "", c["notes"], "",
           f"<!-- từ khóa: {c['tags']} -->"]
-    (ROOT / "docs/cases" / f"{c['id']}.md").write_text("\n".join(o) + "\n", encoding="utf-8")
+    (ROOT / "docs/cases" / c["scope"] / f"{c['id']}.md").write_text("\n".join(o) + "\n", encoding="utf-8")
 
 # ---- README ----
 total = sum(count(b) for br in data.values() for b in br)
@@ -108,10 +111,12 @@ r += ["## Cách tìm nhanh", "",
       "- Biết từ khóa: mở mindmap, nhấn `/` rồi gõ. Link `.../?q=scrub` mở sẵn kết quả lọc.",
       "- Trên GitHub: nhấn `t` để tìm file theo tên, nhấn `/` để tìm trong repo (gõ `crush`, `radosgw-admin user`).",
       "- Trong một file .md: nút Outline (góc phải trên) nhảy giữa các mục con, mỗi khối lệnh có nút copy.", ""]
-r += ["## Case study (lỗi và cách xử lý)", "", "| Sự cố | Triệu chứng |", "|---|---|"]
-for c in cases:
-    r.append(f"| [{c['title']}](docs/cases/{c['id']}.md) | {c['symptoms']} |")
-r.append("")
+for sc in ("ceph", "pve"):
+    r += [f"## Case study {SCOPE_LABEL[sc]} (lỗi và cách xử lý)", "", "| Sự cố | Triệu chứng |", "|---|---|"]
+    for c in cases:
+        if c["scope"] == sc:
+            r.append(f"| [{c['title']}](docs/cases/{sc}/{c['id']}.md) | {c['symptoms'].replace('|', '/')} |")
+    r.append("")
 for side, branches in data.items():
     folder, label = SIDES[side]
     r += [f"## {label}", "", "| ID | Nhóm | Lệnh | Gồm |", "|---|---|---:|---|"]
@@ -135,4 +140,4 @@ html = (tpl.replace("/*__DATA__*/null", json.dumps(data, ensure_ascii=False))
            .replace("/*__SLUGS__*/{}", json.dumps(slugs))
            .replace("/*__CASES__*/[]", json.dumps(cases, ensure_ascii=False)))
 (ROOT / "docs/index.html").write_text(html, encoding="utf-8")
-print(f"ok: {len(slugs)} file .md, {len(cases)} case, {total} lệnh, Việt hóa {covered}/{total}")
+print(f"ok: {len(slugs)} file .md, {len(cases)} case ({sum(c["scope"]=="ceph" for c in cases)} Ceph, {sum(c["scope"]=="pve" for c in cases)} Proxmox), {total} lệnh, Việt hóa {covered}/{total}")

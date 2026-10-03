@@ -1,6 +1,6 @@
 # PG degraded / undersized, recovery chậm
 
-[← Mục lục](../../README.md)
+[← Mục lục](../../../README.md) · Case study Ceph
 
 **Triệu chứng:** HEALTH_WARN "Degraded data redundancy", "N pgs undersized/degraded", "objects misplaced", recovery chạy lâu.
 

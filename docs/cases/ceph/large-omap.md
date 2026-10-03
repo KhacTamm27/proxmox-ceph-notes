@@ -1,6 +1,6 @@
 # Large omap objects (thường do bucket index RGW)
 
-[← Mục lục](../../README.md)
+[← Mục lục](../../../README.md) · Case study Ceph
 
 **Triệu chứng:** HEALTH_WARN "N large omap objects".
 

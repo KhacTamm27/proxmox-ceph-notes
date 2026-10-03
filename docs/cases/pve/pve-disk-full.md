@@ -1,6 +1,6 @@
 # Node Proxmox đầy ổ root, dịch vụ lỗi
 
-[← Mục lục](../../README.md)
+[← Mục lục](../../../README.md) · Case study Proxmox cluster
 
 **Triệu chứng:** "No space left on device", dịch vụ không start, không ghi được /etc/pve, GUI lỗi.
 

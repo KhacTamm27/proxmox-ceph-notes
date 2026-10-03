@@ -1,6 +1,6 @@
 # Thay đĩa OSD hỏng
 
-[← Mục lục](../../README.md)
+[← Mục lục](../../../README.md) · Case study Ceph
 
 **Triệu chứng:** OSD down kéo dài, SMART báo lỗi hoặc dmesg có I/O error, cần thay đĩa vật lý.
 

@@ -1,6 +1,6 @@
 # Cluster Proxmox mất quorum
 
-[← Mục lục](../../README.md)
+[← Mục lục](../../../README.md) · Case study Proxmox cluster
 
 **Triệu chứng:** GUI báo "cluster not ready - no quorum", /etc/pve chuyển read-only, không start được VM, node hiện đỏ.
 

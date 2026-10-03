@@ -1,6 +1,6 @@
 # GUI Proxmox bị đăng xuất liên tục hoặc không đăng nhập được
 
-[← Mục lục](../../README.md)
+[← Mục lục](../../../README.md) · Case study Proxmox cluster
 
 **Triệu chứng:** GUI bị đá ra sau một thời gian ngắn, báo "permission denied" hoặc "invalid ticket", trang tải chậm hoặc treo.
 

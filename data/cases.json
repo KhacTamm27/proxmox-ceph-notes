@@ -50,7 +50,8 @@
     ]
    }
   ],
-  "notes": "Đĩa lỗi thật (SMART xấu, I/O error lặp lại) thì thay đĩa, đừng restart mãi. Đừng out nhiều OSD cùng lúc khi cluster đang không khỏe."
+  "notes": "Đĩa lỗi thật (SMART xấu, I/O error lặp lại) thì thay đĩa, đừng restart mãi. Đừng out nhiều OSD cùng lúc khi cluster đang không khỏe.",
+  "scope": "ceph"
  },
  {
   "id": "pg-inconsistent",
@@ -87,7 +88,8 @@
     ]
    }
   ],
-  "notes": "Xác định bản lỗi trước khi repair. Nếu cùng một OSD báo lỗi lặp lại thì đĩa đang hỏng, nên thay đĩa thay vì repair liên tục."
+  "notes": "Xác định bản lỗi trước khi repair. Nếu cùng một OSD báo lỗi lặp lại thì đĩa đang hỏng, nên thay đĩa thay vì repair liên tục.",
+  "scope": "ceph"
  },
  {
   "id": "clock-skew",
@@ -125,7 +127,8 @@
     ]
    }
   ],
-  "notes": "Đảm bảo mọi node cùng trỏ về cùng nguồn NTP nội bộ. Nếu là VM, tắt đồng bộ giờ trùng lặp từ hypervisor."
+  "notes": "Đảm bảo mọi node cùng trỏ về cùng nguồn NTP nội bộ. Nếu là VM, tắt đồng bộ giờ trùng lặp từ hypervisor.",
+  "scope": "ceph"
  },
  {
   "id": "pve-quorum-lost",
@@ -167,7 +170,8 @@
     ]
    }
   ],
-  "notes": "pvecm expected 1 có nguy cơ split-brain nếu node kia thật ra vẫn chạy và ghi dữ liệu. Với cluster 2 node nên thêm QDevice. pmxcfs -l là biện pháp cuối cùng."
+  "notes": "pvecm expected 1 có nguy cơ split-brain nếu node kia thật ra vẫn chạy và ghi dữ liệu. Với cluster 2 node nên thêm QDevice. pmxcfs -l là biện pháp cuối cùng.",
+  "scope": "pve"
  },
  {
   "id": "nearfull-full",
@@ -210,7 +214,8 @@
     ]
    }
   ],
-  "notes": "Không nâng ngưỡng full quá cao. Khi OSD chạm 100% có thể không khởi động được. Cluster nên giữ dưới khoảng 80% dung lượng."
+  "notes": "Không nâng ngưỡng full quá cao. Khi OSD chạm 100% có thể không khởi động được. Cluster nên giữ dưới khoảng 80% dung lượng.",
+  "scope": "ceph"
  },
  {
   "id": "slow-ops",
@@ -248,7 +253,8 @@
     ]
    }
   ],
-  "notes": "Nhớ ceph osd unset noscrub sau khi xử lý xong. Một OSD có latency cao bất thường thường là đĩa sắp hỏng."
+  "notes": "Nhớ ceph osd unset noscrub sau khi xử lý xong. Một OSD có latency cao bất thường thường là đĩa sắp hỏng.",
+  "scope": "ceph"
  },
  {
   "id": "osd-replace-disk",
@@ -293,7 +299,8 @@
     ]
    }
   ],
-  "notes": "Chỉ xóa OSD khi safe-to-destroy trả về an toàn. Thay từng đĩa một, đợi cluster về HEALTH_OK rồi mới thay đĩa tiếp theo."
+  "notes": "Chỉ xóa OSD khi safe-to-destroy trả về an toàn. Thay từng đĩa một, đợi cluster về HEALTH_OK rồi mới thay đĩa tiếp theo.",
+  "scope": "ceph"
  },
  {
   "id": "node-maintenance",
@@ -337,7 +344,8 @@
     ]
    }
   ],
-  "notes": "Mỗi lần chỉ làm một node. Đừng reboot node kế tiếp khi PG chưa active+clean. Quên unset noout là lỗi hay gặp: nếu sau đó một OSD chết thật, Ceph sẽ không tự phục hồi."
+  "notes": "Mỗi lần chỉ làm một node. Đừng reboot node kế tiếp khi PG chưa active+clean. Quên unset noout là lỗi hay gặp: nếu sau đó một OSD chết thật, Ceph sẽ không tự phục hồi.",
+  "scope": "pve"
  },
  {
   "id": "pg-degraded-recovery",
@@ -375,7 +383,8 @@
     ]
    }
   ],
-  "notes": "Trong lúc degraded, cluster có ít bản sao hơn bình thường, đừng bảo trì thêm node nào. Giờ cao điểm nên giữ profile ưu tiên client."
+  "notes": "Trong lúc degraded, cluster có ít bản sao hơn bình thường, đừng bảo trì thêm node nào. Giờ cao điểm nên giữ profile ưu tiên client.",
+  "scope": "ceph"
  },
  {
   "id": "large-omap",
@@ -409,7 +418,8 @@
     ]
    }
   ],
-  "notes": "Chọn số shard theo số object dự kiến (khoảng 100 nghìn object mỗi shard là mức tham khảo). Nếu pool khác RGW, tìm nguyên nhân omap ở ứng dụng đang dùng pool đó."
+  "notes": "Chọn số shard theo số object dự kiến (khoảng 100 nghìn object mỗi shard là mức tham khảo). Nếu pool khác RGW, tìm nguyên nhân omap ở ứng dụng đang dùng pool đó.",
+  "scope": "ceph"
  },
  {
   "id": "rgw-503",
@@ -447,7 +457,8 @@
     ]
    }
   ],
-  "notes": "Hết quota thường trả 403 QuotaExceeded chứ không phải 503. Nếu có nhiều RGW sau load balancer, restart lần lượt từng cái để không mất dịch vụ."
+  "notes": "Hết quota thường trả 403 QuotaExceeded chứ không phải 503. Nếu có nhiều RGW sau load balancer, restart lần lượt từng cái để không mất dịch vụ.",
+  "scope": "ceph"
  },
  {
   "id": "mon-down",
@@ -484,7 +495,8 @@
     ]
    }
   ],
-  "notes": "Cần đa số MON (2/3 hoặc 3/5) mới có quorum. Tuyệt đối không xóa thư mục store của MON khi chưa chắc còn đủ MON khác khỏe."
+  "notes": "Cần đa số MON (2/3 hoặc 3/5) mới có quorum. Tuyệt đối không xóa thư mục store của MON khi chưa chắc còn đủ MON khác khỏe.",
+  "scope": "ceph"
  },
  {
   "id": "vm-locked",
@@ -520,7 +532,8 @@
     ]
    }
   ],
-  "notes": "Chỉ unlock khi chắc không còn tiến trình nào đang dùng VM. Với container dùng pct unlock <ctid>. Sau backup bị ngắt nên kiểm tra snapshot rác trên VM."
+  "notes": "Chỉ unlock khi chắc không còn tiến trình nào đang dùng VM. Với container dùng pct unlock <ctid>. Sau backup bị ngắt nên kiểm tra snapshot rác trên VM.",
+  "scope": "pve"
  },
  {
   "id": "pve-gui-logout",
@@ -556,7 +569,8 @@
     ]
    }
   ],
-  "notes": "Thử trình duyệt ẩn danh hoặc xóa cookie PVEAuthCookie để loại trừ lỗi phía client. Nếu truy cập qua reverse proxy hoặc VIP thì kiểm tra thêm giờ và timeout trên lớp đó."
+  "notes": "Thử trình duyệt ẩn danh hoặc xóa cookie PVEAuthCookie để loại trừ lỗi phía client. Nếu truy cập qua reverse proxy hoặc VIP thì kiểm tra thêm giờ và timeout trên lớp đó.",
+  "scope": "pve"
  },
  {
   "id": "pve-disk-full",
@@ -594,6 +608,483 @@
     ]
    }
   ],
-  "notes": "Không xóa tay trong /var/lib/ceph hay /etc/pve. Log Ceph lớn thì kiểm tra logrotate. Đặt cảnh báo khi ổ root vượt khoảng 80%."
+  "notes": "Không xóa tay trong /var/lib/ceph hay /etc/pve. Log Ceph lớn thì kiểm tra logrotate. Đặt cảnh báo khi ổ root vượt khoảng 80%.",
+  "scope": "pve"
+ },
+ {
+  "id": "osd-wont-start",
+  "scope": "ceph",
+  "title": "OSD không lên sau reboot",
+  "tags": "ceph osd không start sau reboot ceph-volume lvm activate không thấy đĩa failed",
+  "symptoms": "Sau reboot một số OSD vẫn down, systemctl báo failed hoặc start-limit-hit.",
+  "causes": "LVM chưa activate, đĩa đổi tên thiết bị hoặc không còn nhận, service chạm giới hạn số lần restart.",
+  "steps": [
+   {
+    "t": "Xem OSD nào down và trạng thái service",
+    "cmds": [
+     "ceph osd tree down",
+     "systemctl status ceph-osd@<osd-id>"
+    ]
+   },
+   {
+    "t": "Đọc log tìm lỗi mở đĩa hoặc bluestore",
+    "cmds": [
+     "journalctl -u ceph-osd@<osd-id> --since \"30 min ago\""
+    ]
+   },
+   {
+    "t": "Kiểm tra đĩa và LVM của OSD có còn không",
+    "cmds": [
+     "lsblk",
+     "ceph-volume lvm list"
+    ]
+   },
+   {
+    "t": "Activate lại và start OSD",
+    "cmds": [
+     "ceph-volume lvm activate --all",
+     "systemctl reset-failed ceph-osd@<osd-id>",
+     "systemctl start ceph-osd@<osd-id>"
+    ]
+   }
+  ],
+  "notes": "Nếu lsblk không còn thấy đĩa thì là lỗi phần cứng, chuyển sang case thay đĩa OSD. Đừng dùng ceph-volume lvm create trên đĩa đang chứa OSD cũ vì sẽ xóa dữ liệu."
+ },
+ {
+  "id": "rbd-hang",
+  "scope": "ceph",
+  "title": "VM treo IO do image RBD (watcher, lock, blocklist)",
+  "tags": "ceph rbd vm treo io lock watcher blocklist image không mở được",
+  "symptoms": "VM đơ hoặc không start vì đĩa RBD, lỗi \"image is locked\", \"timeout\" khi mở image.",
+  "causes": "Client cũ (node đã chết) còn giữ lock hoặc watcher, client bị blocklist, hoặc pool đang chậm.",
+  "steps": [
+   {
+    "t": "Cluster và pool có ổn không",
+    "cmds": [
+     "ceph -s",
+     "ceph health detail"
+    ]
+   },
+   {
+    "t": "Ai đang watch và lock image",
+    "cmds": [
+     "rbd status <pool>/<image>",
+     "rbd lock ls <pool>/<image>"
+    ]
+   },
+   {
+    "t": "Client có bị blocklist không",
+    "cmds": [
+     "ceph osd blocklist ls"
+    ]
+   },
+   {
+    "t": "Nếu chủ lock là node đã chết hẳn thì chờ Ceph tự blocklist rồi start lại VM",
+    "cmds": [
+     "qm start <vmid>"
+    ]
+   }
+  ],
+  "notes": "Chỉ xóa lock thủ công (rbd lock rm) khi chắc chắn client giữ lock đã chết, nếu không có nguy cơ hai nơi cùng ghi một image."
+ },
+ {
+  "id": "deep-scrub-late",
+  "scope": "ceph",
+  "title": "Cảnh báo PG không được scrub / deep-scrub kịp thời",
+  "tags": "ceph scrub deep-scrub not scrubbed in time noscrub quên gỡ cảnh báo pg",
+  "symptoms": "HEALTH_WARN \"N pgs not deep-scrubbed in time\" hoặc \"not scrubbed in time\".",
+  "causes": "Quên gỡ flag noscrub sau bảo trì, cửa sổ scrub quá hẹp, cluster bận hoặc số scrub đồng thời thấp.",
+  "steps": [
+   {
+    "t": "Xem PG nào quá hạn",
+    "cmds": [
+     "ceph health detail"
+    ]
+   },
+   {
+    "t": "Kiểm tra có đang bị tắt scrub bằng flag không",
+    "cmds": [
+     "ceph osd dump"
+    ]
+   },
+   {
+    "t": "Xem cửa sổ scrub và cấu hình hiện tại",
+    "cmds": [
+     "ceph config get osd osd_scrub_begin_hour",
+     "ceph config get osd osd_scrub_end_hour"
+    ]
+   },
+   {
+    "t": "Gỡ flag nếu có, rồi chạy deep-scrub thủ công cho PG quá hạn",
+    "cmds": [
+     "ceph osd unset noscrub",
+     "ceph osd unset nodeep-scrub",
+     "ceph pg deep-scrub <pgid>"
+    ]
+   }
+  ],
+  "notes": "Nguyên nhân phổ biến nhất là flag noscrub còn sót. Đừng chạy deep-scrub hàng loạt giờ cao điểm, scrub tốn IO đĩa."
+ },
+ {
+  "id": "pg-count",
+  "scope": "ceph",
+  "title": "Cảnh báo too many / too few PGs, chỉnh pg_num",
+  "tags": "ceph pg number too many pgs per osd too few autoscale pg_num pool",
+  "symptoms": "HEALTH_WARN \"too many PGs per OSD\" hoặc \"pool has too few/many pgs\".",
+  "causes": "Số PG của pool không hợp với số OSD hiện có (thêm hoặc bớt OSD, tạo nhiều pool).",
+  "steps": [
+   {
+    "t": "Xem autoscaler đề xuất gì cho từng pool",
+    "cmds": [
+     "ceph osd pool autoscale-status"
+    ]
+   },
+   {
+    "t": "Xem số PG trên mỗi OSD",
+    "cmds": [
+     "ceph osd df",
+     "ceph health detail"
+    ]
+   },
+   {
+    "t": "Để autoscaler tự điều chỉnh (khuyến nghị)",
+    "cmds": [
+     "ceph osd pool set <pool> pg_autoscale_mode on"
+    ]
+   }
+  ],
+  "notes": "Đổi pg_num gây di chuyển dữ liệu, làm vào giờ thấp tải và theo dõi ceph -s. Khoảng 100 PG mỗi OSD là mức tham khảo."
+ },
+ {
+  "id": "network-mtu",
+  "scope": "ceph",
+  "title": "Mạng Ceph: MTU không khớp, nghẽn hoặc rớt gói",
+  "tags": "ceph mạng network mtu jumbo rớt gói heartbeat slow ops osd flapping switch bond",
+  "symptoms": "Slow ops hoặc OSD flapping chỉ liên quan một vài node, ping thường được nhưng IO lớn bị treo.",
+  "causes": "MTU 9000 cấu hình không đồng nhất trên NIC, bridge, bond và switch; cổng switch lỗi; bond hash không đều.",
+  "steps": [
+   {
+    "t": "Kiểm tra MTU thực sự thông suốt giữa hai node (jumbo 9000 thì dùng 8972)",
+    "cmds": [
+     "ping -M do -s 8972 <peer-ip>"
+    ]
+   },
+   {
+    "t": "Xem MTU và lỗi trên interface",
+    "cmds": [
+     "ip -s link show <if>",
+     "ethtool -S <if>"
+    ]
+   },
+   {
+    "t": "Đo băng thông giữa hai node (cần cài iperf3)",
+    "cmds": [
+     "iperf3 -s",
+     "iperf3 -c <peer-ip>"
+    ]
+   },
+   {
+    "t": "Đối chiếu OSD nào chậm",
+    "cmds": [
+     "ceph osd perf"
+    ]
+   }
+  ],
+  "notes": "MTU phải đồng nhất trên toàn đường đi: NIC, bond, bridge, VLAN và switch. Nếu ping -M do báo \"message too long\" thì có điểm nào đó MTU nhỏ hơn."
+ },
+ {
+  "id": "rgw-403",
+  "scope": "ceph",
+  "title": "RGW/S3 trả 403 (AccessDenied, SignatureDoesNotMatch, QuotaExceeded)",
+  "tags": "rgw s3 403 access denied signature quota exceeded suspended key sai lệch giờ bucket policy",
+  "symptoms": "Client S3 nhận 403 dù cluster khỏe: AccessDenied, SignatureDoesNotMatch hoặc QuotaExceeded.",
+  "causes": "Sai access/secret key, user bị suspend, vượt quota, bucket policy hoặc ACL chặn, giờ client lệch quá nhiều so với server.",
+  "steps": [
+   {
+    "t": "Xem key, trạng thái suspended và quota của user",
+    "cmds": [
+     "radosgw-admin user info --uid=<uid>"
+    ]
+   },
+   {
+    "t": "So dung lượng và số object của bucket với quota",
+    "cmds": [
+     "radosgw-admin bucket stats --bucket=<bucket>"
+    ]
+   },
+   {
+    "t": "Nếu vượt quota thì nâng hạn mức",
+    "cmds": [
+     "radosgw-admin quota set --quota-scope=user --uid=<uid> --max-size=<bytes> --max-objects=<n>"
+    ]
+   },
+   {
+    "t": "Kiểm tra giờ trên máy client và trên RGW (SignatureDoesNotMatch hay do lệch giờ)",
+    "cmds": [
+     "timedatectl"
+    ]
+   }
+  ],
+  "notes": "Sau khi đổi quota có thể cần radosgw-admin quota enable. Lỗi chỉ xảy ra với một bucket thì kiểm tra bucket policy và ACL."
+ },
+ {
+  "id": "add-osd-throttle",
+  "scope": "ceph",
+  "title": "Thêm OSD hoặc node mới làm chậm production",
+  "tags": "ceph thêm osd node mới rebalance backfill chậm io client throttle mở rộng",
+  "symptoms": "Sau khi thêm OSD hoặc node, VM chậm, nhiều PG backfilling, objects misplaced.",
+  "causes": "Rebalance và backfill chiếm IO đĩa và mạng cùng lúc với tải client.",
+  "steps": [
+   {
+    "t": "Theo dõi tiến độ rebalance",
+    "cmds": [
+     "ceph -s",
+     "ceph pg stat"
+    ]
+   },
+   {
+    "t": "Giảm tải backfill và ưu tiên client",
+    "cmds": [
+     "ceph config set osd osd_max_backfills 1",
+     "ceph config set osd osd_mclock_profile high_client_ops"
+    ]
+   },
+   {
+    "t": "Nếu cần tạm dừng hẳn trong giờ cao điểm, nhớ gỡ sau",
+    "cmds": [
+     "ceph osd set nobackfill",
+     "ceph osd unset nobackfill"
+    ]
+   }
+  ],
+  "notes": "Nên thêm OSD từng chút một, ngoài giờ cao điểm. Khi muốn rebalance nhanh lại thì dùng profile high_recovery_ops hoặc xóa cấu hình đã đặt."
+ },
+ {
+  "id": "migrate-fail",
+  "scope": "pve",
+  "title": "Migrate VM thất bại",
+  "tags": "proxmox migrate vm thất bại live migration lỗi local disk cpu cdrom iso storage",
+  "symptoms": "Migrate báo lỗi, treo ở một phần trăm nào đó, hoặc không cho chọn node đích.",
+  "causes": "Đĩa nằm trên local storage, ISO local gắn vào VM, storage không có ở node đích, khác thế hệ CPU với CPU type host, VM đang bị lock, mạng migrate chậm.",
+  "steps": [
+   {
+    "t": "Xem log lỗi của tác vụ migrate",
+    "cmds": [
+     "pvesh get /nodes/<node>/tasks --limit 5"
+    ]
+   },
+   {
+    "t": "Kiểm tra cấu hình VM: đĩa local, cdrom, lock, passthrough",
+    "cmds": [
+     "qm config <vmid>"
+    ]
+   },
+   {
+    "t": "Node đích có đủ storage cần thiết không",
+    "cmds": [
+     "pvesm status",
+     "pvecm status"
+    ]
+   },
+   {
+    "t": "Thử lại (đĩa local thì thêm tùy chọn kèm đĩa)",
+    "cmds": [
+     "qm migrate <vmid> <node> --online",
+     "qm migrate <vmid> <node> --online --with-local-disks"
+    ]
+   }
+  ],
+  "notes": "Gỡ ISO khỏi cdrom trước khi migrate. VM dùng CPU type host giữa các node khác thế hệ có thể lỗi, nên dùng CPU type chung nếu cần live migrate linh hoạt."
+ },
+ {
+  "id": "vm-wont-start",
+  "scope": "pve",
+  "title": "VM không start được",
+  "tags": "proxmox vm không start khởi động lỗi timeout quota storage không đủ ram qm start",
+  "symptoms": "qm start báo lỗi, task lỗi, VM dừng ngay sau khi bật.",
+  "causes": "Cluster mất quorum, storage chứa đĩa không available, thiếu RAM trên node, VM bị lock, file cấu hình trỏ tới đĩa hoặc thiết bị không tồn tại.",
+  "steps": [
+   {
+    "t": "Chạy start để đọc thông báo lỗi chính xác",
+    "cmds": [
+     "qm start <vmid>"
+    ]
+   },
+   {
+    "t": "Kiểm tra lock và đường dẫn đĩa trong cấu hình",
+    "cmds": [
+     "qm config <vmid>"
+    ]
+   },
+   {
+    "t": "Storage và quorum có ổn không",
+    "cmds": [
+     "pvesm status",
+     "pvecm status"
+    ]
+   },
+   {
+    "t": "Còn RAM trống không, và xem lệnh QEMU sẽ chạy",
+    "cmds": [
+     "free -h",
+     "qm showcmd <vmid> --pretty"
+    ]
+   },
+   {
+    "t": "Xem log dịch vụ",
+    "cmds": [
+     "journalctl -u pvedaemon --since \"10 min ago\""
+    ]
+   }
+  ],
+  "notes": "Thấy \"no quorum\" thì xử lý theo case mất quorum trước. Thấy lock thì xem case VM bị lock."
+ },
+ {
+  "id": "pvestatd-unknown",
+  "scope": "pve",
+  "title": "Node hoặc VM hiện dấu hỏi (unknown), GUI không cập nhật",
+  "tags": "proxmox unknown dấu hỏi pvestatd gui không cập nhật storage nfs treo node xám",
+  "symptoms": "Trong GUI node, VM hoặc storage hiện dấu (?) xám, số liệu không cập nhật dù VM vẫn chạy.",
+  "causes": "pvestatd bị treo, thường vì một storage từ xa (NFS, CIFS, PBS) không phản hồi.",
+  "steps": [
+   {
+    "t": "Xem trạng thái pvestatd",
+    "cmds": [
+     "systemctl status pvestatd",
+     "journalctl -u pvestatd --since \"30 min ago\""
+    ]
+   },
+   {
+    "t": "Tìm storage đang treo (dùng timeout để lệnh không bị kẹt)",
+    "cmds": [
+     "timeout 20 pvesm status"
+    ]
+   },
+   {
+    "t": "Restart pvestatd (không ảnh hưởng VM đang chạy)",
+    "cmds": [
+     "systemctl restart pvestatd"
+    ]
+   }
+  ],
+  "notes": "Nếu pvesm status hoặc df bị treo thì storage từ xa đang lỗi, xử lý mount hoặc mạng tới storage đó mới là gốc. Restart pvestatd chỉ là tạm thời."
+ },
+ {
+  "id": "ha-no-restart",
+  "scope": "pve",
+  "title": "HA: VM không tự chạy lại trên node khác, trạng thái error hoặc fence",
+  "tags": "proxmox ha high availability fence error freeze node chết vm không tự chạy lại watchdog",
+  "symptoms": "Node chết nhưng VM HA không tự khởi động ở node khác, hoặc VM HA ở trạng thái error, freeze, fence.",
+  "causes": "Mất quorum, storage không dùng chung, watchdog không hoạt động, VM từng start lỗi nên HA đặt về error.",
+  "steps": [
+   {
+    "t": "Xem HA đang nghĩ gì về từng VM và node",
+    "cmds": [
+     "ha-manager status",
+     "ha-manager config"
+    ]
+   },
+   {
+    "t": "Xem log của LRM và CRM",
+    "cmds": [
+     "journalctl -u pve-ha-lrm -u pve-ha-crm --since \"1 hour ago\""
+    ]
+   },
+   {
+    "t": "Cluster còn quorum không, storage có chung không",
+    "cmds": [
+     "pvecm status",
+     "pvesm status"
+    ]
+   },
+   {
+    "t": "Khi đã xử lý nguyên nhân, đưa VM khỏi trạng thái error: disable rồi start lại",
+    "cmds": [
+     "ha-manager set vm:<vmid> --state disabled",
+     "ha-manager set vm:<vmid> --state started"
+    ]
+   }
+  ],
+  "notes": "HA cần quorum và đĩa VM nằm trên storage dùng chung (Ceph). Fence và chuyển VM mất vài phút sau khi node mất liên lạc, không phải tức thì."
+ },
+ {
+  "id": "backup-fail",
+  "scope": "pve",
+  "title": "Backup vzdump lỗi hoặc treo",
+  "tags": "proxmox backup vzdump lỗi treo guest agent freeze storage đầy pbs lock",
+  "symptoms": "Job backup báo lỗi, chạy rất lâu, hoặc để lại VM bị lock.",
+  "causes": "Storage backup đầy hoặc mất kết nối, guest agent không phản hồi khi freeze, VM bị lock, hai job chồng nhau.",
+  "steps": [
+   {
+    "t": "Storage đích còn chỗ và đang online không",
+    "cmds": [
+     "pvesm status",
+     "df -h"
+    ]
+   },
+   {
+    "t": "Có tiến trình backup nào đang chạy hoặc treo",
+    "cmds": [
+     "ps aux | grep vzdump"
+    ]
+   },
+   {
+    "t": "Guest agent của VM có phản hồi không",
+    "cmds": [
+     "qm agent <vmid> ping"
+    ]
+   },
+   {
+    "t": "Nếu VM bị lock sau backup lỗi, mở khóa (chắc chắn không còn vzdump chạy)",
+    "cmds": [
+     "qm unlock <vmid>"
+    ]
+   },
+   {
+    "t": "Chạy thử thủ công một VM để thấy lỗi rõ",
+    "cmds": [
+     "vzdump <vmid> --storage <storage> --mode snapshot --compress zstd"
+    ]
+   }
+  ],
+  "notes": "Lỗi freeze thường do guest agent trong VM không chạy, cài hoặc bật qemu-guest-agent. Nên giãn lịch để các job backup không chồng nhau."
+ },
+ {
+  "id": "lvm-thin-full",
+  "scope": "pve",
+  "title": "local-lvm (thin pool) đầy",
+  "tags": "proxmox lvm thin pool đầy local-lvm out of space metadata io error fstrim snapshot",
+  "symptoms": "local-lvm gần 100%, VM bị I/O error hoặc treo, log có \"thin pool ... out of space\".",
+  "causes": "Data hoặc metadata của thin pool đầy do snapshot tích tụ, đĩa cấp phát vượt dung lượng thật (overprovision).",
+  "steps": [
+   {
+    "t": "Xem mức đầy của data và metadata",
+    "cmds": [
+     "pvesm status",
+     "lvs -a"
+    ]
+   },
+   {
+    "t": "Tìm snapshot và đĩa chiếm nhiều chỗ",
+    "cmds": [
+     "lvs -o lv_name,lv_size,data_percent,metadata_percent"
+    ]
+   },
+   {
+    "t": "Giải phóng: xóa snapshot không cần (trong VM Linux chạy fstrim để trả block đã xóa)",
+    "cmds": [
+     "qm delsnapshot <vmid> <snapname>",
+     "fstrim -av"
+    ]
+   },
+   {
+    "t": "Nếu VG còn trống thì mở rộng pool, nếu metadata đầy thì mở rộng metadata",
+    "cmds": [
+     "lvextend -L +<size> <vg>/data",
+     "lvextend --poolmetadatasize +<size> <vg>/data"
+    ]
+   }
+  ],
+  "notes": "Pool đầy 100% có thể làm hỏng filesystem trong VM, nên đặt cảnh báo ở khoảng 80%. Cẩn thận khi overprovision."
  }
 ]

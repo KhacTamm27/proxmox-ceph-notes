@@ -1,6 +1,6 @@
 # Bảo trì hoặc reboot một node Proxmox + Ceph
 
-[← Mục lục](../../README.md)
+[← Mục lục](../../../README.md) · Case study Proxmox cluster
 
 **Triệu chứng:** Cần reboot node để nâng cấp kernel hoặc thay phần cứng mà không làm gián đoạn VM và không kích hoạt rebalance.
 

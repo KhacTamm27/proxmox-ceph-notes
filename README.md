@@ -2,6 +2,8 @@
 
 Tài liệu cá nhân: 493 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệnh phá hủy hoặc ảnh hưởng dịch vụ, đọc kỹ trước khi chạy.
 
+**Mindmap tương tác (lọc lệnh, mở thẳng từng mục):** https://KhacTamm27.github.io/proxmox-ceph-notes/
+
 ## Cách tìm nhanh
 
 - Biết tên nhóm: bấm vào mục lục bên dưới, hoặc mở mindmap kèm `#B13` (ví dụ `.../#B13` mở thẳng RGW).
@@ -9,25 +11,43 @@ Tài liệu cá nhân: 493 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 - Trên GitHub: nhấn `t` để tìm file theo tên, nhấn `/` để tìm trong repo (gõ `crush`, `radosgw-admin user`).
 - Trong một file .md: nút Outline (góc phải trên) nhảy giữa các mục con, mỗi khối lệnh có nút copy.
 
-## Case study (lỗi và cách xử lý)
+## Case study Ceph (lỗi và cách xử lý)
 
 | Sự cố | Triệu chứng |
 |---|---|
-| [OSD down hoặc up/down liên tục (flapping)](docs/cases/osd-down-flapping.md) | ceph -s báo "N osds down", OSD lúc up lúc down, log có "wrongly marked me down" hoặc heartbeat_check no reply. |
-| [PG inconsistent / scrub errors](docs/cases/pg-inconsistent.md) | HEALTH_ERR, "pg x.y is active+clean+inconsistent", "N scrub errors". |
-| [Clock skew trên MON (lệch giờ)](docs/cases/clock-skew.md) | HEALTH_WARN "clock skew detected on mon.X", MON mất quorum chập chờn. |
-| [Cluster Proxmox mất quorum](docs/cases/pve-quorum-lost.md) | GUI báo "cluster not ready - no quorum", /etc/pve chuyển read-only, không start được VM, node hiện đỏ. |
-| [Ceph nearfull / full / pool đầy](docs/cases/nearfull-full.md) | HEALTH_WARN "N osd(s) nearfull", HEALTH_ERR "full osd(s)", client không ghi được, backfill dừng. |
-| [Slow ops / blocked requests](docs/cases/slow-ops.md) | HEALTH_WARN "N slow ops", VM đơ hoặc IO chậm, "requests are blocked". |
-| [Thay đĩa OSD hỏng](docs/cases/osd-replace-disk.md) | OSD down kéo dài, SMART báo lỗi hoặc dmesg có I/O error, cần thay đĩa vật lý. |
-| [Bảo trì hoặc reboot một node Proxmox + Ceph](docs/cases/node-maintenance.md) | Cần reboot node để nâng cấp kernel hoặc thay phần cứng mà không làm gián đoạn VM và không kích hoạt rebalance. |
-| [PG degraded / undersized, recovery chậm](docs/cases/pg-degraded-recovery.md) | HEALTH_WARN "Degraded data redundancy", "N pgs undersized/degraded", "objects misplaced", recovery chạy lâu. |
-| [Large omap objects (thường do bucket index RGW)](docs/cases/large-omap.md) | HEALTH_WARN "N large omap objects". |
-| [RGW/S3 trả 503 hoặc timeout, upload lỗi](docs/cases/rgw-503.md) | Client S3 nhận 503/timeout, upload thất bại, RGW phản hồi chậm. |
-| [MON down, ceph -s treo hoặc mất quorum Ceph](docs/cases/mon-down.md) | ceph -s đứng treo hoặc báo "1/3 mons down", "mon.X is down". |
-| [VM bị lock (backup/snapshot), không start hoặc migrate được](docs/cases/vm-locked.md) | Báo "VM is locked (backup)" hoặc "(snapshot)", không start, stop, migrate hoặc xóa được. |
-| [GUI Proxmox bị đăng xuất liên tục hoặc không đăng nhập được](docs/cases/pve-gui-logout.md) | GUI bị đá ra sau một thời gian ngắn, báo "permission denied" hoặc "invalid ticket", trang tải chậm hoặc treo. |
-| [Node Proxmox đầy ổ root, dịch vụ lỗi](docs/cases/pve-disk-full.md) | "No space left on device", dịch vụ không start, không ghi được /etc/pve, GUI lỗi. |
+| [OSD down hoặc up/down liên tục (flapping)](docs/cases/ceph/osd-down-flapping.md) | ceph -s báo "N osds down", OSD lúc up lúc down, log có "wrongly marked me down" hoặc heartbeat_check no reply. |
+| [PG inconsistent / scrub errors](docs/cases/ceph/pg-inconsistent.md) | HEALTH_ERR, "pg x.y is active+clean+inconsistent", "N scrub errors". |
+| [Clock skew trên MON (lệch giờ)](docs/cases/ceph/clock-skew.md) | HEALTH_WARN "clock skew detected on mon.X", MON mất quorum chập chờn. |
+| [Ceph nearfull / full / pool đầy](docs/cases/ceph/nearfull-full.md) | HEALTH_WARN "N osd(s) nearfull", HEALTH_ERR "full osd(s)", client không ghi được, backfill dừng. |
+| [Slow ops / blocked requests](docs/cases/ceph/slow-ops.md) | HEALTH_WARN "N slow ops", VM đơ hoặc IO chậm, "requests are blocked". |
+| [Thay đĩa OSD hỏng](docs/cases/ceph/osd-replace-disk.md) | OSD down kéo dài, SMART báo lỗi hoặc dmesg có I/O error, cần thay đĩa vật lý. |
+| [PG degraded / undersized, recovery chậm](docs/cases/ceph/pg-degraded-recovery.md) | HEALTH_WARN "Degraded data redundancy", "N pgs undersized/degraded", "objects misplaced", recovery chạy lâu. |
+| [Large omap objects (thường do bucket index RGW)](docs/cases/ceph/large-omap.md) | HEALTH_WARN "N large omap objects". |
+| [RGW/S3 trả 503 hoặc timeout, upload lỗi](docs/cases/ceph/rgw-503.md) | Client S3 nhận 503/timeout, upload thất bại, RGW phản hồi chậm. |
+| [MON down, ceph -s treo hoặc mất quorum Ceph](docs/cases/ceph/mon-down.md) | ceph -s đứng treo hoặc báo "1/3 mons down", "mon.X is down". |
+| [OSD không lên sau reboot](docs/cases/ceph/osd-wont-start.md) | Sau reboot một số OSD vẫn down, systemctl báo failed hoặc start-limit-hit. |
+| [VM treo IO do image RBD (watcher, lock, blocklist)](docs/cases/ceph/rbd-hang.md) | VM đơ hoặc không start vì đĩa RBD, lỗi "image is locked", "timeout" khi mở image. |
+| [Cảnh báo PG không được scrub / deep-scrub kịp thời](docs/cases/ceph/deep-scrub-late.md) | HEALTH_WARN "N pgs not deep-scrubbed in time" hoặc "not scrubbed in time". |
+| [Cảnh báo too many / too few PGs, chỉnh pg_num](docs/cases/ceph/pg-count.md) | HEALTH_WARN "too many PGs per OSD" hoặc "pool has too few/many pgs". |
+| [Mạng Ceph: MTU không khớp, nghẽn hoặc rớt gói](docs/cases/ceph/network-mtu.md) | Slow ops hoặc OSD flapping chỉ liên quan một vài node, ping thường được nhưng IO lớn bị treo. |
+| [RGW/S3 trả 403 (AccessDenied, SignatureDoesNotMatch, QuotaExceeded)](docs/cases/ceph/rgw-403.md) | Client S3 nhận 403 dù cluster khỏe: AccessDenied, SignatureDoesNotMatch hoặc QuotaExceeded. |
+| [Thêm OSD hoặc node mới làm chậm production](docs/cases/ceph/add-osd-throttle.md) | Sau khi thêm OSD hoặc node, VM chậm, nhiều PG backfilling, objects misplaced. |
+
+## Case study Proxmox cluster (lỗi và cách xử lý)
+
+| Sự cố | Triệu chứng |
+|---|---|
+| [Cluster Proxmox mất quorum](docs/cases/pve/pve-quorum-lost.md) | GUI báo "cluster not ready - no quorum", /etc/pve chuyển read-only, không start được VM, node hiện đỏ. |
+| [Bảo trì hoặc reboot một node Proxmox + Ceph](docs/cases/pve/node-maintenance.md) | Cần reboot node để nâng cấp kernel hoặc thay phần cứng mà không làm gián đoạn VM và không kích hoạt rebalance. |
+| [VM bị lock (backup/snapshot), không start hoặc migrate được](docs/cases/pve/vm-locked.md) | Báo "VM is locked (backup)" hoặc "(snapshot)", không start, stop, migrate hoặc xóa được. |
+| [GUI Proxmox bị đăng xuất liên tục hoặc không đăng nhập được](docs/cases/pve/pve-gui-logout.md) | GUI bị đá ra sau một thời gian ngắn, báo "permission denied" hoặc "invalid ticket", trang tải chậm hoặc treo. |
+| [Node Proxmox đầy ổ root, dịch vụ lỗi](docs/cases/pve/pve-disk-full.md) | "No space left on device", dịch vụ không start, không ghi được /etc/pve, GUI lỗi. |
+| [Migrate VM thất bại](docs/cases/pve/migrate-fail.md) | Migrate báo lỗi, treo ở một phần trăm nào đó, hoặc không cho chọn node đích. |
+| [VM không start được](docs/cases/pve/vm-wont-start.md) | qm start báo lỗi, task lỗi, VM dừng ngay sau khi bật. |
+| [Node hoặc VM hiện dấu hỏi (unknown), GUI không cập nhật](docs/cases/pve/pvestatd-unknown.md) | Trong GUI node, VM hoặc storage hiện dấu (?) xám, số liệu không cập nhật dù VM vẫn chạy. |
+| [HA: VM không tự chạy lại trên node khác, trạng thái error hoặc fence](docs/cases/pve/ha-no-restart.md) | Node chết nhưng VM HA không tự khởi động ở node khác, hoặc VM HA ở trạng thái error, freeze, fence. |
+| [Backup vzdump lỗi hoặc treo](docs/cases/pve/backup-fail.md) | Job backup báo lỗi, chạy rất lâu, hoặc để lại VM bị lock. |
+| [local-lvm (thin pool) đầy](docs/cases/pve/lvm-thin-full.md) | local-lvm gần 100%, VM bị I/O error hoặc treo, log có "thin pool ... out of space". |
 
 ## Proxmox host
 
@@ -80,7 +100,7 @@ Tài liệu cá nhân: 493 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 Sau khi sửa, chạy:
 
 ```bash
-python3 scripts/build.py --repo <user>/<repo>
+python3 scripts/build.py --repo KhacTamm27/proxmox-ceph-notes
 ```
 
 Lệnh trên sinh lại README này, toàn bộ `docs/**/*.md` và `docs/index.html`.

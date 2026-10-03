@@ -1,6 +1,6 @@
 # Clock skew trên MON (lệch giờ)
 
-[← Mục lục](../../README.md)
+[← Mục lục](../../../README.md) · Case study Ceph
 
 **Triệu chứng:** HEALTH_WARN "clock skew detected on mon.X", MON mất quorum chập chờn.
 

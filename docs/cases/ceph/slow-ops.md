@@ -1,6 +1,6 @@
 # Slow ops / blocked requests
 
-[← Mục lục](../../README.md)
+[← Mục lục](../../../README.md) · Case study Ceph
 
 **Triệu chứng:** HEALTH_WARN "N slow ops", VM đơ hoặc IO chậm, "requests are blocked".
 

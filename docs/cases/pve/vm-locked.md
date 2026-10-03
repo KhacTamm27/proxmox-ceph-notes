@@ -1,6 +1,6 @@
 # VM bị lock (backup/snapshot), không start hoặc migrate được
 
-[← Mục lục](../../README.md)
+[← Mục lục](../../../README.md) · Case study Proxmox cluster
 
 **Triệu chứng:** Báo "VM is locked (backup)" hoặc "(snapshot)", không start, stop, migrate hoặc xóa được.
 

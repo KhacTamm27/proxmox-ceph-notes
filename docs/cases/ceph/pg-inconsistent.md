@@ -1,6 +1,6 @@
 # PG inconsistent / scrub errors
 
-[← Mục lục](../../README.md)
+[← Mục lục](../../../README.md) · Case study Ceph
 
 **Triệu chứng:** HEALTH_ERR, "pg x.y is active+clean+inconsistent", "N scrub errors".
 

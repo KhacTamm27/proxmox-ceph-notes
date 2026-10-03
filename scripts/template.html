@@ -60,10 +60,11 @@ li.danger code{color:var(--danger)}
 }
 
 .tools .tab[aria-pressed=true]{background:var(--ink);color:var(--bg)}
-.chips{display:flex;gap:6px;flex-wrap:wrap;max-width:1500px;margin:0 auto;padding:10px 20px 0}
+.chips{display:flex;gap:6px;flex-wrap:wrap;max-width:1100px;margin:0 auto;padding:10px 20px 0}
 .chip{padding:3px 10px;border:1px solid var(--line);border-radius:999px;background:var(--panel);font-size:13px;color:var(--muted)}
 .vi{display:block;font-size:13px}
-#results,#cases{max-width:1100px;margin:0 auto;padding:12px 20px}
+#results,.casesec{max-width:1100px;margin:0 auto;padding:12px 20px}
+.sech{font-size:16px;margin:4px 0 10px}
 .rhead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;font-weight:600}
 .rrow{display:flex;gap:10px;align-items:baseline;padding:5px 0;border-bottom:1px dashed var(--line)}
 .rrow a{font:600 12px ui-monospace,Menlo,Consolas,monospace;text-decoration:none;color:var(--ceph)}
@@ -83,14 +84,16 @@ details.case ol li{border:0;padding:4px 0}
 <div class="tools">
 <input id="q" type="search" placeholder="Filter commands" aria-label="Filter commands">
 <button id="tabmap" class="tab" type="button" aria-pressed="true">Mindmap</button>
-<button id="tabcase" class="tab" type="button" aria-pressed="false">Case study</button>
+<button id="tabceph" class="tab" type="button" aria-pressed="false">Case Ceph</button>
+<button id="tabpve" class="tab" type="button" aria-pressed="false">Case Proxmox</button>
 <button id="expand" type="button">Expand all</button>
 <button id="collapse" type="button">Collapse all</button>
 </div>
 </header>
 <div class="chips" id="chips" aria-label="Gợi ý tìm kiếm"></div>
 <section id="results" hidden></section>
-<section id="cases" hidden></section>
+<section id="cases-ceph" class="casesec" hidden><h2 class="sech">Case study Ceph</h2></section>
+<section id="cases-pve" class="casesec" hidden><h2 class="sech">Case study Proxmox cluster</h2></section>
 <main id="map">
 <svg id="wires" aria-hidden="true"></svg>
 <div class="side left" id="left"></div>
@@ -183,7 +186,7 @@ window.addEventListener('resize',draw);
 window.addEventListener('scroll',draw,{passive:true});
 if(window.ResizeObserver)new ResizeObserver(draw).observe(map);
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
-const res=$('#results'),casesEl=$('#cases');
+const res=$('#results'),secs={ceph:$('#cases-ceph'),pve:$('#cases-pve')},casesEl=document;
 function mkPrompt(title,sym,cmds){return 'Tôi đang xử lý trên cluster Proxmox + Ceph: '+title+'\n'+(sym?'Triệu chứng: '+sym+'\n':'')+'Các lệnh chẩn đoán liên quan:\n'+cmds.map(c=>'- '+c).join('\n')+'\n\nOutput lệnh thực tế của tôi (đã xóa IP, tên host, key):\n<<< dán output vào đây >>>\n\nHãy phân tích nguyên nhân khả dĩ nhất, nói rõ còn thiếu thông tin gì, và đề xuất bước tiếp theo theo thứ tự an toàn nhất. Cảnh báo trước nếu có lệnh nguy hiểm.'}
 function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
 function cmdEl(c){const e=el('code','cmdline',c);e.title='Bấm để copy';e.tabIndex=0;e.addEventListener('click',()=>copy(e,c));return e}
@@ -197,17 +200,17 @@ CASES.forEach(c=>{
   const nt=el('p','note','Lưu ý: '+c.notes);
   const pb=el('button','pbtn','Copy prompt cho Claude');pb.type='button';
   pb.addEventListener('click',()=>copy(pb,mkPrompt(c.title,c.symptoms,c.steps.flatMap(s=>s.cmds))));
-  d.append(p1,p2,ol,nt,pb);casesEl.append(d);
+  d.append(p1,p2,ol,nt,pb);(c.scope==='pve'?secs.pve:secs.ceph).append(d);
 });
 function show(tab){
-  map.hidden=tab!=='map';casesEl.hidden=tab!=='cases';
-  $('#tabmap').setAttribute('aria-pressed',String(tab==='map'));
-  $('#tabcase').setAttribute('aria-pressed',String(tab==='cases'));
+  map.hidden=tab!=='map';secs.ceph.hidden=tab!=='ceph';secs.pve.hidden=tab!=='pve';
+  [['map','#tabmap'],['ceph','#tabceph'],['pve','#tabpve']].forEach(([k,id])=>$(id).setAttribute('aria-pressed',String(tab===k)));
   $('#expand').hidden=$('#collapse').hidden=tab!=='map';
   if(tab==='map')draw();
 }
 $('#tabmap').addEventListener('click',()=>show('map'));
-$('#tabcase').addEventListener('click',()=>show('cases'));
+$('#tabceph').addEventListener('click',()=>show('ceph'));
+$('#tabpve').addEventListener('click',()=>show('pve'));
 function renderResults(v){
   res.replaceChildren();
   casesEl.querySelectorAll('details.case').forEach(d=>{d.hidden=!!v&&!v.split(/\s+/).every(w=>d.dataset.t.includes(w))});
@@ -226,7 +229,7 @@ function renderResults(v){
     head.append(pb);
   }
   res.append(head);
-  ch.forEach(c=>{const a=el('a','rcase','Case: '+c.title);a.href='#case-'+c.id;res.append(a)});
+  ch.forEach(c=>{const a=el('a','rcase',(c.scope==='pve'?'Case Proxmox: ':'Case Ceph: ')+c.title);a.href='#case-'+c.id;res.append(a)});
   hits.slice(0,30).forEach(({b,it})=>{
     const row=el('div','rrow');const a=el('a',null,b.id);a.href='#'+b.id;
     const box=el('div');box.append(cmdEl(it.c),el('span','vi',it.v||it.p));
@@ -235,13 +238,14 @@ function renderResults(v){
   if(hits.length>30)res.append(el('p','note','Còn '+(hits.length-30)+' lệnh nữa, thu hẹp từ khóa để xem.'));
   res.hidden=false;
 }
-['osd down','đầy disk','lệch giờ','mất quorum','slow ops','pg inconsistent','reboot bảo trì','thay đĩa','vm lock','đăng xuất','rgw 503','crash'].forEach(x=>{
+['osd down','đầy disk','lệch giờ','mất quorum','slow ops','pg inconsistent','reboot bảo trì','thay đĩa','vm lock','đăng xuất','rgw 503','migrate','backup lỗi','dấu hỏi','crash'].forEach(x=>{
   const b=el('button','chip',x);b.type='button';
   b.addEventListener('click',()=>{q.value=x;q.dispatchEvent(new Event('input'))});$('#chips').append(b)});
 function openHash(){
   const id=decodeURIComponent(location.hash.slice(1));if(!id)return;
-  if(id==='cases'){show('cases');return}
-  if(id.startsWith('case-')){show('cases');const d=document.getElementById(id);if(d){d.hidden=false;d.open=true;d.scrollIntoView({block:'start'})}return}
+  if(id==='cases'||id==='cases-ceph'){show('ceph');return}
+  if(id==='cases-pve'){show('pve');return}
+  if(id.startsWith('case-')){const cc=CASES.find(c=>'case-'+c.id===id);show(cc&&cc.scope==='pve'?'pve':'ceph');const d=document.getElementById(id);if(d){d.hidden=false;d.open=true;d.scrollIntoView({block:'start'})}return}
   show('map');
   const sec=document.getElementById(id);if(!sec||!sec.classList.contains('branch'))return;
   setOpen(sec,true);draw();sec.scrollIntoView({block:'center'});

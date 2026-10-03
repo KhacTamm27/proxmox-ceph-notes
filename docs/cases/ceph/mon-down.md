@@ -1,6 +1,6 @@
 # MON down, ceph -s treo hoặc mất quorum Ceph
 
-[← Mục lục](../../README.md)
+[← Mục lục](../../../README.md) · Case study Ceph
 
 **Triệu chứng:** ceph -s đứng treo hoặc báo "1/3 mons down", "mon.X is down".
 
