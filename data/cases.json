@@ -1,90 +1,599 @@
 [
-{
- "id": "osd-down-flapping",
- "title": "OSD down hoặc up/down liên tục (flapping)",
- "tags": "ceph osd down flapping rớt osd heartbeat",
- "symptoms": "ceph -s báo \"N osds down\", OSD lúc up lúc down, log có \"wrongly marked me down\" hoặc heartbeat_check no reply.",
- "causes": "Tiến trình OSD crash, đĩa lỗi, host thiếu RAM (OOM killer), card mạng lỗi hoặc MTU không khớp làm mất heartbeat.",
- "steps": [
-  {"t": "Xác định OSD nào đang down và ở host nào", "cmds": ["ceph health detail", "ceph osd tree down"]},
-  {"t": "Đọc log OSD quanh thời điểm rớt, tìm crash, I/O error, OOM", "cmds": ["journalctl -u ceph-osd@<osd-id> --since \"1 hour ago\"", "ceph crash ls"]},
-  {"t": "Trên host: kiểm tra OOM và lỗi đĩa", "cmds": ["dmesg -T | grep -Ei 'oom|i/o error|blk_update'", "smartctl -a /dev/<dev>"]},
-  {"t": "Nếu nghi mạng (nhiều OSD cùng host flap): xem lỗi NIC, MTU, heartbeat", "cmds": ["ethtool -S <if>", "ceph config get osd osd_heartbeat_grace"]},
-  {"t": "Nếu cần dừng OSD để xử lý: kiểm tra an toàn và đặt noout trước", "cmds": ["ceph osd ok-to-stop <osd-id>", "ceph osd set noout"]},
-  {"t": "Khởi động lại OSD, theo dõi nó vào lại, rồi gỡ noout", "cmds": ["systemctl restart ceph-osd@<osd-id>", "ceph osd stat", "ceph osd unset noout"]}
- ],
- "notes": "Đĩa lỗi thật (SMART xấu, I/O error lặp lại) thì thay đĩa, đừng restart mãi. Đừng out nhiều OSD cùng lúc khi cluster đang không khỏe."
-},
-{
- "id": "pg-inconsistent",
- "title": "PG inconsistent / scrub errors",
- "tags": "ceph pg inconsistent scrub error hỏng dữ liệu repair",
- "symptoms": "HEALTH_ERR, \"pg x.y is active+clean+inconsistent\", \"N scrub errors\".",
- "causes": "Một bản sao của object khác các bản còn lại (bad sector, lỗi đĩa, lỗi bộ nhớ) bị deep-scrub phát hiện.",
- "steps": [
-  {"t": "Lấy ID PG bị lỗi", "cmds": ["ceph health detail"]},
-  {"t": "Xem object nào và bản sao nằm trên OSD nào bị lỗi", "cmds": ["rados list-inconsistent-obj <pgid> --format=json-pretty", "ceph pg map <pgid>"]},
-  {"t": "Kiểm tra sức khỏe đĩa của OSD chứa bản lỗi", "cmds": ["smartctl -a /dev/<dev>", "journalctl -u ceph-osd@<osd-id> --since \"1 hour ago\""]},
-  {"t": "Sửa PG rồi theo dõi cho đến khi hết cảnh báo", "cmds": ["ceph pg repair <pgid>", "ceph -w"]}
- ],
- "notes": "Xác định bản lỗi trước khi repair. Nếu cùng một OSD báo lỗi lặp lại thì đĩa đang hỏng, nên thay đĩa thay vì repair liên tục."
-},
-{
- "id": "clock-skew",
- "title": "Clock skew trên MON (lệch giờ)",
- "tags": "ceph clock skew lệch giờ mất đồng bộ giờ ntp chrony mon",
- "symptoms": "HEALTH_WARN \"clock skew detected on mon.X\", MON mất quorum chập chờn.",
- "causes": "Đồng hồ các node lệch quá ngưỡng (mặc định 0.05 giây), NTP/chrony không chạy hoặc không tới được nguồn giờ.",
- "steps": [
-  {"t": "Xem MON nào lệch bao nhiêu", "cmds": ["ceph time-sync-status"]},
-  {"t": "Trên node lệch: kiểm tra chrony và nguồn giờ", "cmds": ["chronyc tracking", "chronyc sources -v", "timedatectl"]},
-  {"t": "Khởi động lại chrony và ép chỉnh giờ", "cmds": ["systemctl restart chrony", "chronyc makestep"]},
-  {"t": "Kiểm tra lại sau vài phút", "cmds": ["ceph time-sync-status", "ceph health detail"]}
- ],
- "notes": "Đảm bảo mọi node cùng trỏ về cùng nguồn NTP nội bộ. Nếu là VM, tắt đồng bộ giờ trùng lặp từ hypervisor."
-},
-{
- "id": "pve-quorum-lost",
- "title": "Cluster Proxmox mất quorum",
- "tags": "proxmox pve quorum mất quorum corosync cluster not ready read-only không start vm",
- "symptoms": "GUI báo \"cluster not ready - no quorum\", /etc/pve chuyển read-only, không start được VM, node hiện đỏ.",
- "causes": "Mất liên lạc giữa các node (mạng, switch, firewall chặn UDP 5405-5412), quá nửa số node tắt, hoặc cluster 2 node thiếu QDevice.",
- "steps": [
-  {"t": "Xem số phiếu và node nào đang thấy nhau", "cmds": ["pvecm status", "pvecm nodes"]},
-  {"t": "Kiểm tra link corosync giữa các node", "cmds": ["corosync-cfgtool -s", "journalctl -u corosync -f"]},
-  {"t": "Kiểm tra mạng: ping giữa các node qua mạng cluster, MTU, firewall", "cmds": ["ping -M do -s 1472 <node-ip>"]},
-  {"t": "Khi mạng đã ổn, restart stack cluster", "cmds": ["systemctl restart pve-cluster corosync"]},
-  {"t": "Khẩn cấp (chỉ khi chắc chắn các node kia đã tắt hẳn): ép quorum tạm thời", "cmds": ["pvecm expected 1"]}
- ],
- "notes": "pvecm expected 1 có nguy cơ split-brain nếu node kia thật ra vẫn chạy và ghi dữ liệu. Với cluster 2 node nên thêm QDevice. pmxcfs -l là biện pháp cuối cùng."
-},
-{
- "id": "nearfull-full",
- "title": "Ceph nearfull / full / pool đầy",
- "tags": "ceph nearfull full đầy disk dung lượng backfillfull osd đầy",
- "symptoms": "HEALTH_WARN \"N osd(s) nearfull\", HEALTH_ERR \"full osd(s)\", client không ghi được, backfill dừng.",
- "causes": "Dung lượng toàn cluster cạn, hoặc dữ liệu phân bố lệch làm một vài OSD đầy trước.",
- "steps": [
-  {"t": "Xem dung lượng tổng và theo pool", "cmds": ["ceph df", "ceph health detail"]},
-  {"t": "Tìm OSD hoặc host đầy nhất, xem độ lệch", "cmds": ["ceph osd df tree", "ceph osd utilization"]},
-  {"t": "Nếu chỉ lệch: giảm tải OSD đầy", "cmds": ["ceph osd reweight-by-utilization", "ceph osd reweight <osd-id> 0.9"]},
-  {"t": "Giải phóng chỗ: xóa dữ liệu không cần hoặc thêm OSD, rồi theo dõi", "cmds": ["ceph -w"]},
-  {"t": "Khẩn cấp để mở ghi lại (chỉ tạm thời, trả về mặc định sau khi xử lý xong)", "cmds": ["ceph osd set-full-ratio 0.95"]}
- ],
- "notes": "Không nâng ngưỡng full quá cao. Khi OSD chạm 100% có thể không khởi động được. Cluster nên giữ dưới khoảng 80% dung lượng."
-},
-{
- "id": "slow-ops",
- "title": "Slow ops / blocked requests",
- "tags": "ceph slow ops blocked requests chậm treo latency io",
- "symptoms": "HEALTH_WARN \"N slow ops\", VM đơ hoặc IO chậm, \"requests are blocked\".",
- "causes": "Một OSD hoặc đĩa chậm, mạng nghẽn, recovery/scrub chiếm tải giờ cao điểm.",
- "steps": [
-  {"t": "Xem OSD nào bị ảnh hưởng", "cmds": ["ceph health detail", "ceph osd perf"]},
-  {"t": "Trên host của OSD chậm: xem thao tác đang kẹt", "cmds": ["ceph daemon osd.<id> dump_ops_in_flight"]},
-  {"t": "Kiểm tra đĩa và mạng của host đó", "cmds": ["iostat -x 1", "ethtool -S <if>"]},
-  {"t": "Nếu recovery hoặc scrub đang chiếm tải: giảm tải và ưu tiên client", "cmds": ["ceph config set osd osd_max_backfills 1", "ceph config set osd osd_mclock_profile high_client_ops", "ceph osd set noscrub"]}
- ],
- "notes": "Nhớ ceph osd unset noscrub sau khi xử lý xong. Một OSD có latency cao bất thường thường là đĩa sắp hỏng."
-}
+ {
+  "id": "osd-down-flapping",
+  "title": "OSD down hoặc up/down liên tục (flapping)",
+  "tags": "ceph osd down flapping rớt osd heartbeat",
+  "symptoms": "ceph -s báo \"N osds down\", OSD lúc up lúc down, log có \"wrongly marked me down\" hoặc heartbeat_check no reply.",
+  "causes": "Tiến trình OSD crash, đĩa lỗi, host thiếu RAM (OOM killer), card mạng lỗi hoặc MTU không khớp làm mất heartbeat.",
+  "steps": [
+   {
+    "t": "Xác định OSD nào đang down và ở host nào",
+    "cmds": [
+     "ceph health detail",
+     "ceph osd tree down"
+    ]
+   },
+   {
+    "t": "Đọc log OSD quanh thời điểm rớt, tìm crash, I/O error, OOM",
+    "cmds": [
+     "journalctl -u ceph-osd@<osd-id> --since \"1 hour ago\"",
+     "ceph crash ls"
+    ]
+   },
+   {
+    "t": "Trên host: kiểm tra OOM và lỗi đĩa",
+    "cmds": [
+     "dmesg -T | grep -Ei 'oom|i/o error|blk_update'",
+     "smartctl -a /dev/<dev>"
+    ]
+   },
+   {
+    "t": "Nếu nghi mạng (nhiều OSD cùng host flap): xem lỗi NIC, MTU, heartbeat",
+    "cmds": [
+     "ethtool -S <if>",
+     "ceph config get osd osd_heartbeat_grace"
+    ]
+   },
+   {
+    "t": "Nếu cần dừng OSD để xử lý: kiểm tra an toàn và đặt noout trước",
+    "cmds": [
+     "ceph osd ok-to-stop <osd-id>",
+     "ceph osd set noout"
+    ]
+   },
+   {
+    "t": "Khởi động lại OSD, theo dõi nó vào lại, rồi gỡ noout",
+    "cmds": [
+     "systemctl restart ceph-osd@<osd-id>",
+     "ceph osd stat",
+     "ceph osd unset noout"
+    ]
+   }
+  ],
+  "notes": "Đĩa lỗi thật (SMART xấu, I/O error lặp lại) thì thay đĩa, đừng restart mãi. Đừng out nhiều OSD cùng lúc khi cluster đang không khỏe."
+ },
+ {
+  "id": "pg-inconsistent",
+  "title": "PG inconsistent / scrub errors",
+  "tags": "ceph pg inconsistent scrub error hỏng dữ liệu repair",
+  "symptoms": "HEALTH_ERR, \"pg x.y is active+clean+inconsistent\", \"N scrub errors\".",
+  "causes": "Một bản sao của object khác các bản còn lại (bad sector, lỗi đĩa, lỗi bộ nhớ) bị deep-scrub phát hiện.",
+  "steps": [
+   {
+    "t": "Lấy ID PG bị lỗi",
+    "cmds": [
+     "ceph health detail"
+    ]
+   },
+   {
+    "t": "Xem object nào và bản sao nằm trên OSD nào bị lỗi",
+    "cmds": [
+     "rados list-inconsistent-obj <pgid> --format=json-pretty",
+     "ceph pg map <pgid>"
+    ]
+   },
+   {
+    "t": "Kiểm tra sức khỏe đĩa của OSD chứa bản lỗi",
+    "cmds": [
+     "smartctl -a /dev/<dev>",
+     "journalctl -u ceph-osd@<osd-id> --since \"1 hour ago\""
+    ]
+   },
+   {
+    "t": "Sửa PG rồi theo dõi cho đến khi hết cảnh báo",
+    "cmds": [
+     "ceph pg repair <pgid>",
+     "ceph -w"
+    ]
+   }
+  ],
+  "notes": "Xác định bản lỗi trước khi repair. Nếu cùng một OSD báo lỗi lặp lại thì đĩa đang hỏng, nên thay đĩa thay vì repair liên tục."
+ },
+ {
+  "id": "clock-skew",
+  "title": "Clock skew trên MON (lệch giờ)",
+  "tags": "ceph clock skew lệch giờ mất đồng bộ giờ ntp chrony mon",
+  "symptoms": "HEALTH_WARN \"clock skew detected on mon.X\", MON mất quorum chập chờn.",
+  "causes": "Đồng hồ các node lệch quá ngưỡng (mặc định 0.05 giây), NTP/chrony không chạy hoặc không tới được nguồn giờ.",
+  "steps": [
+   {
+    "t": "Xem MON nào lệch bao nhiêu",
+    "cmds": [
+     "ceph time-sync-status"
+    ]
+   },
+   {
+    "t": "Trên node lệch: kiểm tra chrony và nguồn giờ",
+    "cmds": [
+     "chronyc tracking",
+     "chronyc sources -v",
+     "timedatectl"
+    ]
+   },
+   {
+    "t": "Khởi động lại chrony và ép chỉnh giờ",
+    "cmds": [
+     "systemctl restart chrony",
+     "chronyc makestep"
+    ]
+   },
+   {
+    "t": "Kiểm tra lại sau vài phút",
+    "cmds": [
+     "ceph time-sync-status",
+     "ceph health detail"
+    ]
+   }
+  ],
+  "notes": "Đảm bảo mọi node cùng trỏ về cùng nguồn NTP nội bộ. Nếu là VM, tắt đồng bộ giờ trùng lặp từ hypervisor."
+ },
+ {
+  "id": "pve-quorum-lost",
+  "title": "Cluster Proxmox mất quorum",
+  "tags": "proxmox pve quorum mất quorum corosync cluster not ready read-only không start vm",
+  "symptoms": "GUI báo \"cluster not ready - no quorum\", /etc/pve chuyển read-only, không start được VM, node hiện đỏ.",
+  "causes": "Mất liên lạc giữa các node (mạng, switch, firewall chặn UDP 5405-5412), quá nửa số node tắt, hoặc cluster 2 node thiếu QDevice.",
+  "steps": [
+   {
+    "t": "Xem số phiếu và node nào đang thấy nhau",
+    "cmds": [
+     "pvecm status",
+     "pvecm nodes"
+    ]
+   },
+   {
+    "t": "Kiểm tra link corosync giữa các node",
+    "cmds": [
+     "corosync-cfgtool -s",
+     "journalctl -u corosync -f"
+    ]
+   },
+   {
+    "t": "Kiểm tra mạng: ping giữa các node qua mạng cluster, MTU, firewall",
+    "cmds": [
+     "ping -M do -s 1472 <node-ip>"
+    ]
+   },
+   {
+    "t": "Khi mạng đã ổn, restart stack cluster",
+    "cmds": [
+     "systemctl restart pve-cluster corosync"
+    ]
+   },
+   {
+    "t": "Khẩn cấp (chỉ khi chắc chắn các node kia đã tắt hẳn): ép quorum tạm thời",
+    "cmds": [
+     "pvecm expected 1"
+    ]
+   }
+  ],
+  "notes": "pvecm expected 1 có nguy cơ split-brain nếu node kia thật ra vẫn chạy và ghi dữ liệu. Với cluster 2 node nên thêm QDevice. pmxcfs -l là biện pháp cuối cùng."
+ },
+ {
+  "id": "nearfull-full",
+  "title": "Ceph nearfull / full / pool đầy",
+  "tags": "ceph nearfull full đầy disk dung lượng backfillfull osd đầy",
+  "symptoms": "HEALTH_WARN \"N osd(s) nearfull\", HEALTH_ERR \"full osd(s)\", client không ghi được, backfill dừng.",
+  "causes": "Dung lượng toàn cluster cạn, hoặc dữ liệu phân bố lệch làm một vài OSD đầy trước.",
+  "steps": [
+   {
+    "t": "Xem dung lượng tổng và theo pool",
+    "cmds": [
+     "ceph df",
+     "ceph health detail"
+    ]
+   },
+   {
+    "t": "Tìm OSD hoặc host đầy nhất, xem độ lệch",
+    "cmds": [
+     "ceph osd df tree",
+     "ceph osd utilization"
+    ]
+   },
+   {
+    "t": "Nếu chỉ lệch: giảm tải OSD đầy",
+    "cmds": [
+     "ceph osd reweight-by-utilization",
+     "ceph osd reweight <osd-id> 0.9"
+    ]
+   },
+   {
+    "t": "Giải phóng chỗ: xóa dữ liệu không cần hoặc thêm OSD, rồi theo dõi",
+    "cmds": [
+     "ceph -w"
+    ]
+   },
+   {
+    "t": "Khẩn cấp để mở ghi lại (chỉ tạm thời, trả về mặc định sau khi xử lý xong)",
+    "cmds": [
+     "ceph osd set-full-ratio 0.95"
+    ]
+   }
+  ],
+  "notes": "Không nâng ngưỡng full quá cao. Khi OSD chạm 100% có thể không khởi động được. Cluster nên giữ dưới khoảng 80% dung lượng."
+ },
+ {
+  "id": "slow-ops",
+  "title": "Slow ops / blocked requests",
+  "tags": "ceph slow ops blocked requests chậm treo latency io",
+  "symptoms": "HEALTH_WARN \"N slow ops\", VM đơ hoặc IO chậm, \"requests are blocked\".",
+  "causes": "Một OSD hoặc đĩa chậm, mạng nghẽn, recovery/scrub chiếm tải giờ cao điểm.",
+  "steps": [
+   {
+    "t": "Xem OSD nào bị ảnh hưởng",
+    "cmds": [
+     "ceph health detail",
+     "ceph osd perf"
+    ]
+   },
+   {
+    "t": "Trên host của OSD chậm: xem thao tác đang kẹt",
+    "cmds": [
+     "ceph daemon osd.<id> dump_ops_in_flight"
+    ]
+   },
+   {
+    "t": "Kiểm tra đĩa và mạng của host đó",
+    "cmds": [
+     "iostat -x 1",
+     "ethtool -S <if>"
+    ]
+   },
+   {
+    "t": "Nếu recovery hoặc scrub đang chiếm tải: giảm tải và ưu tiên client",
+    "cmds": [
+     "ceph config set osd osd_max_backfills 1",
+     "ceph config set osd osd_mclock_profile high_client_ops",
+     "ceph osd set noscrub"
+    ]
+   }
+  ],
+  "notes": "Nhớ ceph osd unset noscrub sau khi xử lý xong. Một OSD có latency cao bất thường thường là đĩa sắp hỏng."
+ },
+ {
+  "id": "osd-replace-disk",
+  "title": "Thay đĩa OSD hỏng",
+  "tags": "ceph osd thay đĩa hỏng disk replace smart pveceph rebuild",
+  "symptoms": "OSD down kéo dài, SMART báo lỗi hoặc dmesg có I/O error, cần thay đĩa vật lý.",
+  "causes": "Đĩa hết tuổi thọ hoặc bad sector.",
+  "steps": [
+   {
+    "t": "Xác định OSD hỏng và xác nhận đĩa lỗi",
+    "cmds": [
+     "ceph osd tree down",
+     "ceph osd metadata <osd-id>",
+     "smartctl -a /dev/<dev>"
+    ]
+   },
+   {
+    "t": "Đánh dấu out để dữ liệu được dựng lại trên các OSD khác, đợi các PG về active+clean",
+    "cmds": [
+     "ceph osd out <osd-id>",
+     "ceph -w"
+    ]
+   },
+   {
+    "t": "Dừng OSD và kiểm tra an toàn trước khi xóa",
+    "cmds": [
+     "systemctl stop ceph-osd@<osd-id>",
+     "ceph osd safe-to-destroy <osd-id>"
+    ]
+   },
+   {
+    "t": "Xóa OSD khỏi cluster (Proxmox)",
+    "cmds": [
+     "pveceph osd destroy <osd-id> --cleanup"
+    ]
+   },
+   {
+    "t": "Thay đĩa vật lý rồi tạo OSD mới, theo dõi backfill",
+    "cmds": [
+     "pveceph osd create /dev/<dev>",
+     "ceph -s"
+    ]
+   }
+  ],
+  "notes": "Chỉ xóa OSD khi safe-to-destroy trả về an toàn. Thay từng đĩa một, đợi cluster về HEALTH_OK rồi mới thay đĩa tiếp theo."
+ },
+ {
+  "id": "node-maintenance",
+  "title": "Bảo trì hoặc reboot một node Proxmox + Ceph",
+  "tags": "reboot bảo trì node maintenance noout migrate nâng cấp kernel",
+  "symptoms": "Cần reboot node để nâng cấp kernel hoặc thay phần cứng mà không làm gián đoạn VM và không kích hoạt rebalance.",
+  "causes": "Khi node tắt, OSD của nó down; sau 10 phút Ceph tự out và bắt đầu rebalance không cần thiết nếu không đặt noout.",
+  "steps": [
+   {
+    "t": "Kiểm tra cluster đang khỏe trước khi bắt đầu",
+    "cmds": [
+     "ceph -s",
+     "pvecm status"
+    ]
+   },
+   {
+    "t": "Đặt noout để Ceph không tự rebalance",
+    "cmds": [
+     "ceph osd set noout"
+    ]
+   },
+   {
+    "t": "Di chuyển VM sang node khác",
+    "cmds": [
+     "pvenode migrateall <target-node>"
+    ]
+   },
+   {
+    "t": "Reboot, đợi node và OSD lên lại",
+    "cmds": [
+     "reboot",
+     "pvecm status",
+     "ceph osd stat"
+    ]
+   },
+   {
+    "t": "Khi các PG về active+clean thì gỡ noout",
+    "cmds": [
+     "ceph -s",
+     "ceph osd unset noout"
+    ]
+   }
+  ],
+  "notes": "Mỗi lần chỉ làm một node. Đừng reboot node kế tiếp khi PG chưa active+clean. Quên unset noout là lỗi hay gặp: nếu sau đó một OSD chết thật, Ceph sẽ không tự phục hồi."
+ },
+ {
+  "id": "pg-degraded-recovery",
+  "title": "PG degraded / undersized, recovery chậm",
+  "tags": "ceph pg degraded undersized misplaced recovery chậm backfill thiếu replica",
+  "symptoms": "HEALTH_WARN \"Degraded data redundancy\", \"N pgs undersized/degraded\", \"objects misplaced\", recovery chạy lâu.",
+  "causes": "Mất OSD hoặc node, vừa thêm OSD mới, hoặc recovery bị giới hạn quá thấp.",
+  "steps": [
+   {
+    "t": "Xem mức độ và OSD nào đang thiếu",
+    "cmds": [
+     "ceph health detail",
+     "ceph pg stat",
+     "ceph osd tree down"
+    ]
+   },
+   {
+    "t": "Tìm PG kẹt lâu và lý do",
+    "cmds": [
+     "ceph pg dump_stuck undersized",
+     "ceph pg <pgid> query"
+    ]
+   },
+   {
+    "t": "Nếu muốn recovery nhanh hơn (chấp nhận ảnh hưởng client): ưu tiên PG quan trọng hoặc đổi profile",
+    "cmds": [
+     "ceph pg force-recovery <pgid>",
+     "ceph config set osd osd_mclock_profile high_recovery_ops"
+    ]
+   },
+   {
+    "t": "Xong thì trả cấu hình về mặc định",
+    "cmds": [
+     "ceph config rm osd osd_mclock_profile"
+    ]
+   }
+  ],
+  "notes": "Trong lúc degraded, cluster có ít bản sao hơn bình thường, đừng bảo trì thêm node nào. Giờ cao điểm nên giữ profile ưu tiên client."
+ },
+ {
+  "id": "large-omap",
+  "title": "Large omap objects (thường do bucket index RGW)",
+  "tags": "ceph large omap objects rgw bucket index shard reshard cảnh báo",
+  "symptoms": "HEALTH_WARN \"N large omap objects\".",
+  "causes": "Bucket có quá nhiều object trên ít shard của index (hoặc omap lớn ở pool khác).",
+  "steps": [
+   {
+    "t": "Xem pool và object bị cảnh báo",
+    "cmds": [
+     "ceph health detail"
+    ]
+   },
+   {
+    "t": "Tìm bucket vượt giới hạn shard",
+    "cmds": [
+     "radosgw-admin bucket limit check"
+    ]
+   },
+   {
+    "t": "Reshard bucket đó (nếu dynamic resharding chưa tự xử lý)",
+    "cmds": [
+     "radosgw-admin bucket reshard --bucket=<bucket> --num-shards=<n>"
+    ]
+   },
+   {
+    "t": "Cảnh báo chỉ hết sau khi deep-scrub PG chứa object cũ",
+    "cmds": [
+     "ceph pg deep-scrub <pgid>"
+    ]
+   }
+  ],
+  "notes": "Chọn số shard theo số object dự kiến (khoảng 100 nghìn object mỗi shard là mức tham khảo). Nếu pool khác RGW, tìm nguyên nhân omap ở ứng dụng đang dùng pool đó."
+ },
+ {
+  "id": "rgw-503",
+  "title": "RGW/S3 trả 503 hoặc timeout, upload lỗi",
+  "tags": "rgw s3 503 timeout upload lỗi radosgw không phản hồi bucket",
+  "symptoms": "Client S3 nhận 503/timeout, upload thất bại, RGW phản hồi chậm.",
+  "causes": "Daemon RGW treo hoặc crash, pool RGW đầy hoặc có slow ops, PG inactive trên pool index/data.",
+  "steps": [
+   {
+    "t": "Cluster Ceph phía sau có ổn không",
+    "cmds": [
+     "ceph -s",
+     "ceph health detail",
+     "ceph df"
+    ]
+   },
+   {
+    "t": "Trạng thái và log daemon RGW",
+    "cmds": [
+     "systemctl status ceph-radosgw@rgw.<n>",
+     "journalctl -u ceph-radosgw@rgw.<n> --since \"30 min ago\""
+    ]
+   },
+   {
+    "t": "Nếu lỗi theo một user hoặc bucket: xem quota và trạng thái",
+    "cmds": [
+     "radosgw-admin user info --uid=<uid>",
+     "radosgw-admin bucket stats --bucket=<bucket>"
+    ]
+   },
+   {
+    "t": "Nếu chỉ RGW treo mà cluster ổn thì restart daemon",
+    "cmds": [
+     "systemctl restart ceph-radosgw@rgw.<n>"
+    ]
+   }
+  ],
+  "notes": "Hết quota thường trả 403 QuotaExceeded chứ không phải 503. Nếu có nhiều RGW sau load balancer, restart lần lượt từng cái để không mất dịch vụ."
+ },
+ {
+  "id": "mon-down",
+  "title": "MON down, ceph -s treo hoặc mất quorum Ceph",
+  "tags": "ceph mon down quorum mất quorum ceph -s treo monitor đầy disk",
+  "symptoms": "ceph -s đứng treo hoặc báo \"1/3 mons down\", \"mon.X is down\".",
+  "causes": "Daemon MON dừng, ổ chứa /var/lib/ceph đầy (MON store phình), lệch giờ, mạng giữa các MON.",
+  "steps": [
+   {
+    "t": "Xem MON nào còn trong quorum (nếu ceph -s còn trả lời)",
+    "cmds": [
+     "ceph quorum_status -f json-pretty"
+    ]
+   },
+   {
+    "t": "Trên host MON: ceph -s treo thì hỏi thẳng qua admin socket",
+    "cmds": [
+     "ceph daemon mon.<id> mon_status"
+    ]
+   },
+   {
+    "t": "Kiểm tra service, log và dung lượng ổ",
+    "cmds": [
+     "systemctl status ceph-mon@<id>",
+     "journalctl -u ceph-mon@<id> --since \"1 hour ago\"",
+     "df -h /var/lib/ceph"
+    ]
+   },
+   {
+    "t": "Nếu store phình to thì compact, sau đó khởi động lại",
+    "cmds": [
+     "ceph tell mon.<id> compact",
+     "systemctl restart ceph-mon@<id>"
+    ]
+   }
+  ],
+  "notes": "Cần đa số MON (2/3 hoặc 3/5) mới có quorum. Tuyệt đối không xóa thư mục store của MON khi chưa chắc còn đủ MON khác khỏe."
+ },
+ {
+  "id": "vm-locked",
+  "title": "VM bị lock (backup/snapshot), không start hoặc migrate được",
+  "tags": "proxmox vm lock locked backup snapshot unlock qm không start migrate treo",
+  "symptoms": "Báo \"VM is locked (backup)\" hoặc \"(snapshot)\", không start, stop, migrate hoặc xóa được.",
+  "causes": "Tác vụ backup hoặc snapshot bị ngắt giữa chừng (mất mạng, node reboot, task bị kill) và để lại khóa.",
+  "steps": [
+   {
+    "t": "Xem VM đang bị khóa kiểu gì",
+    "cmds": [
+     "qm config <vmid>"
+    ]
+   },
+   {
+    "t": "Chắc chắn không còn backup hay restore đang chạy",
+    "cmds": [
+     "ps aux | grep -E \"vzdump|qmrestore\"",
+     "pvesh get /nodes/<node>/tasks --limit 20"
+    ]
+   },
+   {
+    "t": "Mở khóa",
+    "cmds": [
+     "qm unlock <vmid>"
+    ]
+   },
+   {
+    "t": "Kiểm tra lại trạng thái VM và đĩa trước khi start",
+    "cmds": [
+     "qm status <vmid>",
+     "qm config <vmid>"
+    ]
+   }
+  ],
+  "notes": "Chỉ unlock khi chắc không còn tiến trình nào đang dùng VM. Với container dùng pct unlock <ctid>. Sau backup bị ngắt nên kiểm tra snapshot rác trên VM."
+ },
+ {
+  "id": "pve-gui-logout",
+  "title": "GUI Proxmox bị đăng xuất liên tục hoặc không đăng nhập được",
+  "tags": "proxmox gui web logout đăng xuất session ticket pveproxy không đăng nhập lệch giờ",
+  "symptoms": "GUI bị đá ra sau một thời gian ngắn, báo \"permission denied\" hoặc \"invalid ticket\", trang tải chậm hoặc treo.",
+  "causes": "Giờ lệch giữa node và máy dùng trình duyệt (hoặc giữa các node) làm ticket không hợp lệ; pveproxy hoặc pvedaemon treo; cluster mất quorum.",
+  "steps": [
+   {
+    "t": "So sánh giờ của node với giờ thực, và cả giờ máy đang dùng trình duyệt",
+    "cmds": [
+     "timedatectl",
+     "chronyc tracking"
+    ]
+   },
+   {
+    "t": "Trạng thái các service giao diện và cluster",
+    "cmds": [
+     "systemctl status pveproxy pvedaemon pve-cluster",
+     "pvecm status"
+    ]
+   },
+   {
+    "t": "Xem log pveproxy quanh thời điểm lỗi",
+    "cmds": [
+     "journalctl -u pveproxy --since \"1 hour ago\""
+    ]
+   },
+   {
+    "t": "Khởi động lại service giao diện (không ảnh hưởng VM đang chạy)",
+    "cmds": [
+     "systemctl restart pveproxy pvedaemon"
+    ]
+   }
+  ],
+  "notes": "Thử trình duyệt ẩn danh hoặc xóa cookie PVEAuthCookie để loại trừ lỗi phía client. Nếu truy cập qua reverse proxy hoặc VIP thì kiểm tra thêm giờ và timeout trên lớp đó."
+ },
+ {
+  "id": "pve-disk-full",
+  "title": "Node Proxmox đầy ổ root, dịch vụ lỗi",
+  "tags": "proxmox đầy ổ root disk full log journal /var/log no space left on device",
+  "symptoms": "\"No space left on device\", dịch vụ không start, không ghi được /etc/pve, GUI lỗi.",
+  "causes": "Log (journal, ceph) phình to, backup hoặc ISO nằm trên local, file tạm.",
+  "steps": [
+   {
+    "t": "Xem ổ nào đầy",
+    "cmds": [
+     "df -h",
+     "df -i"
+    ]
+   },
+   {
+    "t": "Tìm thư mục chiếm nhiều nhất",
+    "cmds": [
+     "du -xh / --max-depth=2 | sort -h | tail -20"
+    ]
+   },
+   {
+    "t": "Dọn log journal và cache apt",
+    "cmds": [
+     "journalctl --disk-usage",
+     "journalctl --vacuum-size=500M",
+     "apt clean"
+    ]
+   },
+   {
+    "t": "Kiểm tra ổ chứa backup và ISO",
+    "cmds": [
+     "pvesm status",
+     "du -sh /var/lib/vz/*"
+    ]
+   }
+  ],
+  "notes": "Không xóa tay trong /var/lib/ceph hay /etc/pve. Log Ceph lớn thì kiểm tra logrotate. Đặt cảnh báo khi ổ root vượt khoảng 80%."
+ }
 ]

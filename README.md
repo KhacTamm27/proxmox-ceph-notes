@@ -21,6 +21,15 @@ Tài liệu cá nhân: 493 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 | [Cluster Proxmox mất quorum](docs/cases/pve-quorum-lost.md) | GUI báo "cluster not ready - no quorum", /etc/pve chuyển read-only, không start được VM, node hiện đỏ. |
 | [Ceph nearfull / full / pool đầy](docs/cases/nearfull-full.md) | HEALTH_WARN "N osd(s) nearfull", HEALTH_ERR "full osd(s)", client không ghi được, backfill dừng. |
 | [Slow ops / blocked requests](docs/cases/slow-ops.md) | HEALTH_WARN "N slow ops", VM đơ hoặc IO chậm, "requests are blocked". |
+| [Thay đĩa OSD hỏng](docs/cases/osd-replace-disk.md) | OSD down kéo dài, SMART báo lỗi hoặc dmesg có I/O error, cần thay đĩa vật lý. |
+| [Bảo trì hoặc reboot một node Proxmox + Ceph](docs/cases/node-maintenance.md) | Cần reboot node để nâng cấp kernel hoặc thay phần cứng mà không làm gián đoạn VM và không kích hoạt rebalance. |
+| [PG degraded / undersized, recovery chậm](docs/cases/pg-degraded-recovery.md) | HEALTH_WARN "Degraded data redundancy", "N pgs undersized/degraded", "objects misplaced", recovery chạy lâu. |
+| [Large omap objects (thường do bucket index RGW)](docs/cases/large-omap.md) | HEALTH_WARN "N large omap objects". |
+| [RGW/S3 trả 503 hoặc timeout, upload lỗi](docs/cases/rgw-503.md) | Client S3 nhận 503/timeout, upload thất bại, RGW phản hồi chậm. |
+| [MON down, ceph -s treo hoặc mất quorum Ceph](docs/cases/mon-down.md) | ceph -s đứng treo hoặc báo "1/3 mons down", "mon.X is down". |
+| [VM bị lock (backup/snapshot), không start hoặc migrate được](docs/cases/vm-locked.md) | Báo "VM is locked (backup)" hoặc "(snapshot)", không start, stop, migrate hoặc xóa được. |
+| [GUI Proxmox bị đăng xuất liên tục hoặc không đăng nhập được](docs/cases/pve-gui-logout.md) | GUI bị đá ra sau một thời gian ngắn, báo "permission denied" hoặc "invalid ticket", trang tải chậm hoặc treo. |
+| [Node Proxmox đầy ổ root, dịch vụ lỗi](docs/cases/pve-disk-full.md) | "No space left on device", dịch vụ không start, không ghi được /etc/pve, GUI lỗi. |
 
 ## Proxmox host
 

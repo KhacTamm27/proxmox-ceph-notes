@@ -235,7 +235,7 @@ function renderResults(v){
   if(hits.length>30)res.append(el('p','note','Còn '+(hits.length-30)+' lệnh nữa, thu hẹp từ khóa để xem.'));
   res.hidden=false;
 }
-['osd down','đầy disk','lệch giờ','mất quorum','slow ops','pg inconsistent','reboot bảo trì','crash'].forEach(x=>{
+['osd down','đầy disk','lệch giờ','mất quorum','slow ops','pg inconsistent','reboot bảo trì','thay đĩa','vm lock','đăng xuất','rgw 503','crash'].forEach(x=>{
   const b=el('button','chip',x);b.type='button';
   b.addEventListener('click',()=>{q.value=x;q.dispatchEvent(new Event('input'))});$('#chips').append(b)});
 function openHash(){
