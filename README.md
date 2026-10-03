@@ -2,8 +2,6 @@
 
 Tài liệu cá nhân: 493 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệnh phá hủy hoặc ảnh hưởng dịch vụ, đọc kỹ trước khi chạy.
 
-**Mindmap tương tác (lọc lệnh, mở thẳng từng mục):** https://KhacTamm27.github.io/proxmox-ceph-notes/
-
 ## Cách tìm nhanh
 
 - Biết tên nhóm: bấm vào mục lục bên dưới, hoặc mở mindmap kèm `#B13` (ví dụ `.../#B13` mở thẳng RGW).
@@ -82,7 +80,7 @@ Tài liệu cá nhân: 493 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 Sau khi sửa, chạy:
 
 ```bash
-python3 scripts/build.py --repo KhacTamm27/proxmox-ceph-notes
+python3 scripts/build.py --repo <user>/<repo>
 ```
 
 Lệnh trên sinh lại README này, toàn bộ `docs/**/*.md` và `docs/index.html`.
