@@ -75,7 +75,8 @@ radosgw-admin bucket list --uid=<uid>
 # Bucket size, objects, shards
 radosgw-admin bucket stats --bucket=<bucket>
 
-# Objects per shard and fill status
+# Bucket vượt giới hạn shard (nguyên nhân large omap) | Objects per shard and fill status
+# từ khóa: large omap shard bucket index rgw
 radosgw-admin bucket limit check
 
 # Index check

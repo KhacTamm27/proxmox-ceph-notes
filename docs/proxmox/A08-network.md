@@ -53,7 +53,8 @@ ifreload -a
 # Speed, duplex, link
 ethtool <if>
 
-# NIC statistics, errors, drops
+# Thống kê lỗi card mạng trên host OSD | NIC statistics, errors, drops
+# từ khóa: nic lỗi mạng drop crc flapping
 ethtool -S <if>
 
 # Driver and firmware

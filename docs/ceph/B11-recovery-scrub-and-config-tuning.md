@@ -7,52 +7,63 @@
 ## Config
 
 ```bash
-# All centralized settings
+# Toàn bộ cấu hình tập trung đã đặt | All centralized settings
+# từ khóa: config cấu hình
 ceph config dump
 
-# Read one option
+# Đọc một tùy chọn cấu hình | Read one option
+# từ khóa: config get
 ceph config get <who> <option>
 
-# Set option
+# Đặt tùy chọn cấu hình | Set option
+# từ khóa: config set
 ceph config set <who> <option> <value>
 
-# Reset option
+# Đưa tùy chọn về mặc định | Reset option
+# từ khóa: config reset
 ceph config rm <who> <option>
 ```
 
 ## Backfill
 
 ```bash
-# Limit concurrent backfills
+# Giới hạn số backfill đồng thời để đỡ ảnh hưởng client | Limit concurrent backfills
+# từ khóa: backfill chậm ảnh hưởng io throttle
 ceph config set osd osd_max_backfills 1
 ```
 
 ## Recovery
 
 ```bash
-# Limit recovery ops
+# Giới hạn số thao tác recovery đồng thời | Limit recovery ops
+# từ khóa: recovery throttle
 ceph config set osd osd_recovery_max_active 1
 
-# Throttle recovery on SSD
+# Làm chậm recovery trên SSD cho đỡ tải | Throttle recovery on SSD
+# từ khóa: recovery ssd throttle
 ceph config set osd osd_recovery_sleep_ssd 0.1
 ```
 
 ## mClock
 
 ```bash
-# Favor client IO (Quincy and later)
+# Ưu tiên IO của client hơn recovery (Quincy trở lên) | Favor client IO (Quincy and later)
+# từ khóa: mclock ưu tiên client slow ops
 ceph config set osd osd_mclock_profile high_client_ops
 
-# Favor recovery (Quincy and later)
+# Ưu tiên recovery hơn client (Quincy trở lên) | Favor recovery (Quincy and later)
+# từ khóa: mclock ưu tiên recovery nhanh
 ceph config set osd osd_mclock_profile high_recovery_ops
 ```
 
 ## Scrub
 
 ```bash
-# Scrub window start
+# Giờ bắt đầu cửa sổ scrub | Scrub window start
+# từ khóa: scrub giờ cao điểm lịch
 ceph config set osd osd_scrub_begin_hour 22
 
-# Scrub window end
+# Giờ kết thúc cửa sổ scrub | Scrub window end
+# từ khóa: scrub giờ lịch
 ceph config set osd osd_scrub_end_hour 6
 ```

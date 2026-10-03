@@ -7,14 +7,16 @@
 ## Versions
 
 ```bash
-# Mixed-version check
+# Phiên bản các daemon, kiểm tra lệch version khi nâng cấp | Mixed-version check
+# từ khóa: version nâng cấp upgrade mixed
 ceph versions
 ```
 
 ## Release
 
 ```bash
-# Read `require_osd_release` and flags
+# OSD map: flag, ratio, thông tin pool | Read `require_osd_release` and flags
+# từ khóa: flags noout full ratio pool
 ceph osd dump
 
 # Finalize OSD release after upgrade
@@ -37,7 +39,8 @@ ceph features
 # Avoid rebalance during rolling restart
 ceph osd set noout
 
-# Confirm all PGs `active+clean` before next node
+# Tổng quan sức khỏe cluster Ceph, lệnh đầu tiên cần chạy | Confirm all PGs `active+clean` before next node
+# từ khóa: status health tổng quan kiểm tra nhanh
 ceph -s
 ```
 

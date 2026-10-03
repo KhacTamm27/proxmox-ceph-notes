@@ -45,7 +45,8 @@ rados -p <pool> rm <object>
 ## Omap
 
 ```bash
-# Omap keys of an object
+# Đếm key omap của object nghi lớn | Omap keys of an object
+# từ khóa: large omap object
 rados -p <pool> listomapkeys <object>
 
 # Omap key and values

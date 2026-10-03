@@ -7,64 +7,79 @@
 ## Flags
 
 ```bash
-# Do not mark OSDs out
+# Không tự đánh dấu OSD out (bật trước khi bảo trì, nhớ tắt sau) | Do not mark OSDs out
+# từ khóa: bảo trì reboot maintenance noout
 ceph osd set noout / ceph osd unset noout
 
-# Pause rebalancing
+# Tạm dừng cân bằng lại dữ liệu | Pause rebalancing
+# từ khóa: rebalance tạm dừng
 ceph osd set norebalance / ceph osd unset norebalance
 
-# Pause backfill
+# Tạm dừng backfill | Pause backfill
+# từ khóa: backfill tạm dừng
 ceph osd set nobackfill / ceph osd unset nobackfill
 
-# Pause recovery
+# Tạm dừng recovery | Pause recovery
+# từ khóa: recovery tạm dừng
 ceph osd set norecover / ceph osd unset norecover
 
-# Pause scrubs
+# Tạm dừng scrub và deep-scrub (giờ cao điểm) | Pause scrubs
+# từ khóa: scrub dừng cao điểm chậm
 ceph osd set noscrub / ceph osd set nodeep-scrub
 
-# Pause all client IO (emergency)
+# Dừng toàn bộ IO của client (khẩn cấp) | Pause all client IO (emergency)
+# từ khóa: pause dừng io khẩn cấp
 ceph osd set pause / ceph osd unset pause
 ```
 
 ## Per subtree
 
 ```bash
-# Flag one CRUSH node
+# Đặt noout cho riêng một host hoặc chassis | Flag one CRUSH node
+# từ khóa: bảo trì một host noout
 ceph osd set-group noout <host-or-chassis>
 
-# Clear flag on one CRUSH node
+# Gỡ noout của một host hoặc chassis | Clear flag on one CRUSH node
+# từ khóa: xong bảo trì noout
 ceph osd unset-group noout <host-or-chassis>
 ```
 
 ## Safety
 
 ```bash
-# Safe to stop without losing availability
+# Kiểm tra dừng OSD này có mất tính sẵn sàng không | Safe to stop without losing availability
+# từ khóa: dừng osd an toàn bảo trì
 ceph osd ok-to-stop <osd-id>
 
-# Safe to destroy without data loss
+# Kiểm tra xóa OSD này có mất dữ liệu không | Safe to destroy without data loss
+# từ khóa: thay đĩa xóa osd an toàn
 ceph osd safe-to-destroy <osd-id>
 ```
 
 ## State
 
 ```bash
-# Mark out or in
+# Đánh dấu OSD out để di dời dữ liệu, hoặc in để đưa lại | Mark out or in
+# từ khóa: thay đĩa out in rebalance
 ceph osd out <osd-id> / ceph osd in <osd-id>
 
-# Mark down
+# Đánh dấu OSD down (ép peering lại) | Mark down
+# từ khóa: ép down osd
 ceph osd down <osd-id>
 ```
 
 ## Weight
 
 ```bash
-# Temporary weight (0 to 1)
+# Giảm tạm trọng số OSD (0 đến 1) | Temporary weight (0 to 1)
+# từ khóa: osd đầy giảm tải reweight
 ceph osd reweight <osd-id> 0.9
 
-# CRUSH weight
+# Đổi trọng số CRUSH của OSD (thường theo dung lượng đĩa) | CRUSH weight
+# từ khóa: crush weight đĩa mới
 ceph osd crush reweight osd.<id> <weight>
 
-# Auto reweight overfull OSDs
+# Tự giảm trọng số các OSD đang quá đầy | Auto reweight overfull OSDs
+# từ khóa: nearfull cân bằng tự động
 ceph osd reweight-by-utilization
 ```

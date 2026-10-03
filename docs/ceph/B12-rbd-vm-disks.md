@@ -20,7 +20,8 @@ rbd info <pool>/<image>
 # Provisioned vs used
 rbd du -p <pool>
 
-# Watchers (who has it open)
+# Ai đang mở image (watcher), để tìm client treo | Watchers (who has it open)
+# từ khóa: rbd treo client lock watcher hang
 rbd status <pool>/<image>
 
 # Image locks

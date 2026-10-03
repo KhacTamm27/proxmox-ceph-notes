@@ -30,7 +30,8 @@ uptime
 # Time zone and sync state
 timedatectl
 
-# NTP offset
+# Độ lệch NTP trên máy hiện tại | NTP offset
+# từ khóa: ntp chrony lệch giờ clock skew
 chronyc tracking
 
 # NTP sources

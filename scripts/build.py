@@ -16,6 +16,8 @@ ap.add_argument("--repo", default="", help="user/repo, dùng cho link từ mindm
 args = ap.parse_args()
 
 data = json.loads((ROOT / "data/commands.json").read_text(encoding="utf-8"))
+vi = json.loads((ROOT / "data/vi.json").read_text(encoding="utf-8"))
+cases = json.loads((ROOT / "data/cases.json").read_text(encoding="utf-8"))
 SIDES = {"left": ("proxmox", "Proxmox host"), "right": ("ceph", "Ceph")}
 
 
@@ -33,11 +35,22 @@ def count(b):
 
 
 slugs = {}
+all_cmds = set()
+covered = 0
 for side, branches in data.items():
     for b in branches:
         slugs[b["id"]] = relpath(b, SIDES[side][0])
+        for sub in b["subs"]:
+            for it in sub["items"]:
+                all_cmds.add(it["c"])
+                if it["c"] in vi:
+                    it["v"], it["k"] = vi[it["c"]]
+                    covered += 1
+unknown = [c for c in vi if c not in all_cmds]
+if unknown:
+    print("CẢNH BÁO: vi.json có lệnh không khớp commands.json:", *unknown, sep="\n  ")
 
-for folder in ("proxmox", "ceph"):
+for folder in ("proxmox", "ceph", "cases"):
     p = ROOT / "docs" / folder
     shutil.rmtree(p, ignore_errors=True)
     p.mkdir(parents=True)
@@ -61,10 +74,24 @@ for side, branches in data.items():
             out += [f"## {s['name']}", "", "```bash"]
             for it in s["items"]:
                 tag = "⚠ NGUY HIỂM: " if it["d"] else ""
-                out += [f"# {tag}{it['p']}", it["c"], ""]
+                if it.get("v"):
+                    out += [f"# {tag}{it['v']} | {it['p']}", f"# từ khóa: {it['k']}", it["c"], ""]
+                else:
+                    out += [f"# {tag}{it['p']}", it["c"], ""]
             out[-1] = "```"
             out.append("")
         (ROOT / "docs" / slugs[b["id"]]).write_text("\n".join(out).rstrip() + "\n", encoding="utf-8")
+
+# ---- case study .md ----
+for c in cases:
+    o = [f"# {c['title']}", "", "[← Mục lục](../../README.md)", "",
+         f"**Triệu chứng:** {c['symptoms']}", "", f"**Nguyên nhân hay gặp:** {c['causes']}", "",
+         "## Các bước xử lý", ""]
+    for i, st in enumerate(c["steps"], 1):
+        o += [f"{i}. {st['t']}", "", "```bash"] + st["cmds"] + ["```", ""]
+    o += ["## Lưu ý", "", c["notes"], "",
+          f"<!-- từ khóa: {c['tags']} -->"]
+    (ROOT / "docs/cases" / f"{c['id']}.md").write_text("\n".join(o) + "\n", encoding="utf-8")
 
 # ---- README ----
 total = sum(count(b) for br in data.values() for b in br)
@@ -81,6 +108,10 @@ r += ["## Cách tìm nhanh", "",
       "- Biết từ khóa: mở mindmap, nhấn `/` rồi gõ. Link `.../?q=scrub` mở sẵn kết quả lọc.",
       "- Trên GitHub: nhấn `t` để tìm file theo tên, nhấn `/` để tìm trong repo (gõ `crush`, `radosgw-admin user`).",
       "- Trong một file .md: nút Outline (góc phải trên) nhảy giữa các mục con, mỗi khối lệnh có nút copy.", ""]
+r += ["## Case study (lỗi và cách xử lý)", "", "| Sự cố | Triệu chứng |", "|---|---|"]
+for c in cases:
+    r.append(f"| [{c['title']}](docs/cases/{c['id']}.md) | {c['symptoms']} |")
+r.append("")
 for side, branches in data.items():
     folder, label = SIDES[side]
     r += [f"## {label}", "", "| ID | Nhóm | Lệnh | Gồm |", "|---|---|---:|---|"]
@@ -89,7 +120,10 @@ for side, branches in data.items():
         r.append(f"| {b['id']} | [{b['name']}](docs/{slugs[b['id']]}) | {count(b)} | {subs} |")
     r.append("")
 r += ["## Cập nhật tài liệu", "",
-      "Sửa `data/commands.json` (nhóm → nhóm con → `{c: lệnh, p: mô tả, d: nguy hiểm?}`), rồi chạy:", "",
+      "- `data/commands.json`: nhóm → nhóm con → `{c: lệnh, p: mô tả, d: nguy hiểm?}`.",
+      "- `data/vi.json`: mô tả tiếng Việt và từ khóa, khóa là đúng chuỗi lệnh trong commands.json: `\"lệnh\": [\"mô tả\", \"từ khóa\"]`.",
+      "- `data/cases.json`: các case study (triệu chứng, nguyên nhân, các bước, lưu ý).", "",
+      "Sau khi sửa, chạy:", "",
       "```bash", f"python3 scripts/build.py --repo {args.repo or '<user>/<repo>'}", "```", "",
       "Lệnh trên sinh lại README này, toàn bộ `docs/**/*.md` và `docs/index.html`.", ""]
 (ROOT / "README.md").write_text("\n".join(r), encoding="utf-8")
@@ -98,6 +132,7 @@ r += ["## Cập nhật tài liệu", "",
 tpl = (ROOT / "scripts/template.html").read_text(encoding="utf-8")
 html = (tpl.replace("/*__DATA__*/null", json.dumps(data, ensure_ascii=False))
            .replace("/*__REPO__*/", args.repo)
-           .replace("/*__SLUGS__*/{}", json.dumps(slugs)))
+           .replace("/*__SLUGS__*/{}", json.dumps(slugs))
+           .replace("/*__CASES__*/[]", json.dumps(cases, ensure_ascii=False)))
 (ROOT / "docs/index.html").write_text(html, encoding="utf-8")
-print(f"ok: {len(slugs)} file .md, {total} lệnh")
+print(f"ok: {len(slugs)} file .md, {len(cases)} case, {total} lệnh, Việt hóa {covered}/{total}")

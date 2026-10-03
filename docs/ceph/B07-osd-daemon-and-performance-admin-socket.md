@@ -7,7 +7,8 @@
 ## Ops
 
 ```bash
-# Current slow or active ops (admin socket)
+# Các thao tác đang kẹt trên OSD (chạy trên host của OSD) | Current slow or active ops (admin socket)
+# từ khóa: slow ops blocked requests kẹt
 ceph daemon osd.<id> dump_ops_in_flight
 
 # Recent slowest ops (admin socket)
@@ -47,6 +48,7 @@ ceph tell osd.<id> bench
 ## Heartbeat
 
 ```bash
-# Heartbeat grace
+# Thời gian chờ heartbeat trước khi coi OSD là down | Heartbeat grace
+# từ khóa: heartbeat flapping down
 ceph config get osd osd_heartbeat_grace
 ```

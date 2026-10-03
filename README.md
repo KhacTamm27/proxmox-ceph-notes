@@ -11,6 +11,17 @@ Tài liệu cá nhân: 493 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 - Trên GitHub: nhấn `t` để tìm file theo tên, nhấn `/` để tìm trong repo (gõ `crush`, `radosgw-admin user`).
 - Trong một file .md: nút Outline (góc phải trên) nhảy giữa các mục con, mỗi khối lệnh có nút copy.
 
+## Case study (lỗi và cách xử lý)
+
+| Sự cố | Triệu chứng |
+|---|---|
+| [OSD down hoặc up/down liên tục (flapping)](docs/cases/osd-down-flapping.md) | ceph -s báo "N osds down", OSD lúc up lúc down, log có "wrongly marked me down" hoặc heartbeat_check no reply. |
+| [PG inconsistent / scrub errors](docs/cases/pg-inconsistent.md) | HEALTH_ERR, "pg x.y is active+clean+inconsistent", "N scrub errors". |
+| [Clock skew trên MON (lệch giờ)](docs/cases/clock-skew.md) | HEALTH_WARN "clock skew detected on mon.X", MON mất quorum chập chờn. |
+| [Cluster Proxmox mất quorum](docs/cases/pve-quorum-lost.md) | GUI báo "cluster not ready - no quorum", /etc/pve chuyển read-only, không start được VM, node hiện đỏ. |
+| [Ceph nearfull / full / pool đầy](docs/cases/nearfull-full.md) | HEALTH_WARN "N osd(s) nearfull", HEALTH_ERR "full osd(s)", client không ghi được, backfill dừng. |
+| [Slow ops / blocked requests](docs/cases/slow-ops.md) | HEALTH_WARN "N slow ops", VM đơ hoặc IO chậm, "requests are blocked". |
+
 ## Proxmox host
 
 | ID | Nhóm | Lệnh | Gồm |
@@ -55,7 +66,11 @@ Tài liệu cá nhân: 493 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 
 ## Cập nhật tài liệu
 
-Sửa `data/commands.json` (nhóm → nhóm con → `{c: lệnh, p: mô tả, d: nguy hiểm?}`), rồi chạy:
+- `data/commands.json`: nhóm → nhóm con → `{c: lệnh, p: mô tả, d: nguy hiểm?}`.
+- `data/vi.json`: mô tả tiếng Việt và từ khóa, khóa là đúng chuỗi lệnh trong commands.json: `"lệnh": ["mô tả", "từ khóa"]`.
+- `data/cases.json`: các case study (triệu chứng, nguyên nhân, các bước, lưu ý).
+
+Sau khi sửa, chạy:
 
 ```bash
 python3 scripts/build.py --repo KhacTamm27/proxmox-ceph-notes

@@ -7,51 +7,59 @@
 ## Status
 
 ```bash
-# MON summary
+# Tóm tắt MON và quorum | MON summary
+# từ khóa: mon quorum monitor
 ceph mon stat
 
-# MON map
+# Xem MON map | MON map
+# từ khóa: monmap địa chỉ mon
 ceph mon dump
 ```
 
 ## Quorum
 
 ```bash
-# Quorum detail
+# Chi tiết quorum MON, biết MON nào đang vắng | Quorum detail
+# từ khóa: mon down quorum mất mon
 ceph quorum_status -f json-pretty
 ```
 
 ## Admin socket
 
 ```bash
-# Local MON status (admin socket)
+# Trạng thái MON ngay trên host (khi ceph -s không phản hồi) | Local MON status (admin socket)
+# từ khóa: mon không phản hồi admin socket treo
 ceph daemon mon.<id> mon_status
 ```
 
 ## Maintenance
 
 ```bash
-# Compact MON store
+# Nén store của MON khi MON phình to | Compact MON store
+# từ khóa: mon store lớn compact đầy disk
 ceph tell mon.<id> compact
 ```
 
 ## Features
 
 ```bash
-# MON features
+# Tính năng MON đang bật | MON features
+# từ khóa: feature
 ceph mon feature ls
 ```
 
 ## Protocol
 
 ```bash
-# Enable msgr2
+# Bật giao thức msgr2 | Enable msgr2
+# từ khóa: msgr2 v2 nâng cấp
 ceph mon enable-msgr2
 ```
 
 ## Map
 
 ```bash
-# Export MON map
+# Xuất MON map ra file | Export MON map
+# từ khóa: monmap backup
 ceph mon getmap -o monmap.bin
 ```

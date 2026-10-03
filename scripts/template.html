@@ -58,6 +58,23 @@ li.danger code{color:var(--danger)}
 .branch.left{border-right:1px solid var(--line);border-left:4px solid var(--pve)}
 .branch.left .bhead{flex-direction:row}
 }
+
+.tools .tab[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;max-width:1500px;margin:0 auto;padding:10px 20px 0}
+.chip{padding:3px 10px;border:1px solid var(--line);border-radius:999px;background:var(--panel);font-size:13px;color:var(--muted)}
+.vi{display:block;font-size:13px}
+#results,#cases{max-width:1100px;margin:0 auto;padding:12px 20px}
+.rhead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;font-weight:600}
+.rrow{display:flex;gap:10px;align-items:baseline;padding:5px 0;border-bottom:1px dashed var(--line)}
+.rrow a{font:600 12px ui-monospace,Menlo,Consolas,monospace;text-decoration:none;color:var(--ceph)}
+.rcase{display:block;padding:6px 0;color:var(--ceph)}
+details.case{border:1px solid var(--line);border-radius:10px;background:var(--panel);margin:0 0 8px;padding:0 14px}
+details.case summary{padding:10px 0;font-weight:600;cursor:pointer}
+details.case ol{padding-left:20px;margin:6px 0}
+details.case ol li{border:0;padding:4px 0}
+.cmdline{display:block;margin:2px 0 6px}
+.note{color:var(--muted);font-size:13px}
+.pbtn{padding:5px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);font-size:13px}
 </style>
 </head>
 <body>
@@ -65,10 +82,15 @@ li.danger code{color:var(--danger)}
 <h1>Proxmox + Ceph command mindmap</h1>
 <div class="tools">
 <input id="q" type="search" placeholder="Filter commands" aria-label="Filter commands">
+<button id="tabmap" class="tab" type="button" aria-pressed="true">Mindmap</button>
+<button id="tabcase" class="tab" type="button" aria-pressed="false">Case study</button>
 <button id="expand" type="button">Expand all</button>
 <button id="collapse" type="button">Collapse all</button>
 </div>
 </header>
+<div class="chips" id="chips" aria-label="Gợi ý tìm kiếm"></div>
+<section id="results" hidden></section>
+<section id="cases" hidden></section>
 <main id="map">
 <svg id="wires" aria-hidden="true"></svg>
 <div class="side left" id="left"></div>
@@ -77,8 +99,9 @@ li.danger code{color:var(--danger)}
 </main>
 <script>
 const DATA=/*__DATA__*/null;
-const REPO="/*__REPO__*/";const SLUGS=/*__SLUGS__*/{};
+const REPO="/*__REPO__*/";const SLUGS=/*__SLUGS__*/{};const CASES=/*__CASES__*/[];
 const $=s=>document.querySelector(s);
+const N=s=>String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');
 const map=$('#map'),wires=$('#wires'),root=$('#root'),q=$('#q');
 let raf=0;
 function draw(){cancelAnimationFrame(raf);raf=requestAnimationFrame(paint)}
@@ -124,12 +147,12 @@ function build(side,branches,holder,title){
       const ul=document.createElement('ul');
       s.items.forEach(it=>{
         const li=document.createElement('li');if(it.d)li.className='danger';
-        li.dataset.t=(it.c+' '+it.p+' '+s.name).toLowerCase();
+        li.dataset.t=N(it.c+' '+it.p+' '+(it.v||'')+' '+(it.k||'')+' '+s.name+' '+b.name);
         const c=document.createElement('code');c.textContent=it.c;c.title='Click to copy';c.tabIndex=0;
         c.addEventListener('click',()=>copy(c,it.c));
         c.addEventListener('keydown',e=>{if(e.key==='Enter')copy(c,it.c)});
         const w=document.createElement('span');w.className='why';w.textContent=it.p;
-        li.append(c,w);ul.appendChild(li);
+        if(it.v){const vv=document.createElement('span');vv.className='vi';vv.textContent=it.v;li.append(c,vv,w)}else li.append(c,w);ul.appendChild(li);
       });
       sub.appendChild(ul);body.appendChild(sub);
     });
@@ -143,12 +166,12 @@ build('right',DATA.right,$('#right'),'Ceph, '+DATA.right.length+' branches');
 $('#expand').addEventListener('click',()=>{document.querySelectorAll('.branch:not([hidden])').forEach(s=>setOpen(s,true));draw()});
 $('#collapse').addEventListener('click',()=>{document.querySelectorAll('.branch').forEach(s=>setOpen(s,false));draw()});
 q.addEventListener('input',()=>{
-  const v=q.value.trim().toLowerCase();
+  const v=N(q.value.trim());renderResults(v);
   document.querySelectorAll('.branch').forEach(sec=>{
     let any=false;
     sec.querySelectorAll('.sub').forEach(sub=>{
       let subAny=false;
-      sub.querySelectorAll('li').forEach(li=>{const ok=!v||li.dataset.t.includes(v);li.hidden=!ok;if(ok)subAny=true});
+      sub.querySelectorAll('li').forEach(li=>{const ok=!v||v.split(/\s+/).every(w=>li.dataset.t.includes(w));li.hidden=!ok;if(ok)subAny=true});
       sub.hidden=!subAny;if(subAny)any=true;
     });
     sec.hidden=!!v&&!any;
@@ -160,8 +183,66 @@ window.addEventListener('resize',draw);
 window.addEventListener('scroll',draw,{passive:true});
 if(window.ResizeObserver)new ResizeObserver(draw).observe(map);
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+const res=$('#results'),casesEl=$('#cases');
+function mkPrompt(title,sym,cmds){return 'Tôi đang xử lý trên cluster Proxmox + Ceph: '+title+'\n'+(sym?'Triệu chứng: '+sym+'\n':'')+'Các lệnh chẩn đoán liên quan:\n'+cmds.map(c=>'- '+c).join('\n')+'\n\nOutput lệnh thực tế của tôi (đã xóa IP, tên host, key):\n<<< dán output vào đây >>>\n\nHãy phân tích nguyên nhân khả dĩ nhất, nói rõ còn thiếu thông tin gì, và đề xuất bước tiếp theo theo thứ tự an toàn nhất. Cảnh báo trước nếu có lệnh nguy hiểm.'}
+function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+function cmdEl(c){const e=el('code','cmdline',c);e.title='Bấm để copy';e.tabIndex=0;e.addEventListener('click',()=>copy(e,c));return e}
+CASES.forEach(c=>{
+  const d=el('details','case');d.id='case-'+c.id;d.dataset.t=N(c.title+' '+c.tags+' '+c.symptoms+' '+c.causes);
+  d.append(el('summary',null,c.title));
+  const p1=el('p');p1.append(el('b',null,'Triệu chứng: '),c.symptoms);
+  const p2=el('p');p2.append(el('b',null,'Nguyên nhân hay gặp: '),c.causes);
+  const ol=el('ol');
+  c.steps.forEach(st=>{const li=el('li',null,st.t);st.cmds.forEach(x=>li.append(cmdEl(x)));ol.append(li)});
+  const nt=el('p','note','Lưu ý: '+c.notes);
+  const pb=el('button','pbtn','Copy prompt cho Claude');pb.type='button';
+  pb.addEventListener('click',()=>copy(pb,mkPrompt(c.title,c.symptoms,c.steps.flatMap(s=>s.cmds))));
+  d.append(p1,p2,ol,nt,pb);casesEl.append(d);
+});
+function show(tab){
+  map.hidden=tab!=='map';casesEl.hidden=tab!=='cases';
+  $('#tabmap').setAttribute('aria-pressed',String(tab==='map'));
+  $('#tabcase').setAttribute('aria-pressed',String(tab==='cases'));
+  $('#expand').hidden=$('#collapse').hidden=tab!=='map';
+  if(tab==='map')draw();
+}
+$('#tabmap').addEventListener('click',()=>show('map'));
+$('#tabcase').addEventListener('click',()=>show('cases'));
+function renderResults(v){
+  res.replaceChildren();
+  casesEl.querySelectorAll('details.case').forEach(d=>{d.hidden=!!v&&!v.split(/\s+/).every(w=>d.dataset.t.includes(w))});
+  if(!v){res.hidden=true;return}
+  const toks=v.split(/\s+/),hits=[];
+  [...DATA.left,...DATA.right].forEach(b=>b.subs.forEach(s=>s.items.forEach(it=>{
+    const t=N(it.c+' '+it.p+' '+(it.v||'')+' '+(it.k||'')+' '+s.name+' '+b.name);
+    if(toks.every(w=>t.includes(w)))hits.push({b,it});
+  })));
+  const ch=CASES.filter(c=>toks.every(w=>N(c.title+' '+c.tags+' '+c.symptoms+' '+c.causes).includes(w)));
+  const head=el('div','rhead');
+  head.append(el('span',null,'Kết quả: '+hits.length+' lệnh, '+ch.length+' case'));
+  if(hits.length||ch.length){
+    const pb=el('button','pbtn','Copy prompt cho Claude');pb.type='button';
+    pb.addEventListener('click',()=>copy(pb,mkPrompt('"'+q.value.trim()+'"','',hits.slice(0,15).map(h=>h.it.c))));
+    head.append(pb);
+  }
+  res.append(head);
+  ch.forEach(c=>{const a=el('a','rcase','Case: '+c.title);a.href='#case-'+c.id;res.append(a)});
+  hits.slice(0,30).forEach(({b,it})=>{
+    const row=el('div','rrow');const a=el('a',null,b.id);a.href='#'+b.id;
+    const box=el('div');box.append(cmdEl(it.c),el('span','vi',it.v||it.p));
+    row.append(a,box);res.append(row);
+  });
+  if(hits.length>30)res.append(el('p','note','Còn '+(hits.length-30)+' lệnh nữa, thu hẹp từ khóa để xem.'));
+  res.hidden=false;
+}
+['osd down','đầy disk','lệch giờ','mất quorum','slow ops','pg inconsistent','reboot bảo trì','crash'].forEach(x=>{
+  const b=el('button','chip',x);b.type='button';
+  b.addEventListener('click',()=>{q.value=x;q.dispatchEvent(new Event('input'))});$('#chips').append(b)});
 function openHash(){
   const id=decodeURIComponent(location.hash.slice(1));if(!id)return;
+  if(id==='cases'){show('cases');return}
+  if(id.startsWith('case-')){show('cases');const d=document.getElementById(id);if(d){d.hidden=false;d.open=true;d.scrollIntoView({block:'start'})}return}
+  show('map');
   const sec=document.getElementById(id);if(!sec||!sec.classList.contains('branch'))return;
   setOpen(sec,true);draw();sec.scrollIntoView({block:'center'});
 }

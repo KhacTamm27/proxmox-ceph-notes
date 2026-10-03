@@ -7,75 +7,91 @@
 ## Status
 
 ```bash
-# Quorum, votes, links
+# Xem quorum, số phiếu và link của cluster Proxmox | Quorum, votes, links
+# từ khóa: quorum mất quorum no quorum cluster vote
 pvecm status
 
-# Cluster members
+# Liệt kê các node trong cluster | Cluster members
+# từ khóa: node thành viên danh sách
 pvecm nodes
 
-# Quorum details
+# Chi tiết quorum theo corosync | Quorum details
+# từ khóa: quorum votes
 corosync-quorumtool -s
 ```
 
 ## Links
 
 ```bash
-# KNET link status per node
+# Trạng thái từng link knet giữa các node, phát hiện link đứt | KNET link status per node
+# từ khóa: link down mạng cluster knet đứt
 corosync-cfgtool -s
 
-# Node and link list
+# Danh sách node và link corosync | Node and link list
+# từ khóa: node link
 corosync-cfgtool -n
 
-# Runtime member info
+# Thành viên corosync đang chạy thực tế | Runtime member info
+# từ khóa: members runtime
 corosync-cmapctl runtime.members
 ```
 
 ## Logs
 
 ```bash
-# Follow corosync log
+# Theo dõi log corosync theo thời gian thực | Follow corosync log
+# từ khóa: log corosync retransmit token lost link
 journalctl -u corosync -f
 
-# Follow pmxcfs log
+# Theo dõi log pmxcfs (thư mục /etc/pve) | Follow pmxcfs log
+# từ khóa: log pmxcfs etc/pve read-only
 journalctl -u pve-cluster -f
 ```
 
 ## Config
 
 ```bash
-# Cluster config
+# Xem cấu hình corosync của cluster | Cluster config
+# từ khóa: config corosync
 cat /etc/pve/corosync.conf
 ```
 
 ## Membership
 
 ```bash
-# Join a node
+# Thêm node mới vào cluster (chạy trên node mới) | Join a node
+# từ khóa: join thêm node
 pvecm add <existing-node-ip> --link0 <ip>
 
-# ⚠ NGUY HIỂM: Remove a node (destructive)
+# ⚠ NGUY HIỂM: Xóa node khỏi cluster (nguy hiểm, node phải tắt hẳn trước) | Remove a node (destructive)
+# từ khóa: xóa node remove node
 pvecm delnode <node>
 ```
 
 ## Quorum
 
 ```bash
-# Force expected votes (emergency)
+# Ép số phiếu kỳ vọng khi mất quorum (khẩn cấp, dễ split-brain) | Force expected votes (emergency)
+# từ khóa: mất quorum emergency expected votes
 pvecm expected <n>
 
-# Add external QDevice
+# Thêm QDevice ngoài để cluster 2 node có quorum | Add external QDevice
+# từ khóa: qdevice 2 node tie breaker
 pvecm qdevice setup <qnetd-ip>
 
-# Remove QDevice
+# Gỡ QDevice khỏi cluster | Remove QDevice
+# từ khóa: qdevice
 pvecm qdevice remove
 ```
 
 ## Recovery
 
 ```bash
-# Start pmxcfs in local mode without quorum (emergency)
+# Chạy pmxcfs chế độ local khi không có quorum (biện pháp cuối) | Start pmxcfs in local mode without quorum (emergency)
+# từ khóa: không quorum sửa etc/pve local mode
 pmxcfs -l
 
-# Restart cluster stack
+# Khởi động lại stack cluster khi treo hoặc lệch trạng thái | Restart cluster stack
+# từ khóa: restart cluster corosync treo
 systemctl restart pve-cluster corosync
 ```

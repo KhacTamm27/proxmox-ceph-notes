@@ -7,75 +7,91 @@
 ## Tree
 
 ```bash
-# CRUSH tree with state
+# Cây CRUSH kèm trạng thái up/down của từng OSD | CRUSH tree with state
+# từ khóa: osd down up tree host vị trí
 ceph osd tree
 
-# Only down OSDs
+# Chỉ liệt kê các OSD đang down | Only down OSDs
+# từ khóa: osd down tìm osd chết
 ceph osd tree down
 
-# Include device-class shadow trees
+# Cây CRUSH gồm cả shadow tree theo device class | Include device-class shadow trees
+# từ khóa: device class ssd hdd shadow
 ceph osd tree --show-shadow
 ```
 
 ## Usage
 
 ```bash
-# Usage per OSD
+# Dung lượng dùng của từng OSD, tìm OSD đầy hoặc lệch | Usage per OSD
+# từ khóa: osd đầy nearfull lệch dung lượng
 ceph osd df
 
-# Usage per bucket
+# Dung lượng theo từng host và OSD | Usage per bucket
+# từ khóa: nearfull đầy host osd lệch
 ceph osd df tree
 
-# Min, max and deviation
+# Mức dùng thấp nhất, cao nhất và độ lệch giữa các OSD | Min, max and deviation
+# từ khóa: cân bằng lệch utilization
 ceph osd utilization
 ```
 
 ## State
 
 ```bash
-# Up and in counts
+# Số OSD up và in, kiểm tra nhanh OSD có rớt không | Up and in counts
+# từ khóa: osd up in down flapping
 ceph osd stat
 
-# OSD map, flags, ratios
+# OSD map: flag, ratio, thông tin pool | OSD map, flags, ratios
+# từ khóa: flags noout full ratio pool
 ceph osd dump
 
-# OSD IDs
+# Danh sách ID OSD | OSD IDs
+# từ khóa: osd id
 ceph osd ls
 ```
 
 ## Info
 
 ```bash
-# Host, device, versions
+# Host, thiết bị, phiên bản của một OSD | Host, device, versions
+# từ khóa: osd đĩa device host
 ceph osd metadata <osd-id>
 
-# Host and CRUSH location
+# OSD này nằm ở host nào | Host and CRUSH location
+# từ khóa: tìm osd host vị trí
 ceph osd find <osd-id>
 ```
 
 ## Perf
 
 ```bash
-# Commit and apply latency
+# Độ trễ commit và apply của từng OSD, tìm OSD chậm | Commit and apply latency
+# từ khóa: slow ops chậm latency đĩa lag
 ceph osd perf
 ```
 
 ## Ratios
 
 ```bash
-# Nearfull threshold
+# Đặt ngưỡng nearfull | Nearfull threshold
+# từ khóa: nearfull ngưỡng ratio
 ceph osd set-nearfull-ratio 0.85
 
-# Backfill-full threshold
+# Đặt ngưỡng backfillfull, vượt ngưỡng thì dừng backfill | Backfill-full threshold
+# từ khóa: backfillfull ratio
 ceph osd set-backfillfull-ratio 0.90
 
-# Full threshold
+# Đặt ngưỡng full, vượt thì chặn ghi | Full threshold
+# từ khóa: full đầy chặn ghi ratio
 ceph osd set-full-ratio 0.95
 ```
 
 ## Blocklist
 
 ```bash
-# Blocklisted clients
+# Client đang bị chặn (blocklist) | Blocklisted clients
+# từ khóa: blocklist client treo rbd hang
 ceph osd blocklist ls
 ```
