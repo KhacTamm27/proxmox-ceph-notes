@@ -1,0 +1,3773 @@
+{
+ "left": [
+  {
+   "id": "A1",
+   "name": "System and node",
+   "subs": [
+    {
+     "name": "Version",
+     "items": [
+      {
+       "c": "pveversion -v",
+       "p": "PVE and package versions",
+       "d": false
+      },
+      {
+       "c": "hostnamectl",
+       "p": "Hostname, OS",
+       "d": false
+      },
+      {
+       "c": "uname -r",
+       "p": "Running kernel",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Load",
+     "items": [
+      {
+       "c": "uptime",
+       "p": "Uptime and load",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Time",
+     "items": [
+      {
+       "c": "timedatectl",
+       "p": "Time zone and sync state",
+       "d": false
+      },
+      {
+       "c": "chronyc tracking",
+       "p": "NTP offset",
+       "d": false
+      },
+      {
+       "c": "chronyc sources -v",
+       "p": "NTP sources",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Services",
+     "items": [
+      {
+       "c": "systemctl --failed",
+       "p": "Failed units",
+       "d": false
+      },
+      {
+       "c": "systemctl status pve-cluster pvedaemon pveproxy pvestatd pve-firewall pvescheduler",
+       "p": "Core PVE services",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Node",
+     "items": [
+      {
+       "c": "pvenode config get",
+       "p": "Node config",
+       "d": false
+      },
+      {
+       "c": "pvenode startall",
+       "p": "Start all guests on node",
+       "d": false
+      },
+      {
+       "c": "pvenode stopall",
+       "p": "Stop all guests on node",
+       "d": false
+      },
+      {
+       "c": "pvenode migrateall <target-node>",
+       "p": "Migrate all guests away",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Certificates",
+     "items": [
+      {
+       "c": "pvenode cert info",
+       "p": "Certificate details",
+       "d": false
+      },
+      {
+       "c": "pvecm updatecerts --force",
+       "p": "Regenerate cluster certificates",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Upgrade",
+     "items": [
+      {
+       "c": "apt update",
+       "p": "Refresh package lists",
+       "d": false
+      },
+      {
+       "c": "apt full-upgrade",
+       "p": "Upgrade packages",
+       "d": false
+      },
+      {
+       "c": "pve8to9 --full",
+       "p": "Pre-upgrade checker (PVE 8 to 9)",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Kernel",
+     "items": [
+      {
+       "c": "proxmox-boot-tool status",
+       "p": "Boot setup status",
+       "d": false
+      },
+      {
+       "c": "proxmox-boot-tool kernel list",
+       "p": "Installed kernels",
+       "d": false
+      },
+      {
+       "c": "proxmox-boot-tool kernel pin <version>",
+       "p": "Pin default kernel",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "A2",
+   "name": "Cluster and corosync",
+   "subs": [
+    {
+     "name": "Status",
+     "items": [
+      {
+       "c": "pvecm status",
+       "p": "Quorum, votes, links",
+       "d": false
+      },
+      {
+       "c": "pvecm nodes",
+       "p": "Cluster members",
+       "d": false
+      },
+      {
+       "c": "corosync-quorumtool -s",
+       "p": "Quorum details",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Links",
+     "items": [
+      {
+       "c": "corosync-cfgtool -s",
+       "p": "KNET link status per node",
+       "d": false
+      },
+      {
+       "c": "corosync-cfgtool -n",
+       "p": "Node and link list",
+       "d": false
+      },
+      {
+       "c": "corosync-cmapctl runtime.members",
+       "p": "Runtime member info",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Logs",
+     "items": [
+      {
+       "c": "journalctl -u corosync -f",
+       "p": "Follow corosync log",
+       "d": false
+      },
+      {
+       "c": "journalctl -u pve-cluster -f",
+       "p": "Follow pmxcfs log",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Config",
+     "items": [
+      {
+       "c": "cat /etc/pve/corosync.conf",
+       "p": "Cluster config",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Membership",
+     "items": [
+      {
+       "c": "pvecm add <existing-node-ip> --link0 <ip>",
+       "p": "Join a node",
+       "d": false
+      },
+      {
+       "c": "pvecm delnode <node>",
+       "p": "Remove a node (destructive)",
+       "d": true
+      }
+     ]
+    },
+    {
+     "name": "Quorum",
+     "items": [
+      {
+       "c": "pvecm expected <n>",
+       "p": "Force expected votes (emergency)",
+       "d": false
+      },
+      {
+       "c": "pvecm qdevice setup <qnetd-ip>",
+       "p": "Add external QDevice",
+       "d": false
+      },
+      {
+       "c": "pvecm qdevice remove",
+       "p": "Remove QDevice",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Recovery",
+     "items": [
+      {
+       "c": "pmxcfs -l",
+       "p": "Start pmxcfs in local mode without quorum (emergency)",
+       "d": false
+      },
+      {
+       "c": "systemctl restart pve-cluster corosync",
+       "p": "Restart cluster stack",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "A3",
+   "name": "Virtual machines (qm)",
+   "subs": [
+    {
+     "name": "Inspect",
+     "items": [
+      {
+       "c": "qm list",
+       "p": "List VMs on node",
+       "d": false
+      },
+      {
+       "c": "qm status <vmid> --verbose",
+       "p": "Detailed VM status",
+       "d": false
+      },
+      {
+       "c": "qm config <vmid>",
+       "p": "VM config",
+       "d": false
+      },
+      {
+       "c": "qm pending <vmid>",
+       "p": "Pending config changes",
+       "d": false
+      },
+      {
+       "c": "qm showcmd <vmid> --pretty",
+       "p": "Show KVM command line",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Power",
+     "items": [
+      {
+       "c": "qm start <vmid>",
+       "p": "Start",
+       "d": false
+      },
+      {
+       "c": "qm shutdown <vmid> --timeout 60",
+       "p": "Clean shutdown",
+       "d": false
+      },
+      {
+       "c": "qm stop <vmid>",
+       "p": "Hard stop",
+       "d": false
+      },
+      {
+       "c": "qm reboot <vmid>",
+       "p": "Reboot",
+       "d": false
+      },
+      {
+       "c": "qm reset <vmid>",
+       "p": "Hard reset",
+       "d": false
+      },
+      {
+       "c": "qm suspend <vmid> / qm resume <vmid>",
+       "p": "Suspend and resume",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Create",
+     "items": [
+      {
+       "c": "qm create <vmid> --name <n> --memory 4096 --cores 2 --net0 virtio,bridge=vmbr0",
+       "p": "Create VM",
+       "d": false
+      },
+      {
+       "c": "qm clone <vmid> <newid> --full",
+       "p": "Full clone",
+       "d": false
+      },
+      {
+       "c": "qm template <vmid>",
+       "p": "Convert to template",
+       "d": false
+      },
+      {
+       "c": "qm destroy <vmid> --purge",
+       "p": "Delete VM (destructive)",
+       "d": true
+      }
+     ]
+    },
+    {
+     "name": "Config",
+     "items": [
+      {
+       "c": "qm set <vmid> --memory 8192 --cores 4",
+       "p": "Change CPU and RAM",
+       "d": false
+      },
+      {
+       "c": "qm set <vmid> --scsi1 <storage>:<size-GiB>",
+       "p": "Add disk",
+       "d": false
+      },
+      {
+       "c": "qm resize <vmid> scsi0 +10G",
+       "p": "Grow disk",
+       "d": false
+      },
+      {
+       "c": "qm disk move <vmid> scsi0 <storage>",
+       "p": "Move disk to another storage (alias `qm move-disk`)",
+       "d": false
+      },
+      {
+       "c": "qm rescan",
+       "p": "Rescan volumes and fix config",
+       "d": false
+      },
+      {
+       "c": "qm unlock <vmid>",
+       "p": "Remove stuck lock",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Snapshot",
+     "items": [
+      {
+       "c": "qm snapshot <vmid> <name>",
+       "p": "Create snapshot",
+       "d": false
+      },
+      {
+       "c": "qm listsnapshot <vmid>",
+       "p": "List snapshots",
+       "d": false
+      },
+      {
+       "c": "qm rollback <vmid> <name>",
+       "p": "Roll back",
+       "d": false
+      },
+      {
+       "c": "qm delsnapshot <vmid> <name>",
+       "p": "Delete snapshot",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Migration",
+     "items": [
+      {
+       "c": "qm migrate <vmid> <node> --online",
+       "p": "Live migration",
+       "d": false
+      },
+      {
+       "c": "qm migrate <vmid> <node> --online --with-local-disks",
+       "p": "Live migration with local disks",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Guest agent",
+     "items": [
+      {
+       "c": "qm agent <vmid> ping",
+       "p": "Check agent",
+       "d": false
+      },
+      {
+       "c": "qm guest exec <vmid> -- <cmd>",
+       "p": "Run command in guest",
+       "d": false
+      },
+      {
+       "c": "qm guest cmd <vmid> network-get-interfaces",
+       "p": "Guest IPs",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Console",
+     "items": [
+      {
+       "c": "qm terminal <vmid>",
+       "p": "Serial console",
+       "d": false
+      },
+      {
+       "c": "qm monitor <vmid>",
+       "p": "QEMU monitor",
+       "d": false
+      },
+      {
+       "c": "qm sendkey <vmid> ctrl-alt-delete",
+       "p": "Send key",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Cloud-init",
+     "items": [
+      {
+       "c": "qm cloudinit dump <vmid> user",
+       "p": "Show generated user-data",
+       "d": false
+      },
+      {
+       "c": "qm set <vmid> --ciuser <u> --sshkeys <file> --ipconfig0 ip=dhcp",
+       "p": "Set cloud-init values",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Import",
+     "items": [
+      {
+       "c": "pvesm add esxi <id> --server <host> --username <u> --password <p>",
+       "p": "Add ESXi import source (PVE 8.2+)",
+       "d": false
+      },
+      {
+       "c": "qm importovf <vmid> <file.ovf> <storage>",
+       "p": "Import OVF",
+       "d": false
+      },
+      {
+       "c": "qm importdisk <vmid> <disk-file> <storage>",
+       "p": "Import disk image",
+       "d": false
+      },
+      {
+       "c": "qemu-img convert -f vmdk -O raw <src.vmdk> <dst.raw>",
+       "p": "Convert VMware disk",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "A4",
+   "name": "Containers (pct) and templates",
+   "subs": [
+    {
+     "name": "Inspect",
+     "items": [
+      {
+       "c": "pct list",
+       "p": "List containers",
+       "d": false
+      },
+      {
+       "c": "pct status <ctid>",
+       "p": "Status",
+       "d": false
+      },
+      {
+       "c": "pct config <ctid>",
+       "p": "Config",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Power",
+     "items": [
+      {
+       "c": "pct start <ctid> / pct shutdown <ctid> / pct stop <ctid>",
+       "p": "Power control",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Access",
+     "items": [
+      {
+       "c": "pct enter <ctid>",
+       "p": "Shell inside container",
+       "d": false
+      },
+      {
+       "c": "pct exec <ctid> -- <cmd>",
+       "p": "Run command",
+       "d": false
+      },
+      {
+       "c": "pct push <ctid> <src> <dst>",
+       "p": "Copy file in",
+       "d": false
+      },
+      {
+       "c": "pct pull <ctid> <src> <dst>",
+       "p": "Copy file out",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Create",
+     "items": [
+      {
+       "c": "pct create <ctid> <template> --storage <storage>",
+       "p": "Create container",
+       "d": false
+      },
+      {
+       "c": "pct clone <ctid> <newid>",
+       "p": "Clone",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Config",
+     "items": [
+      {
+       "c": "pct set <ctid> --memory 2048 --cores 2",
+       "p": "Change resources",
+       "d": false
+      },
+      {
+       "c": "pct resize <ctid> rootfs +5G",
+       "p": "Grow root disk",
+       "d": false
+      },
+      {
+       "c": "pct unlock <ctid>",
+       "p": "Remove lock",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Snapshot",
+     "items": [
+      {
+       "c": "pct snapshot <ctid> <name> / pct rollback <ctid> <name>",
+       "p": "Snapshot and roll back",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Migration",
+     "items": [
+      {
+       "c": "pct migrate <ctid> <node> --restart",
+       "p": "Migrate container",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Delete",
+     "items": [
+      {
+       "c": "pct destroy <ctid>",
+       "p": "Delete (destructive)",
+       "d": true
+      }
+     ]
+    },
+    {
+     "name": "Templates",
+     "items": [
+      {
+       "c": "pveam update",
+       "p": "Refresh template list",
+       "d": false
+      },
+      {
+       "c": "pveam available",
+       "p": "Available templates",
+       "d": false
+      },
+      {
+       "c": "pveam download <storage> <template>",
+       "p": "Download template",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "A5",
+   "name": "Storage (pvesm)",
+   "subs": [
+    {
+     "name": "Status",
+     "items": [
+      {
+       "c": "pvesm status",
+       "p": "All storages and usage",
+       "d": false
+      },
+      {
+       "c": "pvesm list <storage>",
+       "p": "Volumes on a storage",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Config",
+     "items": [
+      {
+       "c": "cat /etc/pve/storage.cfg",
+       "p": "Storage definitions",
+       "d": false
+      },
+      {
+       "c": "pvesm add <type> <id> ...",
+       "p": "Add storage",
+       "d": false
+      },
+      {
+       "c": "pvesm set <id> --content images,rootdir",
+       "p": "Change storage options",
+       "d": false
+      },
+      {
+       "c": "pvesm remove <id>",
+       "p": "Remove storage definition",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Scan",
+     "items": [
+      {
+       "c": "pvesm scan nfs <server>",
+       "p": "Discover NFS exports",
+       "d": false
+      },
+      {
+       "c": "pvesm scan iscsi <portal>",
+       "p": "Discover iSCSI targets",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Volume",
+     "items": [
+      {
+       "c": "pvesm path <volume-id>",
+       "p": "Resolve volume path",
+       "d": false
+      },
+      {
+       "c": "pvesm alloc <storage> <vmid> <name> <size>",
+       "p": "Allocate volume",
+       "d": false
+      },
+      {
+       "c": "pvesm free <volume-id>",
+       "p": "Delete volume (destructive)",
+       "d": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "A6",
+   "name": "Backup and restore",
+   "subs": [
+    {
+     "name": "vzdump",
+     "items": [
+      {
+       "c": "vzdump <vmid> --storage <storage> --mode snapshot --compress zstd",
+       "p": "Backup a guest",
+       "d": false
+      },
+      {
+       "c": "vzdump --all --storage <storage>",
+       "p": "Backup all guests on node",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Restore",
+     "items": [
+      {
+       "c": "qmrestore <archive-or-volid> <vmid> --storage <storage>",
+       "p": "Restore VM",
+       "d": false
+      },
+      {
+       "c": "pct restore <ctid> <archive-or-volid> --storage <storage>",
+       "p": "Restore container",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Jobs",
+     "items": [
+      {
+       "c": "pvesh get /cluster/backup",
+       "p": "List backup jobs",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "PBS client",
+     "items": [
+      {
+       "c": "proxmox-backup-client list --repository <user@realm@host:datastore>",
+       "p": "List backup groups",
+       "d": false
+      },
+      {
+       "c": "proxmox-backup-client snapshot list --repository <repo>",
+       "p": "List snapshots",
+       "d": false
+      },
+      {
+       "c": "proxmox-backup-client backup <name>.pxar:<path> --repository <repo>",
+       "p": "File-level backup",
+       "d": false
+      },
+      {
+       "c": "proxmox-backup-client restore <snapshot> <archive> <target> --repository <repo>",
+       "p": "File-level restore",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "PBS server (on PBS host)",
+     "items": [
+      {
+       "c": "proxmox-backup-manager datastore list",
+       "p": "List datastores",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "PBS server",
+     "items": [
+      {
+       "c": "proxmox-backup-manager garbage-collection start <datastore>",
+       "p": "Start GC",
+       "d": false
+      },
+      {
+       "c": "proxmox-backup-manager verify-job list",
+       "p": "Verify jobs",
+       "d": false
+      },
+      {
+       "c": "proxmox-backup-manager prune-job list",
+       "p": "Prune jobs",
+       "d": false
+      },
+      {
+       "c": "proxmox-backup-manager sync-job list",
+       "p": "Sync jobs",
+       "d": false
+      },
+      {
+       "c": "proxmox-backup-manager disk list",
+       "p": "Disks on PBS host",
+       "d": false
+      },
+      {
+       "c": "proxmox-backup-manager user list",
+       "p": "PBS users",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "A7",
+   "name": "High availability and replication",
+   "subs": [
+    {
+     "name": "Status",
+     "items": [
+      {
+       "c": "ha-manager status",
+       "p": "CRM, LRM and resource states",
+       "d": false
+      },
+      {
+       "c": "ha-manager config",
+       "p": "Configured HA resources",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Resources",
+     "items": [
+      {
+       "c": "ha-manager add vm:<vmid> --state started",
+       "p": "Add VM to HA",
+       "d": false
+      },
+      {
+       "c": "ha-manager set vm:<vmid> --state disabled",
+       "p": "Change HA state",
+       "d": false
+      },
+      {
+       "c": "ha-manager remove vm:<vmid>",
+       "p": "Remove from HA",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Groups",
+     "items": [
+      {
+       "c": "ha-manager groupadd <group> --nodes node1:2,node2:1",
+       "p": "Create HA group (PVE 8)",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Move",
+     "items": [
+      {
+       "c": "ha-manager migrate vm:<vmid> <node>",
+       "p": "Live migrate an HA VM",
+       "d": false
+      },
+      {
+       "c": "ha-manager relocate vm:<vmid> <node>",
+       "p": "Stop, move, start",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Maintenance",
+     "items": [
+      {
+       "c": "ha-manager crm-command node-maintenance enable <node>",
+       "p": "Maintenance mode (PVE 8.2+)",
+       "d": false
+      },
+      {
+       "c": "ha-manager crm-command node-maintenance disable <node>",
+       "p": "Leave maintenance mode",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Services",
+     "items": [
+      {
+       "c": "systemctl status pve-ha-crm pve-ha-lrm",
+       "p": "HA daemons",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Replication",
+     "items": [
+      {
+       "c": "pvesr list",
+       "p": "Replication jobs",
+       "d": false
+      },
+      {
+       "c": "pvesr status",
+       "p": "Replication state",
+       "d": false
+      },
+      {
+       "c": "pvesr create-local-job <vmid>-<n> <target-node> --schedule \"*/15\"",
+       "p": "Create ZFS replication job",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "A8",
+   "name": "Network",
+   "subs": [
+    {
+     "name": "Interfaces",
+     "items": [
+      {
+       "c": "ip -br a",
+       "p": "Addresses, brief",
+       "d": false
+      },
+      {
+       "c": "ip -d link show <if>",
+       "p": "Link details, VLAN, bond",
+       "d": false
+      },
+      {
+       "c": "ip -s link show <if>",
+       "p": "Interface counters",
+       "d": false
+      },
+      {
+       "c": "ip r",
+       "p": "Routing table",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Bridge",
+     "items": [
+      {
+       "c": "bridge link",
+       "p": "Bridge ports",
+       "d": false
+      },
+      {
+       "c": "bridge vlan show",
+       "p": "VLAN table",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Bond",
+     "items": [
+      {
+       "c": "cat /proc/net/bonding/bond0",
+       "p": "Bond and LACP state",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Config",
+     "items": [
+      {
+       "c": "cat /etc/network/interfaces",
+       "p": "Network config",
+       "d": false
+      },
+      {
+       "c": "ifreload -a",
+       "p": "Apply network config",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "NIC",
+     "items": [
+      {
+       "c": "ethtool <if>",
+       "p": "Speed, duplex, link",
+       "d": false
+      },
+      {
+       "c": "ethtool -S <if>",
+       "p": "NIC statistics, errors, drops",
+       "d": false
+      },
+      {
+       "c": "ethtool -i <if>",
+       "p": "Driver and firmware",
+       "d": false
+      },
+      {
+       "c": "ethtool -k <if>",
+       "p": "Offload features",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "MTU test",
+     "items": [
+      {
+       "c": "ping -M do -s 8972 <ip>",
+       "p": "Verify MTU 9000 end to end",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Throughput",
+     "items": [
+      {
+       "c": "iperf3 -s / iperf3 -c <ip> -P 4",
+       "p": "Bandwidth test",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Sockets",
+     "items": [
+      {
+       "c": "ss -tulpn",
+       "p": "Listening ports",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Capture",
+     "items": [
+      {
+       "c": "tcpdump -i <if> -nn host <ip>",
+       "p": "Packet capture",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Path",
+     "items": [
+      {
+       "c": "mtr <ip>",
+       "p": "Path and loss",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Neighbors",
+     "items": [
+      {
+       "c": "lldpcli show neighbors",
+       "p": "LLDP switch neighbors (if lldpd)",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "OVS",
+     "items": [
+      {
+       "c": "ovs-vsctl show",
+       "p": "Open vSwitch layout (if used)",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "QoS",
+     "items": [
+      {
+       "c": "tc -s qdisc show dev <if>",
+       "p": "Queue discipline stats",
+       "d": false
+      },
+      {
+       "c": "iptables -t mangle -S",
+       "p": "DSCP marking rules",
+       "d": false
+      },
+      {
+       "c": "nft list ruleset",
+       "p": "nftables rules",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "A9",
+   "name": "Firewall",
+   "subs": [
+    {
+     "name": "Status",
+     "items": [
+      {
+       "c": "pve-firewall status",
+       "p": "Firewall state",
+       "d": false
+      },
+      {
+       "c": "pve-firewall localnet",
+       "p": "Detected local networks",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Rules",
+     "items": [
+      {
+       "c": "pve-firewall compile",
+       "p": "Show generated rules",
+       "d": false
+      },
+      {
+       "c": "cat /etc/pve/firewall/cluster.fw",
+       "p": "Cluster-level rules",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Control",
+     "items": [
+      {
+       "c": "pve-firewall restart",
+       "p": "Restart firewall",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "A10",
+   "name": "Disks and filesystems",
+   "subs": [
+    {
+     "name": "Inventory",
+     "items": [
+      {
+       "c": "lsblk -o NAME,SIZE,TYPE,MODEL,SERIAL,MOUNTPOINT",
+       "p": "Block devices",
+       "d": false
+      },
+      {
+       "c": "blkid",
+       "p": "UUIDs and filesystems",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Usage",
+     "items": [
+      {
+       "c": "df -h",
+       "p": "Filesystem usage",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "NVMe",
+     "items": [
+      {
+       "c": "nvme list",
+       "p": "NVMe devices",
+       "d": false
+      },
+      {
+       "c": "nvme smart-log /dev/nvme0",
+       "p": "NVMe health and wear",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "SMART",
+     "items": [
+      {
+       "c": "smartctl -a /dev/<dev>",
+       "p": "SMART data",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "LVM",
+     "items": [
+      {
+       "c": "pvs / vgs / lvs",
+       "p": "LVM overview",
+       "d": false
+      },
+      {
+       "c": "lvs -o +devices",
+       "p": "LVs with backing devices",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "ZFS",
+     "items": [
+      {
+       "c": "zpool status",
+       "p": "Pool health",
+       "d": false
+      },
+      {
+       "c": "zpool list",
+       "p": "Pool capacity",
+       "d": false
+      },
+      {
+       "c": "zfs list",
+       "p": "Datasets",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "IO",
+     "items": [
+      {
+       "c": "iostat -x 1",
+       "p": "Device latency and utilization",
+       "d": false
+      },
+      {
+       "c": "iotop -o",
+       "p": "Processes doing IO",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Benchmark",
+     "items": [
+      {
+       "c": "pveperf",
+       "p": "Basic host benchmark",
+       "d": false
+      },
+      {
+       "c": "fio --name=t --filename=<file> --rw=randwrite --bs=4k --iodepth=32 --runtime=30 --time_based",
+       "p": "Disk benchmark",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Wipe",
+     "items": [
+      {
+       "c": "wipefs -a /dev/<dev>",
+       "p": "Remove signatures (destructive)",
+       "d": true
+      },
+      {
+       "c": "sgdisk --zap-all /dev/<dev>",
+       "p": "Wipe partition table (destructive)",
+       "d": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "A11",
+   "name": "Hardware and performance",
+   "subs": [
+    {
+     "name": "CPU",
+     "items": [
+      {
+       "c": "lscpu",
+       "p": "CPU model and topology",
+       "d": false
+      },
+      {
+       "c": "numactl -H",
+       "p": "NUMA layout",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Memory",
+     "items": [
+      {
+       "c": "free -h",
+       "p": "RAM usage",
+       "d": false
+      },
+      {
+       "c": "dmidecode -t memory",
+       "p": "DIMM inventory",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Load",
+     "items": [
+      {
+       "c": "top / htop",
+       "p": "Process view",
+       "d": false
+      },
+      {
+       "c": "vmstat 1",
+       "p": "CPU, memory, IO summary",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Sensors",
+     "items": [
+      {
+       "c": "sensors",
+       "p": "Temperatures and fans",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "BMC",
+     "items": [
+      {
+       "c": "ipmitool sdr",
+       "p": "Sensor readings",
+       "d": false
+      },
+      {
+       "c": "ipmitool sel list",
+       "p": "Hardware event log",
+       "d": false
+      },
+      {
+       "c": "ipmitool chassis status",
+       "p": "Power and chassis state",
+       "d": false
+      },
+      {
+       "c": "ipmitool lan print",
+       "p": "BMC network config",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Kernel log",
+     "items": [
+      {
+       "c": "dmesg -T",
+       "p": "Kernel messages with time",
+       "d": false
+      },
+      {
+       "c": "journalctl -k -b",
+       "p": "Kernel log this boot",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "A12",
+   "name": "Access control (pveum)",
+   "subs": [
+    {
+     "name": "Users",
+     "items": [
+      {
+       "c": "pveum user list",
+       "p": "List users",
+       "d": false
+      },
+      {
+       "c": "pveum user add <user>@pve --password <p>",
+       "p": "Create user",
+       "d": false
+      },
+      {
+       "c": "pveum passwd <user>@pve",
+       "p": "Change password",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Roles",
+     "items": [
+      {
+       "c": "pveum role list",
+       "p": "List roles",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Permissions",
+     "items": [
+      {
+       "c": "pveum acl list",
+       "p": "List ACLs",
+       "d": false
+      },
+      {
+       "c": "pveum acl modify /vms/<vmid> --users <user>@pve --roles PVEVMAdmin",
+       "p": "Grant permission",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Tokens",
+     "items": [
+      {
+       "c": "pveum user token add <user>@pve <token-id> --privsep 1",
+       "p": "API token",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Realms",
+     "items": [
+      {
+       "c": "pveum realm list",
+       "p": "Auth realms",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "A13",
+   "name": "Tasks, logs and API",
+   "subs": [
+    {
+     "name": "Tasks",
+     "items": [
+      {
+       "c": "pvenode task list",
+       "p": "Recent tasks",
+       "d": false
+      },
+      {
+       "c": "pvenode task log <upid>",
+       "p": "Task log",
+       "d": false
+      },
+      {
+       "c": "pvenode task status <upid>",
+       "p": "Task state",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Logs",
+     "items": [
+      {
+       "c": "journalctl -u pvedaemon -f",
+       "p": "API daemon log",
+       "d": false
+      },
+      {
+       "c": "journalctl -u pveproxy -f",
+       "p": "Web proxy log",
+       "d": false
+      },
+      {
+       "c": "tail -f /var/log/syslog",
+       "p": "System log",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "API",
+     "items": [
+      {
+       "c": "pvesh get /cluster/status",
+       "p": "Cluster status via API",
+       "d": false
+      },
+      {
+       "c": "pvesh get /cluster/resources --type vm",
+       "p": "All VMs in cluster",
+       "d": false
+      },
+      {
+       "c": "pvesh get /nodes/<node>/status",
+       "p": "Node status",
+       "d": false
+      },
+      {
+       "c": "pvesh create /nodes/<node>/qemu/<vmid>/status/start",
+       "p": "Start VM via API",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "A14",
+   "name": "Ceph management from Proxmox (pveceph)",
+   "subs": [
+    {
+     "name": "Install",
+     "items": [
+      {
+       "c": "pveceph install",
+       "p": "Install Ceph packages",
+       "d": false
+      },
+      {
+       "c": "pveceph init --network <cidr> --cluster-network <cidr>",
+       "p": "Initialize Ceph config",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "MON",
+     "items": [
+      {
+       "c": "pveceph mon create",
+       "p": "Create MON on this node",
+       "d": false
+      },
+      {
+       "c": "pveceph mon destroy <id>",
+       "p": "Remove MON",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "MGR",
+     "items": [
+      {
+       "c": "pveceph mgr create",
+       "p": "Create MGR",
+       "d": false
+      },
+      {
+       "c": "pveceph mgr destroy <id>",
+       "p": "Remove MGR",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "OSD",
+     "items": [
+      {
+       "c": "pveceph osd create /dev/<dev>",
+       "p": "Create OSD",
+       "d": false
+      },
+      {
+       "c": "pveceph osd destroy <osd-id> --cleanup",
+       "p": "Remove OSD (destructive)",
+       "d": true
+      }
+     ]
+    },
+    {
+     "name": "Pool",
+     "items": [
+      {
+       "c": "pveceph pool ls",
+       "p": "List pools",
+       "d": false
+      },
+      {
+       "c": "pveceph pool create <pool> --size 3 --min_size 2 --crush_rule <rule> --add_storages 1",
+       "p": "Create pool and storage",
+       "d": false
+      },
+      {
+       "c": "pveceph pool set <pool> --target_size_ratio 0.9",
+       "p": "Change pool option",
+       "d": false
+      },
+      {
+       "c": "pveceph pool destroy <pool>",
+       "p": "Delete pool (destructive)",
+       "d": true
+      }
+     ]
+    },
+    {
+     "name": "CephFS",
+     "items": [
+      {
+       "c": "pveceph mds create",
+       "p": "Create MDS",
+       "d": false
+      },
+      {
+       "c": "pveceph fs create --name <fs> --add-storage",
+       "p": "Create CephFS",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Services",
+     "items": [
+      {
+       "c": "pveceph start / pveceph stop",
+       "p": "Start or stop Ceph services on node",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Cleanup",
+     "items": [
+      {
+       "c": "pveceph purge",
+       "p": "Remove Ceph config from node (destructive)",
+       "d": true
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "right": [
+  {
+   "id": "B1",
+   "name": "Health and status",
+   "subs": [
+    {
+     "name": "Overview",
+     "items": [
+      {
+       "c": "ceph -s",
+       "p": "Cluster summary",
+       "d": false
+      },
+      {
+       "c": "ceph -w",
+       "p": "Live event stream",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Health",
+     "items": [
+      {
+       "c": "ceph health detail",
+       "p": "Warnings with detail",
+       "d": false
+      },
+      {
+       "c": "ceph status --format json-pretty",
+       "p": "Machine-readable status",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Capacity",
+     "items": [
+      {
+       "c": "ceph df",
+       "p": "Raw and per-pool usage",
+       "d": false
+      },
+      {
+       "c": "ceph df detail",
+       "p": "Extended usage and quotas",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Versions",
+     "items": [
+      {
+       "c": "ceph versions",
+       "p": "Daemon versions",
+       "d": false
+      },
+      {
+       "c": "ceph fsid",
+       "p": "Cluster ID",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Log",
+     "items": [
+      {
+       "c": "ceph log last 50",
+       "p": "Recent cluster log",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Crash",
+     "items": [
+      {
+       "c": "ceph crash ls",
+       "p": "Recorded daemon crashes",
+       "d": false
+      },
+      {
+       "c": "ceph crash info <crash-id>",
+       "p": "Crash details",
+       "d": false
+      },
+      {
+       "c": "ceph crash archive-all",
+       "p": "Acknowledge crashes",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Time",
+     "items": [
+      {
+       "c": "ceph time-sync-status",
+       "p": "MON clock skew",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Report",
+     "items": [
+      {
+       "c": "ceph report",
+       "p": "Full cluster report",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B2",
+   "name": "MON",
+   "subs": [
+    {
+     "name": "Status",
+     "items": [
+      {
+       "c": "ceph mon stat",
+       "p": "MON summary",
+       "d": false
+      },
+      {
+       "c": "ceph mon dump",
+       "p": "MON map",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Quorum",
+     "items": [
+      {
+       "c": "ceph quorum_status -f json-pretty",
+       "p": "Quorum detail",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Admin socket",
+     "items": [
+      {
+       "c": "ceph daemon mon.<id> mon_status",
+       "p": "Local MON status (admin socket)",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Maintenance",
+     "items": [
+      {
+       "c": "ceph tell mon.<id> compact",
+       "p": "Compact MON store",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Features",
+     "items": [
+      {
+       "c": "ceph mon feature ls",
+       "p": "MON features",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Protocol",
+     "items": [
+      {
+       "c": "ceph mon enable-msgr2",
+       "p": "Enable msgr2",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Map",
+     "items": [
+      {
+       "c": "ceph mon getmap -o monmap.bin",
+       "p": "Export MON map",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B3",
+   "name": "MGR and modules",
+   "subs": [
+    {
+     "name": "Status",
+     "items": [
+      {
+       "c": "ceph mgr stat",
+       "p": "Active and standby MGR",
+       "d": false
+      },
+      {
+       "c": "ceph mgr services",
+       "p": "Module endpoints",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Control",
+     "items": [
+      {
+       "c": "ceph mgr fail",
+       "p": "Fail over active MGR",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Modules",
+     "items": [
+      {
+       "c": "ceph mgr module ls",
+       "p": "Enabled and available modules",
+       "d": false
+      },
+      {
+       "c": "ceph mgr module enable prometheus",
+       "p": "Enable exporter",
+       "d": false
+      },
+      {
+       "c": "ceph mgr module disable <module>",
+       "p": "Disable module",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Balancer",
+     "items": [
+      {
+       "c": "ceph balancer status",
+       "p": "Balancer state",
+       "d": false
+      },
+      {
+       "c": "ceph balancer mode upmap",
+       "p": "Set upmap mode",
+       "d": false
+      },
+      {
+       "c": "ceph balancer on / ceph balancer off",
+       "p": "Toggle balancer",
+       "d": false
+      },
+      {
+       "c": "ceph balancer eval",
+       "p": "Score current distribution",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "IO",
+     "items": [
+      {
+       "c": "ceph iostat",
+       "p": "Cluster IO rates (iostat module)",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Progress",
+     "items": [
+      {
+       "c": "ceph progress",
+       "p": "Ongoing recovery progress",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B4",
+   "name": "OSD status",
+   "subs": [
+    {
+     "name": "Tree",
+     "items": [
+      {
+       "c": "ceph osd tree",
+       "p": "CRUSH tree with state",
+       "d": false
+      },
+      {
+       "c": "ceph osd tree down",
+       "p": "Only down OSDs",
+       "d": false
+      },
+      {
+       "c": "ceph osd tree --show-shadow",
+       "p": "Include device-class shadow trees",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Usage",
+     "items": [
+      {
+       "c": "ceph osd df",
+       "p": "Usage per OSD",
+       "d": false
+      },
+      {
+       "c": "ceph osd df tree",
+       "p": "Usage per bucket",
+       "d": false
+      },
+      {
+       "c": "ceph osd utilization",
+       "p": "Min, max and deviation",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "State",
+     "items": [
+      {
+       "c": "ceph osd stat",
+       "p": "Up and in counts",
+       "d": false
+      },
+      {
+       "c": "ceph osd dump",
+       "p": "OSD map, flags, ratios",
+       "d": false
+      },
+      {
+       "c": "ceph osd ls",
+       "p": "OSD IDs",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Info",
+     "items": [
+      {
+       "c": "ceph osd metadata <osd-id>",
+       "p": "Host, device, versions",
+       "d": false
+      },
+      {
+       "c": "ceph osd find <osd-id>",
+       "p": "Host and CRUSH location",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Perf",
+     "items": [
+      {
+       "c": "ceph osd perf",
+       "p": "Commit and apply latency",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Ratios",
+     "items": [
+      {
+       "c": "ceph osd set-nearfull-ratio 0.85",
+       "p": "Nearfull threshold",
+       "d": false
+      },
+      {
+       "c": "ceph osd set-backfillfull-ratio 0.90",
+       "p": "Backfill-full threshold",
+       "d": false
+      },
+      {
+       "c": "ceph osd set-full-ratio 0.95",
+       "p": "Full threshold",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Blocklist",
+     "items": [
+      {
+       "c": "ceph osd blocklist ls",
+       "p": "Blocklisted clients",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B5",
+   "name": "OSD flags and maintenance",
+   "subs": [
+    {
+     "name": "Flags",
+     "items": [
+      {
+       "c": "ceph osd set noout / ceph osd unset noout",
+       "p": "Do not mark OSDs out",
+       "d": false
+      },
+      {
+       "c": "ceph osd set norebalance / ceph osd unset norebalance",
+       "p": "Pause rebalancing",
+       "d": false
+      },
+      {
+       "c": "ceph osd set nobackfill / ceph osd unset nobackfill",
+       "p": "Pause backfill",
+       "d": false
+      },
+      {
+       "c": "ceph osd set norecover / ceph osd unset norecover",
+       "p": "Pause recovery",
+       "d": false
+      },
+      {
+       "c": "ceph osd set noscrub / ceph osd set nodeep-scrub",
+       "p": "Pause scrubs",
+       "d": false
+      },
+      {
+       "c": "ceph osd set pause / ceph osd unset pause",
+       "p": "Pause all client IO (emergency)",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Per subtree",
+     "items": [
+      {
+       "c": "ceph osd set-group noout <host-or-chassis>",
+       "p": "Flag one CRUSH node",
+       "d": false
+      },
+      {
+       "c": "ceph osd unset-group noout <host-or-chassis>",
+       "p": "Clear flag on one CRUSH node",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Safety",
+     "items": [
+      {
+       "c": "ceph osd ok-to-stop <osd-id>",
+       "p": "Safe to stop without losing availability",
+       "d": false
+      },
+      {
+       "c": "ceph osd safe-to-destroy <osd-id>",
+       "p": "Safe to destroy without data loss",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "State",
+     "items": [
+      {
+       "c": "ceph osd out <osd-id> / ceph osd in <osd-id>",
+       "p": "Mark out or in",
+       "d": false
+      },
+      {
+       "c": "ceph osd down <osd-id>",
+       "p": "Mark down",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Weight",
+     "items": [
+      {
+       "c": "ceph osd reweight <osd-id> 0.9",
+       "p": "Temporary weight (0 to 1)",
+       "d": false
+      },
+      {
+       "c": "ceph osd crush reweight osd.<id> <weight>",
+       "p": "CRUSH weight",
+       "d": false
+      },
+      {
+       "c": "ceph osd reweight-by-utilization",
+       "p": "Auto reweight overfull OSDs",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B6",
+   "name": "OSD lifecycle and devices",
+   "subs": [
+    {
+     "name": "Inventory",
+     "items": [
+      {
+       "c": "ceph-volume inventory",
+       "p": "Devices usable for OSDs (on OSD host)",
+       "d": false
+      },
+      {
+       "c": "ceph-volume lvm list",
+       "p": "OSD to device mapping (on OSD host)",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Create",
+     "items": [
+      {
+       "c": "ceph-volume lvm create --data /dev/<dev>",
+       "p": "Create OSD (on OSD host)",
+       "d": false
+      },
+      {
+       "c": "ceph-volume lvm activate --all",
+       "p": "Activate OSDs after reboot",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Replace",
+     "items": [
+      {
+       "c": "ceph osd destroy <osd-id> --yes-i-really-mean-it",
+       "p": "Destroy OSD, keep ID (destructive)",
+       "d": true
+      }
+     ]
+    },
+    {
+     "name": "Remove",
+     "items": [
+      {
+       "c": "ceph osd purge <osd-id> --yes-i-really-mean-it",
+       "p": "Remove OSD from cluster (destructive)",
+       "d": true
+      }
+     ]
+    },
+    {
+     "name": "Wipe",
+     "items": [
+      {
+       "c": "ceph-volume lvm zap /dev/<dev> --destroy",
+       "p": "Wipe device (destructive)",
+       "d": true
+      }
+     ]
+    },
+    {
+     "name": "Service",
+     "items": [
+      {
+       "c": "systemctl status ceph-osd@<osd-id>",
+       "p": "OSD daemon state",
+       "d": false
+      },
+      {
+       "c": "systemctl restart ceph-osd@<osd-id>",
+       "p": "Restart OSD",
+       "d": false
+      },
+      {
+       "c": "journalctl -u ceph-osd@<osd-id> -f",
+       "p": "OSD log",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "BlueStore",
+     "items": [
+      {
+       "c": "ceph-bluestore-tool show-label --dev /dev/<dev>",
+       "p": "Read OSD label",
+       "d": false
+      },
+      {
+       "c": "ceph-bluestore-tool fsck --path /var/lib/ceph/osd/ceph-<id>",
+       "p": "Check store (OSD stopped)",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Maintenance",
+     "items": [
+      {
+       "c": "ceph tell osd.<id> compact",
+       "p": "Compact RocksDB",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Class",
+     "items": [
+      {
+       "c": "ceph osd crush set-device-class nvme osd.<id>",
+       "p": "Set device class",
+       "d": false
+      },
+      {
+       "c": "ceph osd crush rm-device-class osd.<id>",
+       "p": "Remove device class",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B7",
+   "name": "OSD daemon and performance (admin socket)",
+   "subs": [
+    {
+     "name": "Ops",
+     "items": [
+      {
+       "c": "ceph daemon osd.<id> dump_ops_in_flight",
+       "p": "Current slow or active ops (admin socket)",
+       "d": false
+      },
+      {
+       "c": "ceph daemon osd.<id> dump_historic_ops",
+       "p": "Recent slowest ops (admin socket)",
+       "d": false
+      },
+      {
+       "c": "ceph daemon osd.<id> status",
+       "p": "OSD state (admin socket)",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Perf",
+     "items": [
+      {
+       "c": "ceph daemon osd.<id> perf dump",
+       "p": "Internal counters (admin socket)",
+       "d": false
+      },
+      {
+       "c": "ceph daemonperf osd.<id>",
+       "p": "Live counters (admin socket)",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Config",
+     "items": [
+      {
+       "c": "ceph daemon osd.<id> config show",
+       "p": "Effective config (admin socket)",
+       "d": false
+      },
+      {
+       "c": "ceph config show osd.<id>",
+       "p": "Effective config from MON",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Bench",
+     "items": [
+      {
+       "c": "ceph tell osd.<id> bench",
+       "p": "Raw OSD write bench",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Heartbeat",
+     "items": [
+      {
+       "c": "ceph config get osd osd_heartbeat_grace",
+       "p": "Heartbeat grace",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B8",
+   "name": "CRUSH map",
+   "subs": [
+    {
+     "name": "View",
+     "items": [
+      {
+       "c": "ceph osd crush tree",
+       "p": "CRUSH hierarchy",
+       "d": false
+      },
+      {
+       "c": "ceph osd crush class ls",
+       "p": "Device classes",
+       "d": false
+      },
+      {
+       "c": "ceph osd crush tunables show",
+       "p": "Tunables profile",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Rules",
+     "items": [
+      {
+       "c": "ceph osd crush rule ls",
+       "p": "List rules",
+       "d": false
+      },
+      {
+       "c": "ceph osd crush rule dump <rule>",
+       "p": "Rule detail",
+       "d": false
+      },
+      {
+       "c": "ceph osd crush rule create-replicated <rule> <root> <type> [<class>]",
+       "p": "Create replicated rule",
+       "d": false
+      },
+      {
+       "c": "ceph osd crush rule create-erasure <rule> <profile>",
+       "p": "Create EC rule",
+       "d": false
+      },
+      {
+       "c": "ceph osd crush rule rm <rule>",
+       "p": "Delete rule (destructive)",
+       "d": true
+      }
+     ]
+    },
+    {
+     "name": "Buckets",
+     "items": [
+      {
+       "c": "ceph osd crush add-bucket <name> <type>",
+       "p": "Create bucket",
+       "d": false
+      },
+      {
+       "c": "ceph osd crush move <name> <type>=<parent>",
+       "p": "Move bucket",
+       "d": false
+      },
+      {
+       "c": "ceph osd crush link <name> <type>=<parent>",
+       "p": "Add extra parent",
+       "d": false
+      },
+      {
+       "c": "ceph osd crush rename-bucket <old> <new>",
+       "p": "Rename bucket",
+       "d": false
+      },
+      {
+       "c": "ceph osd crush remove <name>",
+       "p": "Remove bucket or item (destructive)",
+       "d": true
+      }
+     ]
+    },
+    {
+     "name": "Map file",
+     "items": [
+      {
+       "c": "ceph osd getcrushmap -o crush.bin",
+       "p": "Export compiled map",
+       "d": false
+      },
+      {
+       "c": "crushtool -d crush.bin -o crush.txt",
+       "p": "Decompile",
+       "d": false
+      },
+      {
+       "c": "crushtool -c crush.txt -o crush.new",
+       "p": "Compile",
+       "d": false
+      },
+      {
+       "c": "crushtool -i crush.bin --test --rule <n> --num-rep 3 --show-bad-mappings",
+       "p": "Validate mappings",
+       "d": false
+      },
+      {
+       "c": "crushtool -i crush.bin --test --rule <n> --num-rep 3 --show-utilization",
+       "p": "Simulate distribution",
+       "d": false
+      },
+      {
+       "c": "ceph osd setcrushmap -i crush.new",
+       "p": "Apply map (can trigger rebalance)",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B9",
+   "name": "Pools",
+   "subs": [
+    {
+     "name": "View",
+     "items": [
+      {
+       "c": "ceph osd pool ls detail",
+       "p": "Pools with settings",
+       "d": false
+      },
+      {
+       "c": "ceph osd pool get <pool> all",
+       "p": "All settings of a pool",
+       "d": false
+      },
+      {
+       "c": "ceph osd pool stats",
+       "p": "Client and recovery IO per pool",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Create",
+     "items": [
+      {
+       "c": "ceph osd pool create <pool> <pg_num>",
+       "p": "Create pool",
+       "d": false
+      },
+      {
+       "c": "ceph osd pool application enable <pool> rbd",
+       "p": "Tag pool application",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Settings",
+     "items": [
+      {
+       "c": "ceph osd pool set <pool> size 3",
+       "p": "Replica count",
+       "d": false
+      },
+      {
+       "c": "ceph osd pool set <pool> min_size 2",
+       "p": "Minimum replicas for IO",
+       "d": false
+      },
+      {
+       "c": "ceph osd pool set <pool> crush_rule <rule>",
+       "p": "Change placement rule",
+       "d": false
+      },
+      {
+       "c": "ceph osd pool set <pool> pg_autoscale_mode on",
+       "p": "Autoscaler",
+       "d": false
+      },
+      {
+       "c": "ceph osd pool set <pool> target_size_ratio 0.9",
+       "p": "Expected share of capacity",
+       "d": false
+      },
+      {
+       "c": "ceph osd pool set <pool> nodelete true",
+       "p": "Protect from deletion",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Autoscale",
+     "items": [
+      {
+       "c": "ceph osd pool autoscale-status",
+       "p": "PG autoscaler view",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Quota",
+     "items": [
+      {
+       "c": "ceph osd pool set-quota <pool> max_bytes <n>",
+       "p": "Set quota",
+       "d": false
+      },
+      {
+       "c": "ceph osd pool get-quota <pool>",
+       "p": "Show quota",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Rename",
+     "items": [
+      {
+       "c": "ceph osd pool rename <old> <new>",
+       "p": "Rename pool",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Delete",
+     "items": [
+      {
+       "c": "ceph config set mon mon_allow_pool_delete true",
+       "p": "Allow deletion",
+       "d": false
+      },
+      {
+       "c": "ceph osd pool delete <pool> <pool> --yes-i-really-really-mean-it",
+       "p": "Delete pool (destructive)",
+       "d": true
+      }
+     ]
+    },
+    {
+     "name": "Usage",
+     "items": [
+      {
+       "c": "rados df",
+       "p": "Objects and bytes per pool",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B10",
+   "name": "Placement groups",
+   "subs": [
+    {
+     "name": "Summary",
+     "items": [
+      {
+       "c": "ceph pg stat",
+       "p": "PG state counts",
+       "d": false
+      },
+      {
+       "c": "ceph pg dump_stuck inactive",
+       "p": "Stuck inactive PGs",
+       "d": false
+      },
+      {
+       "c": "ceph pg dump_stuck unclean",
+       "p": "Stuck unclean PGs",
+       "d": false
+      },
+      {
+       "c": "ceph pg dump_stuck undersized",
+       "p": "Stuck undersized PGs",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "List",
+     "items": [
+      {
+       "c": "ceph pg ls",
+       "p": "All PGs",
+       "d": false
+      },
+      {
+       "c": "ceph pg ls-by-pool <pool>",
+       "p": "PGs of a pool",
+       "d": false
+      },
+      {
+       "c": "ceph pg ls-by-osd osd.<id>",
+       "p": "PGs on an OSD",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Mapping",
+     "items": [
+      {
+       "c": "ceph pg map <pgid>",
+       "p": "Up and acting OSDs",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Detail",
+     "items": [
+      {
+       "c": "ceph pg <pgid> query",
+       "p": "Full PG state",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Scrub",
+     "items": [
+      {
+       "c": "ceph pg scrub <pgid> / ceph pg deep-scrub <pgid>",
+       "p": "Scrub a PG",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Repair",
+     "items": [
+      {
+       "c": "ceph pg repair <pgid>",
+       "p": "Repair inconsistent PG",
+       "d": false
+      },
+      {
+       "c": "ceph pg repeer <pgid>",
+       "p": "Force re-peering",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Priority",
+     "items": [
+      {
+       "c": "ceph pg force-recovery <pgid>",
+       "p": "Recover this PG first",
+       "d": false
+      },
+      {
+       "c": "ceph pg force-backfill <pgid>",
+       "p": "Backfill this PG first",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Upmap",
+     "items": [
+      {
+       "c": "ceph osd pg-upmap-items <pgid> <from> <to>",
+       "p": "Manual PG remap",
+       "d": false
+      },
+      {
+       "c": "ceph osd rm-pg-upmap-items <pgid>",
+       "p": "Remove manual remap",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B11",
+   "name": "Recovery, scrub and config tuning",
+   "subs": [
+    {
+     "name": "Config",
+     "items": [
+      {
+       "c": "ceph config dump",
+       "p": "All centralized settings",
+       "d": false
+      },
+      {
+       "c": "ceph config get <who> <option>",
+       "p": "Read one option",
+       "d": false
+      },
+      {
+       "c": "ceph config set <who> <option> <value>",
+       "p": "Set option",
+       "d": false
+      },
+      {
+       "c": "ceph config rm <who> <option>",
+       "p": "Reset option",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Backfill",
+     "items": [
+      {
+       "c": "ceph config set osd osd_max_backfills 1",
+       "p": "Limit concurrent backfills",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Recovery",
+     "items": [
+      {
+       "c": "ceph config set osd osd_recovery_max_active 1",
+       "p": "Limit recovery ops",
+       "d": false
+      },
+      {
+       "c": "ceph config set osd osd_recovery_sleep_ssd 0.1",
+       "p": "Throttle recovery on SSD",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "mClock",
+     "items": [
+      {
+       "c": "ceph config set osd osd_mclock_profile high_client_ops",
+       "p": "Favor client IO (Quincy and later)",
+       "d": false
+      },
+      {
+       "c": "ceph config set osd osd_mclock_profile high_recovery_ops",
+       "p": "Favor recovery (Quincy and later)",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Scrub",
+     "items": [
+      {
+       "c": "ceph config set osd osd_scrub_begin_hour 22",
+       "p": "Scrub window start",
+       "d": false
+      },
+      {
+       "c": "ceph config set osd osd_scrub_end_hour 6",
+       "p": "Scrub window end",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B12",
+   "name": "RBD (VM disks)",
+   "subs": [
+    {
+     "name": "List",
+     "items": [
+      {
+       "c": "rbd ls -l -p <pool>",
+       "p": "Images with size",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Info",
+     "items": [
+      {
+       "c": "rbd info <pool>/<image>",
+       "p": "Image details",
+       "d": false
+      },
+      {
+       "c": "rbd du -p <pool>",
+       "p": "Provisioned vs used",
+       "d": false
+      },
+      {
+       "c": "rbd status <pool>/<image>",
+       "p": "Watchers (who has it open)",
+       "d": false
+      },
+      {
+       "c": "rbd lock ls <pool>/<image>",
+       "p": "Image locks",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Snapshot",
+     "items": [
+      {
+       "c": "rbd snap ls <pool>/<image>",
+       "p": "List snapshots",
+       "d": false
+      },
+      {
+       "c": "rbd snap create <pool>/<image>@<snap>",
+       "p": "Create snapshot",
+       "d": false
+      },
+      {
+       "c": "rbd snap rollback <pool>/<image>@<snap>",
+       "p": "Roll back (destructive)",
+       "d": true
+      },
+      {
+       "c": "rbd snap protect <pool>/<image>@<snap>",
+       "p": "Protect for cloning",
+       "d": false
+      },
+      {
+       "c": "rbd snap rm <pool>/<image>@<snap>",
+       "p": "Delete snapshot",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Clone",
+     "items": [
+      {
+       "c": "rbd clone <pool>/<image>@<snap> <pool>/<clone>",
+       "p": "Clone from snapshot",
+       "d": false
+      },
+      {
+       "c": "rbd flatten <pool>/<clone>",
+       "p": "Detach clone from parent",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Copy",
+     "items": [
+      {
+       "c": "rbd cp <src> <dst>",
+       "p": "Copy image",
+       "d": false
+      },
+      {
+       "c": "rbd export <pool>/<image> <file>",
+       "p": "Export image",
+       "d": false
+      },
+      {
+       "c": "rbd import <file> <pool>/<image>",
+       "p": "Import image",
+       "d": false
+      },
+      {
+       "c": "rbd export-diff <pool>/<image> <file>",
+       "p": "Incremental export",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Resize",
+     "items": [
+      {
+       "c": "rbd resize --size <MiB> <pool>/<image>",
+       "p": "Resize image",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Space",
+     "items": [
+      {
+       "c": "rbd sparsify <pool>/<image>",
+       "p": "Reclaim zeroed space",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Trash",
+     "items": [
+      {
+       "c": "rbd trash ls -p <pool>",
+       "p": "Trash contents",
+       "d": false
+      },
+      {
+       "c": "rbd trash mv <pool>/<image>",
+       "p": "Move to trash",
+       "d": false
+      },
+      {
+       "c": "rbd trash restore -p <pool> <image-id>",
+       "p": "Restore from trash",
+       "d": false
+      },
+      {
+       "c": "rbd trash purge -p <pool>",
+       "p": "Empty trash (destructive)",
+       "d": true
+      }
+     ]
+    },
+    {
+     "name": "Delete",
+     "items": [
+      {
+       "c": "rbd rm <pool>/<image>",
+       "p": "Delete image (destructive)",
+       "d": true
+      }
+     ]
+    },
+    {
+     "name": "Perf",
+     "items": [
+      {
+       "c": "rbd perf image iostat -p <pool>",
+       "p": "Per-image IO rates",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Bench",
+     "items": [
+      {
+       "c": "rbd bench --io-type write --io-size 4K --io-threads 16 <pool>/<image>",
+       "p": "Image benchmark",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Mapping",
+     "items": [
+      {
+       "c": "rbd map <pool>/<image> / rbd unmap <dev>",
+       "p": "Kernel map (troubleshooting)",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B13",
+   "name": "RGW and S3 (radosgw-admin)",
+   "subs": [
+    {
+     "name": "Service",
+     "items": [
+      {
+       "c": "systemctl status ceph-radosgw@rgw.<name>",
+       "p": "RGW daemon state",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Users",
+     "items": [
+      {
+       "c": "radosgw-admin user list",
+       "p": "List users",
+       "d": false
+      },
+      {
+       "c": "radosgw-admin user info --uid=<uid>",
+       "p": "User detail and keys",
+       "d": false
+      },
+      {
+       "c": "radosgw-admin user create --uid=<uid> --display-name=<name>",
+       "p": "Create user",
+       "d": false
+      },
+      {
+       "c": "radosgw-admin user modify --uid=<uid> --max-buckets=<n>",
+       "p": "Change user",
+       "d": false
+      },
+      {
+       "c": "radosgw-admin user suspend --uid=<uid> / radosgw-admin user enable --uid=<uid>",
+       "p": "Suspend or enable",
+       "d": false
+      },
+      {
+       "c": "radosgw-admin user rm --uid=<uid> --purge-data",
+       "p": "Delete user and data (destructive)",
+       "d": true
+      }
+     ]
+    },
+    {
+     "name": "Keys",
+     "items": [
+      {
+       "c": "radosgw-admin key create --uid=<uid> --key-type=s3 --gen-access-key --gen-secret",
+       "p": "New S3 key",
+       "d": false
+      },
+      {
+       "c": "radosgw-admin key rm --uid=<uid> --access-key=<key>",
+       "p": "Remove key",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Subuser",
+     "items": [
+      {
+       "c": "radosgw-admin subuser create --uid=<uid> --subuser=<uid>:<sub> --access=full",
+       "p": "Create subuser",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Quota",
+     "items": [
+      {
+       "c": "radosgw-admin quota set --quota-scope=user --uid=<uid> --max-size=<bytes> --max-objects=<n>",
+       "p": "Set user quota",
+       "d": false
+      },
+      {
+       "c": "radosgw-admin quota set --quota-scope=bucket --uid=<uid> --max-size=<bytes>",
+       "p": "Set bucket quota",
+       "d": false
+      },
+      {
+       "c": "radosgw-admin quota enable --quota-scope=user --uid=<uid>",
+       "p": "Enable quota",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Buckets",
+     "items": [
+      {
+       "c": "radosgw-admin bucket list",
+       "p": "List buckets",
+       "d": false
+      },
+      {
+       "c": "radosgw-admin bucket list --uid=<uid>",
+       "p": "Buckets of a user",
+       "d": false
+      },
+      {
+       "c": "radosgw-admin bucket stats --bucket=<bucket>",
+       "p": "Bucket size, objects, shards",
+       "d": false
+      },
+      {
+       "c": "radosgw-admin bucket limit check",
+       "p": "Objects per shard and fill status",
+       "d": false
+      },
+      {
+       "c": "radosgw-admin bucket check --bucket=<bucket>",
+       "p": "Index check",
+       "d": false
+      },
+      {
+       "c": "radosgw-admin bucket rm --bucket=<bucket> --purge-objects",
+       "p": "Delete bucket (destructive)",
+       "d": true
+      }
+     ]
+    },
+    {
+     "name": "Reshard",
+     "items": [
+      {
+       "c": "radosgw-admin reshard list",
+       "p": "Queued reshards",
+       "d": false
+      },
+      {
+       "c": "radosgw-admin reshard status --bucket=<bucket>",
+       "p": "Reshard state",
+       "d": false
+      },
+      {
+       "c": "radosgw-admin bucket reshard --bucket=<bucket> --num-shards=<n>",
+       "p": "Reshard bucket index",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Usage",
+     "items": [
+      {
+       "c": "radosgw-admin usage show --uid=<uid>",
+       "p": "Usage log",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Lifecycle",
+     "items": [
+      {
+       "c": "radosgw-admin lc list",
+       "p": "Lifecycle status",
+       "d": false
+      },
+      {
+       "c": "radosgw-admin lc process",
+       "p": "Run lifecycle now",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "GC",
+     "items": [
+      {
+       "c": "radosgw-admin gc list --include-all",
+       "p": "Pending garbage",
+       "d": false
+      },
+      {
+       "c": "radosgw-admin gc process",
+       "p": "Run GC now",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Topology",
+     "items": [
+      {
+       "c": "radosgw-admin zone get",
+       "p": "Zone config",
+       "d": false
+      },
+      {
+       "c": "radosgw-admin zonegroup get",
+       "p": "Zonegroup config",
+       "d": false
+      },
+      {
+       "c": "radosgw-admin realm list",
+       "p": "Realms",
+       "d": false
+      },
+      {
+       "c": "radosgw-admin period get",
+       "p": "Current period",
+       "d": false
+      },
+      {
+       "c": "radosgw-admin sync status",
+       "p": "Multisite sync state",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Index pool",
+     "items": [
+      {
+       "c": "rados -p <index-pool> listomapkeys <object>",
+       "p": "Keys in an index object (large omap check)",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B14",
+   "name": "CephFS",
+   "subs": [
+    {
+     "name": "Status",
+     "items": [
+      {
+       "c": "ceph fs ls",
+       "p": "List filesystems",
+       "d": false
+      },
+      {
+       "c": "ceph fs status",
+       "p": "Ranks, clients, usage",
+       "d": false
+      },
+      {
+       "c": "ceph mds stat",
+       "p": "MDS states",
+       "d": false
+      },
+      {
+       "c": "ceph fs get <fs>",
+       "p": "Filesystem map",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Create",
+     "items": [
+      {
+       "c": "ceph fs new <fs> <metadata-pool> <data-pool>",
+       "p": "Create filesystem",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Subvolume",
+     "items": [
+      {
+       "c": "ceph fs subvolume ls <fs>",
+       "p": "List subvolumes",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Failover",
+     "items": [
+      {
+       "c": "ceph mds fail <name-or-rank>",
+       "p": "Fail an MDS",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Delete",
+     "items": [
+      {
+       "c": "ceph fs rm <fs> --yes-i-really-mean-it",
+       "p": "Delete filesystem (destructive)",
+       "d": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B15",
+   "name": "Authentication (cephx)",
+   "subs": [
+    {
+     "name": "List",
+     "items": [
+      {
+       "c": "ceph auth ls",
+       "p": "All keys and caps",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Show",
+     "items": [
+      {
+       "c": "ceph auth get client.<name>",
+       "p": "One key and caps",
+       "d": false
+      },
+      {
+       "c": "ceph auth print-key client.<name>",
+       "p": "Print secret only",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Create",
+     "items": [
+      {
+       "c": "ceph auth get-or-create client.<name> mon 'allow r' osd 'allow rwx pool=<pool>'",
+       "p": "Create client key",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Change",
+     "items": [
+      {
+       "c": "ceph auth caps client.<name> mon 'allow r' osd 'allow rw pool=<pool>'",
+       "p": "Change caps",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Delete",
+     "items": [
+      {
+       "c": "ceph auth del client.<name>",
+       "p": "Remove key (destructive)",
+       "d": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B16",
+   "name": "Benchmarks and low-level rados",
+   "subs": [
+    {
+     "name": "Bench",
+     "items": [
+      {
+       "c": "rados bench -p <pool> 30 write --no-cleanup",
+       "p": "Write benchmark",
+       "d": false
+      },
+      {
+       "c": "rados bench -p <pool> 30 seq",
+       "p": "Sequential read benchmark",
+       "d": false
+      },
+      {
+       "c": "rados bench -p <pool> 30 rand",
+       "p": "Random read benchmark",
+       "d": false
+      },
+      {
+       "c": "rados -p <pool> cleanup",
+       "p": "Remove benchmark objects",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Objects",
+     "items": [
+      {
+       "c": "rados lspools",
+       "p": "List pools",
+       "d": false
+      },
+      {
+       "c": "rados -p <pool> ls",
+       "p": "List objects (large pools: slow)",
+       "d": false
+      },
+      {
+       "c": "rados -p <pool> stat <object>",
+       "p": "Object size and mtime",
+       "d": false
+      },
+      {
+       "c": "rados -p <pool> get <object> <file>",
+       "p": "Read object",
+       "d": false
+      },
+      {
+       "c": "rados -p <pool> put <object> <file>",
+       "p": "Write object",
+       "d": false
+      },
+      {
+       "c": "rados -p <pool> rm <object>",
+       "p": "Delete object (destructive)",
+       "d": true
+      }
+     ]
+    },
+    {
+     "name": "Omap",
+     "items": [
+      {
+       "c": "rados -p <pool> listomapkeys <object>",
+       "p": "Omap keys of an object",
+       "d": false
+      },
+      {
+       "c": "rados -p <pool> listomapvals <object>",
+       "p": "Omap key and values",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B17",
+   "name": "Upgrade and compatibility",
+   "subs": [
+    {
+     "name": "Versions",
+     "items": [
+      {
+       "c": "ceph versions",
+       "p": "Mixed-version check",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Release",
+     "items": [
+      {
+       "c": "ceph osd dump",
+       "p": "Read `require_osd_release` and flags",
+       "d": false
+      },
+      {
+       "c": "ceph osd require-osd-release <release>",
+       "p": "Finalize OSD release after upgrade",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Clients",
+     "items": [
+      {
+       "c": "ceph osd set-require-min-compat-client <release>",
+       "p": "Minimum client version (needed for upmap)",
+       "d": false
+      },
+      {
+       "c": "ceph features",
+       "p": "Connected client feature levels",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Pre-upgrade",
+     "items": [
+      {
+       "c": "ceph osd set noout",
+       "p": "Avoid rebalance during rolling restart",
+       "d": false
+      },
+      {
+       "c": "ceph -s",
+       "p": "Confirm all PGs `active+clean` before next node",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Post-upgrade",
+     "items": [
+      {
+       "c": "ceph osd unset noout",
+       "p": "Restore normal behavior",
+       "d": false
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B18",
+   "name": "Troubleshooting shortlist",
+   "subs": [
+    {
+     "name": "HEALTH_WARN",
+     "items": [
+      {
+       "c": "ceph health detail",
+       "p": "Find the exact warning",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Slow ops",
+     "items": [
+      {
+       "c": "ceph daemon osd.<id> dump_ops_in_flight",
+       "p": "Which ops are stuck (admin socket)",
+       "d": false
+      },
+      {
+       "c": "ceph osd perf",
+       "p": "OSDs with high latency",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "OSD flapping",
+     "items": [
+      {
+       "c": "ceph osd stat",
+       "p": "Up and in counts",
+       "d": false
+      },
+      {
+       "c": "journalctl -u ceph-osd@<osd-id> --since \"1 hour ago\"",
+       "p": "OSD log around the flap",
+       "d": false
+      },
+      {
+       "c": "ceph config get osd osd_heartbeat_grace",
+       "p": "Heartbeat grace in use",
+       "d": false
+      },
+      {
+       "c": "ethtool -S <if>",
+       "p": "NIC errors on OSD host",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "PGs stuck",
+     "items": [
+      {
+       "c": "ceph pg dump_stuck inactive",
+       "p": "Find inactive PGs",
+       "d": false
+      },
+      {
+       "c": "ceph pg <pgid> query",
+       "p": "See why a PG is stuck",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Undersized",
+     "items": [
+      {
+       "c": "ceph pg ls undersized",
+       "p": "PGs missing replicas",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Nearfull",
+     "items": [
+      {
+       "c": "ceph osd df tree",
+       "p": "Find the full OSD or host",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Large omap",
+     "items": [
+      {
+       "c": "ceph health detail",
+       "p": "Names pool and object",
+       "d": false
+      },
+      {
+       "c": "radosgw-admin bucket limit check",
+       "p": "Buckets over shard limit",
+       "d": false
+      },
+      {
+       "c": "rados -p <pool> listomapkeys <object>",
+       "p": "Count keys in object",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Clock skew",
+     "items": [
+      {
+       "c": "ceph time-sync-status",
+       "p": "MON skew",
+       "d": false
+      },
+      {
+       "c": "chronyc tracking",
+       "p": "Local NTP offset",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "MON down",
+     "items": [
+      {
+       "c": "ceph quorum_status -f json-pretty",
+       "p": "Who is in quorum",
+       "d": false
+      }
+     ]
+    },
+    {
+     "name": "Client hang",
+     "items": [
+      {
+       "c": "rbd status <pool>/<image>",
+       "p": "Watchers on the image",
+       "d": false
+      },
+      {
+       "c": "ceph osd blocklist ls",
+       "p": "Blocklisted client addresses",
+       "d": false
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proxmox + Ceph command mindmap</title>
+<meta name="description" content="Cheatsheet lệnh Proxmox VE và Ceph, tìm theo từ khóa, mở thẳng từng mục qua #A1, #B13">
+<style>
+:root{--bg:#fbfbfa;--panel:#fff;--ink:#1c2330;--muted:#5d6877;--line:#d8dde4;--pve:#b4520a;--pve-soft:#fbeee2;--ceph:#0b6b86;--ceph-soft:#e6f3f7;--danger:#b3261e;--root:#1c2330;--rootink:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#12161c;--panel:#1a2029;--ink:#e6e9ee;--muted:#9aa5b4;--line:#2c3542;--pve:#f0a061;--pve-soft:#2b2017;--ceph:#5cc0dc;--ceph-soft:#12262d;--danger:#ff8a80;--root:#e6e9ee;--rootink:#12161c}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.top{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--bg);border-bottom:1px solid var(--line)}
+h1{font-size:18px;font-weight:600;margin:0}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+input[type=search]{width:260px;max-width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);font:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+.tools button{padding:7px 12px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+:focus-visible{outline:2px solid var(--ceph);outline-offset:2px}
+#map{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 150px minmax(0,1fr);gap:0 16px;padding:20px;max-width:1500px;margin:0 auto}
+#wires{position:absolute;left:0;top:0;pointer-events:none;z-index:0}
+.w{fill:none;stroke-width:1.5;opacity:.55}
+.w.left{stroke:var(--pve)}
+.w.right{stroke:var(--ceph)}
+.side{position:relative;z-index:1;display:flex;flex-direction:column;gap:8px}
+.side.left{text-align:right}
+.sidehead{font-size:13px;color:var(--muted);margin:0 0 4px}
+.hub{position:relative;z-index:1}
+.root{position:sticky;top:42vh;display:flex;align-items:center;justify-content:center;text-align:center;min-height:84px;padding:12px;border-radius:14px;background:var(--root);color:var(--rootink);font-weight:600;font-size:17px;line-height:1.25}
+.branch{border:1px solid var(--line);border-radius:10px;background:var(--panel);overflow:hidden}
+.branch.left{border-right:4px solid var(--pve)}
+.branch.right{border-left:4px solid var(--ceph)}
+.bhead{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border:0;background:transparent;text-align:inherit}
+.branch.left .bhead{flex-direction:row-reverse}
+.bid{font:600 12px ui-monospace,"SF Mono",Menlo,Consolas,monospace;padding:2px 7px;border-radius:5px}
+.left .bid{background:var(--pve-soft);color:var(--pve)}
+.right .bid{background:var(--ceph-soft);color:var(--ceph)}
+.bname{flex:1;font-weight:600}
+.bcount{color:var(--muted);font-size:12.5px}
+.bbody{padding:2px 14px 12px;border-top:1px solid var(--line)}
+.subname{margin:10px 0 4px;font-size:12.5px;font-weight:600;color:var(--muted)}
+ul{list-style:none;margin:0;padding:0}
+li{padding:5px 0;border-bottom:1px dashed var(--line)}
+li:last-child{border-bottom:0}
+code{font:13px/1.45 ui-monospace,"SF Mono",Menlo,Consolas,monospace;word-break:break-word;cursor:copy}
+.why{display:block;color:var(--muted);font-size:12.5px}
+li.danger code{color:var(--danger)}
+[hidden]{display:none!important}
+.gh{display:inline-block;margin:8px 0 0;font-size:12.5px;color:var(--ceph)}
+.branch:target{box-shadow:0 0 0 2px var(--ceph)}
+@media (max-width:860px){
+#map{grid-template-columns:1fr;padding:12px}
+#wires{display:none}
+.hub{order:-1;margin-bottom:8px}
+.root{position:static;min-height:56px}
+.side.left{text-align:left}
+.branch.left{border-right:1px solid var(--line);border-left:4px solid var(--pve)}
+.branch.left .bhead{flex-direction:row}
+}
+</style>
+</head>
+<body>
+<header class="top">
+<h1>Proxmox + Ceph command mindmap</h1>
+<div class="tools">
+<input id="q" type="search" placeholder="Filter commands" aria-label="Filter commands">
+<button id="expand" type="button">Expand all</button>
+<button id="collapse" type="button">Collapse all</button>
+</div>
+</header>
+<main id="map">
+<svg id="wires" aria-hidden="true"></svg>
+<div class="side left" id="left"></div>
+<div class="hub"><div class="root" id="root">Proxmox<br>+ Ceph</div></div>
+<div class="side right" id="right"></div>
+</main>
+<script>
+const DATA=/*__DATA__*/null;
+const REPO="/*__REPO__*/";const SLUGS=/*__SLUGS__*/{};
+const $=s=>document.querySelector(s);
+const map=$('#map'),wires=$('#wires'),root=$('#root'),q=$('#q');
+let raf=0;
+function draw(){cancelAnimationFrame(raf);raf=requestAnimationFrame(paint)}
+function paint(){
+  if(getComputedStyle(wires).display==='none')return;
+  const m=map.getBoundingClientRect(),r=root.getBoundingClientRect();
+  wires.setAttribute('width',m.width);wires.setAttribute('height',m.height);
+  const y1=r.top+r.height/2-m.top;let out='';
+  document.querySelectorAll('.branch:not([hidden]) .bhead').forEach(btn=>{
+    const side=btn.parentElement.dataset.side,h=btn.getBoundingClientRect();
+    const x1=(side==='left'?r.left:r.right)-m.left,x2=(side==='left'?h.right:h.left)-m.left;
+    const y2=h.top+h.height/2-m.top,cx=(x1+x2)/2;
+    out+='<path class="w '+side+'" d="M'+x1+' '+y1+'C'+cx+' '+y1+' '+cx+' '+y2+' '+x2+' '+y2+'"/>';
+  });
+  wires.innerHTML=out;
+}
+function copy(el,text){
+  if(!navigator.clipboard)return;
+  navigator.clipboard.writeText(text).then(()=>{
+    const old=el.textContent;el.textContent='Copied';
+    setTimeout(()=>{el.textContent=old;draw()},700);
+  },()=>{});
+}
+function setOpen(sec,open){
+  const btn=sec.querySelector('.bhead'),body=sec.querySelector('.bbody');
+  body.hidden=!open;btn.setAttribute('aria-expanded',String(open));
+}
+function build(side,branches,holder,title){
+  const h=document.createElement('p');h.className='sidehead';h.textContent=title;holder.appendChild(h);
+  branches.forEach(b=>{
+    const n=b.subs.reduce((a,s)=>a+s.items.length,0);
+    const sec=document.createElement('section');sec.className='branch '+side;sec.dataset.side=side;
+    const btn=document.createElement('button');btn.type='button';btn.className='bhead';btn.setAttribute('aria-expanded','false');
+    const id=document.createElement('span');id.className='bid';id.textContent=b.id;
+    const nm=document.createElement('span');nm.className='bname';nm.textContent=b.name;
+    const ct=document.createElement('span');ct.className='bcount';ct.textContent=n;
+    btn.append(id,nm,ct);
+    sec.id=b.id;
+    const body=document.createElement('div');body.className='bbody';body.hidden=true;
+    b.subs.forEach(s=>{
+      const sub=document.createElement('div');sub.className='sub';
+      const t=document.createElement('div');t.className='subname';t.textContent=s.name;sub.appendChild(t);
+      const ul=document.createElement('ul');
+      s.items.forEach(it=>{
+        const li=document.createElement('li');if(it.d)li.className='danger';
+        li.dataset.t=(it.c+' '+it.p+' '+s.name).toLowerCase();
+        const c=document.createElement('code');c.textContent=it.c;c.title='Click to copy';c.tabIndex=0;
+        c.addEventListener('click',()=>copy(c,it.c));
+        c.addEventListener('keydown',e=>{if(e.key==='Enter')copy(c,it.c)});
+        const w=document.createElement('span');w.className='why';w.textContent=it.p;
+        li.append(c,w);ul.appendChild(li);
+      });
+      sub.appendChild(ul);body.appendChild(sub);
+    });
+    btn.addEventListener('click',()=>{setOpen(sec,body.hidden);draw()});
+    if(REPO&&SLUGS[b.id]){const a=document.createElement('a');a.className='gh';a.href='https://github.com/'+REPO+'/blob/main/docs/'+SLUGS[b.id];a.textContent='mở file .md';a.target='_blank';a.rel='noopener';body.prepend(a)}
+    sec.append(btn,body);holder.appendChild(sec);
+  });
+}
+build('left',DATA.left,$('#left'),'Proxmox host, '+DATA.left.length+' branches');
+build('right',DATA.right,$('#right'),'Ceph, '+DATA.right.length+' branches');
+$('#expand').addEventListener('click',()=>{document.querySelectorAll('.branch:not([hidden])').forEach(s=>setOpen(s,true));draw()});
+$('#collapse').addEventListener('click',()=>{document.querySelectorAll('.branch').forEach(s=>setOpen(s,false));draw()});
+q.addEventListener('input',()=>{
+  const v=q.value.trim().toLowerCase();
+  document.querySelectorAll('.branch').forEach(sec=>{
+    let any=false;
+    sec.querySelectorAll('.sub').forEach(sub=>{
+      let subAny=false;
+      sub.querySelectorAll('li').forEach(li=>{const ok=!v||li.dataset.t.includes(v);li.hidden=!ok;if(ok)subAny=true});
+      sub.hidden=!subAny;if(subAny)any=true;
+    });
+    sec.hidden=!!v&&!any;
+    setOpen(sec,!!v&&any);
+  });
+  draw();
+});
+window.addEventListener('resize',draw);
+window.addEventListener('scroll',draw,{passive:true});
+if(window.ResizeObserver)new ResizeObserver(draw).observe(map);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+function openHash(){
+  const id=decodeURIComponent(location.hash.slice(1));if(!id)return;
+  const sec=document.getElementById(id);if(!sec||!sec.classList.contains('branch'))return;
+  setOpen(sec,true);draw();sec.scrollIntoView({block:'center'});
+}
+window.addEventListener('hashchange',openHash);
+document.querySelectorAll('.branch').forEach(sec=>sec.querySelector('.bhead').addEventListener('click',()=>{
+  if(!sec.querySelector('.bbody').hidden)history.replaceState(null,'','#'+sec.id)}));
+document.addEventListener('keydown',e=>{
+  if(e.key==='/'&&document.activeElement!==q){e.preventDefault();q.focus();q.select()}
+  if(e.key==='Escape'&&document.activeElement===q){q.value='';q.dispatchEvent(new Event('input'));q.blur()}
+});
+const qp=new URLSearchParams(location.search).get('q');
+if(qp){q.value=qp;q.dispatchEvent(new Event('input'))}
+q.placeholder='Lọc lệnh  (nhấn /)';
+openHash();
+draw();
+</script>
+</body>
+</html>
