@@ -50,7 +50,7 @@ unknown = [c for c in vi if c not in all_cmds]
 if unknown:
     print("CẢNH BÁO: vi.json có lệnh không khớp commands.json:", *unknown, sep="\n  ")
 
-for folder in ("proxmox", "ceph", "cases"):
+for folder in ("proxmox", "ceph", "cases", "runbooks"):
     p = ROOT / "docs" / folder
     shutil.rmtree(p, ignore_errors=True)
     p.mkdir(parents=True)
@@ -85,16 +85,26 @@ for side, branches in data.items():
             out.append("")
         (ROOT / "docs" / slugs[b["id"]]).write_text("\n".join(out).rstrip() + "\n", encoding="utf-8")
 
-# ---- case study .md ----
+# ---- case study / runbook .md ----
 for c in cases:
-    o = [f"# {c['title']}", "", f"[← Mục lục](../../../README.md) · Case study {SCOPE_LABEL[c['scope']]}", "",
-         f"**Triệu chứng:** {c['symptoms']}", "", f"**Nguyên nhân hay gặp:** {c['causes']}", "",
-         "## Các bước xử lý", ""]
+    rb = c.get("kind") == "runbook"
+    if rb:
+        o = [f"# {c['title']}", "", "[← Mục lục](../../README.md) · Runbook", "",
+             f"**Mục tiêu:** {c['goal']}", "", f"**Điều kiện trước khi làm:** {c['prereq']}", "", "## Các bước", ""]
+    else:
+        o = [f"# {c['title']}", "", f"[← Mục lục](../../../README.md) · Case study {SCOPE_LABEL[c['scope']]}", "",
+             f"**Triệu chứng:** {c['symptoms']}", "", f"**Nguyên nhân hay gặp:** {c['causes']}", "",
+             "## Các bước xử lý", ""]
     for i, st in enumerate(c["steps"], 1):
-        o += [f"{i}. {st['t']}", "", "```bash"] + st["cmds"] + ["```", ""]
-    o += ["## Lưu ý", "", c["notes"], "",
-          f"<!-- từ khóa: {c['tags']} -->"]
-    (ROOT / "docs/cases" / c["scope"] / f"{c['id']}.md").write_text("\n".join(o) + "\n", encoding="utf-8")
+        o += [f"{i}. {st['t']}", ""]
+        if st["cmds"]:
+            o += ["```bash"] + st["cmds"] + ["```", ""]
+    o += ["## Lưu ý", "", c["notes"], ""]
+    if c.get("refs"):
+        o += ["## Nguồn tham khảo", ""] + [f"- [{r['t']}]({r['u']})" for r in c["refs"]] + [""]
+    o += [f"<!-- từ khóa: {c['tags']} -->"]
+    dest = ROOT / "docs/runbooks" / f"{c['id']}.md" if rb else ROOT / "docs/cases" / c["scope"] / f"{c['id']}.md"
+    dest.write_text("\n".join(o) + "\n", encoding="utf-8")
 
 # ---- README ----
 total = sum(count(b) for br in data.values() for b in br)
@@ -114,9 +124,14 @@ r += ["## Cách tìm nhanh", "",
 for sc in ("ceph", "pve"):
     r += [f"## Case study {SCOPE_LABEL[sc]} (lỗi và cách xử lý)", "", "| Sự cố | Triệu chứng |", "|---|---|"]
     for c in cases:
-        if c["scope"] == sc:
+        if c["scope"] == sc and c.get("kind") != "runbook":
             r.append(f"| [{c['title']}](docs/cases/{sc}/{c['id']}.md) | {c['symptoms'].replace('|', '/')} |")
     r.append("")
+r += ["## Runbook (quy trình thao tác từng bước)", "", "| Runbook | Mục tiêu |", "|---|---|"]
+for c in cases:
+    if c.get("kind") == "runbook":
+        r.append(f"| [{c['title']}](docs/runbooks/{c['id']}.md) | {c['goal'].replace('|', '/')} |")
+r.append("")
 for side, branches in data.items():
     folder, label = SIDES[side]
     r += [f"## {label}", "", "| ID | Nhóm | Lệnh | Gồm |", "|---|---|---:|---|"]
@@ -140,4 +155,7 @@ html = (tpl.replace("/*__DATA__*/null", json.dumps(data, ensure_ascii=False))
            .replace("/*__SLUGS__*/{}", json.dumps(slugs))
            .replace("/*__CASES__*/[]", json.dumps(cases, ensure_ascii=False)))
 (ROOT / "docs/index.html").write_text(html, encoding="utf-8")
-print(f"ok: {len(slugs)} file .md, {len(cases)} case ({sum(c["scope"]=="ceph" for c in cases)} Ceph, {sum(c["scope"]=="pve" for c in cases)} Proxmox), {total} lệnh, Việt hóa {covered}/{total}")
+nrb = sum(c.get("kind") == "runbook" for c in cases)
+nce = sum(c["scope"] == "ceph" and c.get("kind") != "runbook" for c in cases)
+npv = sum(c["scope"] == "pve" and c.get("kind") != "runbook" for c in cases)
+print(f"ok: {len(slugs)} file .md, {nce + npv} case ({nce} Ceph, {npv} Proxmox), {nrb} runbook, {total} lệnh, Việt hóa {covered}/{total}")

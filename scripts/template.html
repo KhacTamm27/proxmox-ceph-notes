@@ -50,6 +50,8 @@ li.danger code{color:var(--danger)}
 .gh{display:inline-block;margin:8px 0 0;font-size:12.5px;color:var(--ceph)}
 .branch:target{box-shadow:0 0 0 2px var(--ceph)}
 @media (max-width:860px){
+.bsubs{display:none}
+.bname{flex:1;max-width:none}
 #map{grid-template-columns:1fr;padding:12px}
 #wires{display:none}
 .hub{order:-1;margin-bottom:8px}
@@ -59,6 +61,23 @@ li.danger code{color:var(--danger)}
 .branch.left .bhead{flex-direction:row}
 }
 
+#map{display:block;max-width:1100px;padding:8px 20px 40px}
+#wires,.hub{display:none}
+.side{gap:6px;margin-bottom:22px}
+.side.left,.side.right{text-align:left}
+.sidehead{font-size:15px;font-weight:600;color:var(--ink);margin:14px 0 6px}
+.branch.left,.branch.right{border:1px solid var(--line);border-left:4px solid var(--pve)}
+.branch.right{border-left-color:var(--ceph)}
+.branch.left .bhead{flex-direction:row}
+.bhead{padding:10px 12px}
+.bhead:hover{background:var(--panel-hover,rgba(127,127,127,.08))}
+.bname{flex:0 0 280px;max-width:40%}
+.bsubs{flex:1;min-width:0;color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bbody{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:0 28px}
+.bbody .gh{grid-column:1/-1}
+#jump b{font-size:12.5px;color:var(--muted);margin:0 2px 0 8px;align-self:center}
+.jl{font:600 12px ui-monospace,Menlo,Consolas,monospace;padding:2px 7px;border:1px solid var(--line);border-radius:5px;text-decoration:none;color:var(--ink);background:var(--panel)}
+.refs{font-size:13px;margin:6px 0}.refs a{color:var(--ceph)}
 .tools .tab[aria-pressed=true]{background:var(--ink);color:var(--bg)}
 .chips{display:flex;gap:6px;flex-wrap:wrap;max-width:1100px;margin:0 auto;padding:10px 20px 0}
 .chip{padding:3px 10px;border:1px solid var(--line);border-radius:999px;background:var(--panel);font-size:13px;color:var(--muted)}
@@ -86,13 +105,16 @@ details.case ol li{border:0;padding:4px 0}
 <button id="tabmap" class="tab" type="button" aria-pressed="true">Mindmap</button>
 <button id="tabceph" class="tab" type="button" aria-pressed="false">Case Ceph</button>
 <button id="tabpve" class="tab" type="button" aria-pressed="false">Case Proxmox</button>
+<button id="tabrun" class="tab" type="button" aria-pressed="false">Runbook</button>
 <button id="expand" type="button">Expand all</button>
 <button id="collapse" type="button">Collapse all</button>
 </div>
 </header>
 <div class="chips" id="chips" aria-label="Gợi ý tìm kiếm"></div>
+<nav class="chips" id="jump" aria-label="Nhảy tới nhóm"></nav>
 <section id="results" hidden></section>
 <section id="cases-ceph" class="casesec" hidden><h2 class="sech">Case study Ceph</h2></section>
+<section id="cases-run" class="casesec" hidden><h2 class="sech">Runbook (quy trình thao tác từng bước)</h2></section>
 <section id="cases-pve" class="casesec" hidden><h2 class="sech">Case study Proxmox cluster</h2></section>
 <main id="map">
 <svg id="wires" aria-hidden="true"></svg>
@@ -141,7 +163,8 @@ function build(side,branches,holder,title){
     const id=document.createElement('span');id.className='bid';id.textContent=b.id;
     const nm=document.createElement('span');nm.className='bname';nm.textContent=b.name;
     const ct=document.createElement('span');ct.className='bcount';ct.textContent=n;
-    btn.append(id,nm,ct);
+    const sb=document.createElement('span');sb.className='bsubs';sb.textContent=b.subs.map(s=>s.name).join(' · ');
+    btn.append(id,nm,sb,ct);
     sec.id=b.id;
     const body=document.createElement('div');body.className='bbody';body.hidden=true;
     b.subs.forEach(s=>{
@@ -186,31 +209,36 @@ window.addEventListener('resize',draw);
 window.addEventListener('scroll',draw,{passive:true});
 if(window.ResizeObserver)new ResizeObserver(draw).observe(map);
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
-const res=$('#results'),secs={ceph:$('#cases-ceph'),pve:$('#cases-pve')},casesEl=document;
+const res=$('#results'),secs={ceph:$('#cases-ceph'),pve:$('#cases-pve'),run:$('#cases-run')},casesEl=document;
 function mkPrompt(title,sym,cmds){return 'Tôi đang xử lý trên cluster Proxmox + Ceph: '+title+'\n'+(sym?'Triệu chứng: '+sym+'\n':'')+'Các lệnh chẩn đoán liên quan:\n'+cmds.map(c=>'- '+c).join('\n')+'\n\nOutput lệnh thực tế của tôi (đã xóa IP, tên host, key):\n<<< dán output vào đây >>>\n\nHãy phân tích nguyên nhân khả dĩ nhất, nói rõ còn thiếu thông tin gì, và đề xuất bước tiếp theo theo thứ tự an toàn nhất. Cảnh báo trước nếu có lệnh nguy hiểm.'}
+const ct=c=>N([c.title,c.tags,c.symptoms,c.causes,c.goal,c.prereq].filter(Boolean).join(' '));
 function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
 function cmdEl(c){const e=el('code','cmdline',c);e.title='Bấm để copy';e.tabIndex=0;e.addEventListener('click',()=>copy(e,c));return e}
 CASES.forEach(c=>{
-  const d=el('details','case');d.id='case-'+c.id;d.dataset.t=N(c.title+' '+c.tags+' '+c.symptoms+' '+c.causes);
+  const d=el('details','case');d.id='case-'+c.id;d.dataset.t=ct(c);const rb=c.kind==='runbook';
   d.append(el('summary',null,c.title));
-  const p1=el('p');p1.append(el('b',null,'Triệu chứng: '),c.symptoms);
-  const p2=el('p');p2.append(el('b',null,'Nguyên nhân hay gặp: '),c.causes);
+  const p1=el('p');p1.append(el('b',null,rb?'Mục tiêu: ':'Triệu chứng: '),rb?c.goal:c.symptoms);
+  const p2=el('p');p2.append(el('b',null,rb?'Điều kiện trước khi làm: ':'Nguyên nhân hay gặp: '),rb?c.prereq:c.causes);
   const ol=el('ol');
-  c.steps.forEach(st=>{const li=el('li',null,st.t);st.cmds.forEach(x=>li.append(cmdEl(x)));ol.append(li)});
+  c.steps.forEach(st=>{const li=el('li',null,st.t);(st.cmds||[]).forEach(x=>li.append(cmdEl(x)));ol.append(li)});
   const nt=el('p','note','Lưu ý: '+c.notes);
   const pb=el('button','pbtn','Copy prompt cho Claude');pb.type='button';
-  pb.addEventListener('click',()=>copy(pb,mkPrompt(c.title,c.symptoms,c.steps.flatMap(s=>s.cmds))));
-  d.append(p1,p2,ol,nt,pb);(c.scope==='pve'?secs.pve:secs.ceph).append(d);
+  pb.addEventListener('click',()=>copy(pb,mkPrompt(c.title,c.symptoms||c.goal,c.steps.flatMap(s=>s.cmds))));
+  d.append(p1,p2,ol,nt);
+  if(c.refs&&c.refs.length){const rp=el('p','refs');rp.append(el('b',null,'Nguồn tham khảo: '));
+    c.refs.forEach((r,i)=>{if(i)rp.append(' · ');const a=el('a',null,r.t);a.href=r.u;a.target='_blank';a.rel='noopener';rp.append(a)});d.append(rp)}
+  d.append(pb);(rb?secs.run:c.scope==='pve'?secs.pve:secs.ceph).append(d);
 });
 function show(tab){
-  map.hidden=tab!=='map';secs.ceph.hidden=tab!=='ceph';secs.pve.hidden=tab!=='pve';
-  [['map','#tabmap'],['ceph','#tabceph'],['pve','#tabpve']].forEach(([k,id])=>$(id).setAttribute('aria-pressed',String(tab===k)));
+  map.hidden=tab!=='map';Object.keys(secs).forEach(k=>{secs[k].hidden=tab!==k});
+  [['map','#tabmap'],['ceph','#tabceph'],['pve','#tabpve'],['run','#tabrun']].forEach(([k,id])=>$(id).setAttribute('aria-pressed',String(tab===k)));
   $('#expand').hidden=$('#collapse').hidden=tab!=='map';
   if(tab==='map')draw();
 }
 $('#tabmap').addEventListener('click',()=>show('map'));
 $('#tabceph').addEventListener('click',()=>show('ceph'));
 $('#tabpve').addEventListener('click',()=>show('pve'));
+$('#tabrun').addEventListener('click',()=>show('run'));
 function renderResults(v){
   res.replaceChildren();
   casesEl.querySelectorAll('details.case').forEach(d=>{d.hidden=!!v&&!v.split(/\s+/).every(w=>d.dataset.t.includes(w))});
@@ -220,7 +248,7 @@ function renderResults(v){
     const t=N(it.c+' '+it.p+' '+(it.v||'')+' '+(it.k||'')+' '+s.name+' '+b.name);
     if(toks.every(w=>t.includes(w)))hits.push({b,it});
   })));
-  const ch=CASES.filter(c=>toks.every(w=>N(c.title+' '+c.tags+' '+c.symptoms+' '+c.causes).includes(w)));
+  const ch=CASES.filter(c=>toks.every(w=>ct(c).includes(w)));
   const head=el('div','rhead');
   head.append(el('span',null,'Kết quả: '+hits.length+' lệnh, '+ch.length+' case'));
   if(hits.length||ch.length){
@@ -229,7 +257,7 @@ function renderResults(v){
     head.append(pb);
   }
   res.append(head);
-  ch.forEach(c=>{const a=el('a','rcase',(c.scope==='pve'?'Case Proxmox: ':'Case Ceph: ')+c.title);a.href='#case-'+c.id;res.append(a)});
+  ch.forEach(c=>{const a=el('a','rcase',(c.kind==='runbook'?'Runbook: ':c.scope==='pve'?'Case Proxmox: ':'Case Ceph: ')+c.title);a.href='#case-'+c.id;res.append(a)});
   hits.slice(0,30).forEach(({b,it})=>{
     const row=el('div','rrow');const a=el('a',null,b.id);a.href='#'+b.id;
     const box=el('div');box.append(cmdEl(it.c),el('span','vi',it.v||it.p));
@@ -238,14 +266,17 @@ function renderResults(v){
   if(hits.length>30)res.append(el('p','note','Còn '+(hits.length-30)+' lệnh nữa, thu hẹp từ khóa để xem.'));
   res.hidden=false;
 }
-['osd down','đầy disk','lệch giờ','mất quorum','slow ops','pg inconsistent','reboot bảo trì','thay đĩa','vm lock','đăng xuất','rgw 503','migrate','backup lỗi','dấu hỏi','crash'].forEach(x=>{
+['osd down','đầy disk','lệch giờ','mất quorum','slow ops','pg inconsistent','reboot bảo trì','thay đĩa','vm lock','đăng xuất','rgw 503','migrate','backup lỗi','dấu hỏi','nâng cấp','bảo trì','crash'].forEach(x=>{
   const b=el('button','chip',x);b.type='button';
   b.addEventListener('click',()=>{q.value=x;q.dispatchEvent(new Event('input'))});$('#chips').append(b)});
+const jump=$('#jump');
+[['Proxmox',DATA.left],['Ceph',DATA.right]].forEach(([n,arr])=>{jump.append(el('b',null,n+':'));arr.forEach(b=>{const a=el('a','jl',b.id);a.href='#'+b.id;a.title=b.name;jump.append(a)})});
 function openHash(){
   const id=decodeURIComponent(location.hash.slice(1));if(!id)return;
   if(id==='cases'||id==='cases-ceph'){show('ceph');return}
   if(id==='cases-pve'){show('pve');return}
-  if(id.startsWith('case-')){const cc=CASES.find(c=>'case-'+c.id===id);show(cc&&cc.scope==='pve'?'pve':'ceph');const d=document.getElementById(id);if(d){d.hidden=false;d.open=true;d.scrollIntoView({block:'start'})}return}
+  if(id==='runbooks'||id==='cases-run'){show('run');return}
+  if(id.startsWith('case-')){const cc=CASES.find(c=>'case-'+c.id===id);show(cc&&cc.kind==='runbook'?'run':cc&&cc.scope==='pve'?'pve':'ceph');const d=document.getElementById(id);if(d){d.hidden=false;d.open=true;d.scrollIntoView({block:'start'})}return}
   show('map');
   const sec=document.getElementById(id);if(!sec||!sec.classList.contains('branch'))return;
   setOpen(sec,true);draw();sec.scrollIntoView({block:'center'});

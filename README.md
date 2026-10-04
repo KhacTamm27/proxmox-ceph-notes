@@ -32,6 +32,13 @@ Tài liệu cá nhân: 493 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 | [Mạng Ceph: MTU không khớp, nghẽn hoặc rớt gói](docs/cases/ceph/network-mtu.md) | Slow ops hoặc OSD flapping chỉ liên quan một vài node, ping thường được nhưng IO lớn bị treo. |
 | [RGW/S3 trả 403 (AccessDenied, SignatureDoesNotMatch, QuotaExceeded)](docs/cases/ceph/rgw-403.md) | Client S3 nhận 403 dù cluster khỏe: AccessDenied, SignatureDoesNotMatch hoặc QuotaExceeded. |
 | [Thêm OSD hoặc node mới làm chậm production](docs/cases/ceph/add-osd-throttle.md) | Sau khi thêm OSD hoặc node, VM chậm, nhiều PG backfilling, objects misplaced. |
+| [PG down, peering kẹt hoặc unfound objects (mất nhiều OSD)](docs/cases/ceph/pg-down-incomplete.md) | HEALTH_ERR, "N pgs down", pg ở trạng thái down+peering, IO vào một số object bị treo; hoặc "N unfound" (objects unfound). |
+| [BLUEFS_SPILLOVER: metadata RocksDB tràn sang đĩa chậm](docs/cases/ceph/bluefs-spillover.md) | HEALTH_WARN "BlueFS spillover detected on N OSD(s)", latency của các OSD HDD tăng. |
+| [Cluster đầy khẩn cấp: ghi bị chặn (OSD_FULL), backfill_toofull](docs/cases/ceph/cluster-full-emergency.md) | HEALTH_ERR "full osd(s)", VM không ghi được, PG có backfill_toofull hoặc recovery_toofull nên recovery không chạy. |
+| [Latency OSD cao, IOPS thấp do SSD consumer (không có PLP)](docs/cases/ceph/osd-latency-consumer-ssd.md) | ceph osd perf cho commit/apply latency hàng chục đến hàng trăm ms ở một số OSD, VM chậm, thỉnh thoảng slow ops, benchmark cho IOPS rất thấp. |
+| [Nâng cấp Ceph trên Proxmox (ví dụ Reef lên Squid)](docs/cases/ceph/ceph-upgrade-pve.md) | Cần nâng cấp phiên bản Ceph mà không làm gián đoạn VM; sau nâng cấp có cảnh báo require-osd-release. |
+| [Cờ bảo trì Ceph còn sót sau bảo trì (noout, noscrub, norecover...)](docs/cases/ceph/maintenance-flags-left.md) | HEALTH_WARN "noout,nobackfill,norecover,norebalance,noscrub,nodeep-scrub flag(s) set", PG không recover, cảnh báo scrub quá hạn. |
+| [CephFS: MDS failover khi restart hoặc nâng cấp (max_mds lớn hơn 1)](docs/cases/ceph/cephfs-mds-restart.md) | Restart ceph-mds.target hoặc nâng cấp làm CephFS gián đoạn ngắn, trạng thái MDS tạm là replay, reconnect hoặc rejoin. |
 
 ## Case study Proxmox cluster (lỗi và cách xử lý)
 
@@ -48,6 +55,27 @@ Tài liệu cá nhân: 493 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 | [HA: VM không tự chạy lại trên node khác, trạng thái error hoặc fence](docs/cases/pve/ha-no-restart.md) | Node chết nhưng VM HA không tự khởi động ở node khác, hoặc VM HA ở trạng thái error, freeze, fence. |
 | [Backup vzdump lỗi hoặc treo](docs/cases/pve/backup-fail.md) | Job backup báo lỗi, chạy rất lâu, hoặc để lại VM bị lock. |
 | [local-lvm (thin pool) đầy](docs/cases/pve/lvm-thin-full.md) | local-lvm gần 100%, VM bị I/O error hoặc treo, log có "thin pool ... out of space". |
+| [Corosync link chập chờn, retransmit, node tự reboot (HA watchdog)](docs/cases/pve/corosync-flapping.md) | Log corosync có "Retransmit List", knet link down/up, "Token has not been received"; cluster mất quorum rồi phục hồi; các node có HA tự reboot cùng lúc. |
+| [Xóa node hỏng và join lại cùng tên (node ma xám trong GUI)](docs/cases/pve/ghost-node-rejoin.md) | Đã pvecm delnode nhưng node vẫn hiện xám trong GUI; cài lại node cùng tên không join được hoặc báo lỗi SSH/chứng chỉ. |
+| [Lỗi cfs-lock "got lock request timeout" (pmxcfs, HA, replication)](docs/cases/pve/cfs-lock-timeout.md) | Log có "cfs-lock ... error: got lock request timeout" (từ pvescheduler, pvestatd, ha-crm), tác vụ HA/replication/backup lỗi, GUI báo unknown. |
+| [Nâng cấp Proxmox VE 8 lên 9 trong cluster có Ceph](docs/cases/pve/pve-upgrade-8to9.md) | Cần nâng cấp cluster Proxmox đang chạy production (có Ceph, HA) mà không gián đoạn dịch vụ. |
+| [Một node chết hẳn (hỏng phần cứng): khôi phục dịch vụ](docs/cases/pve/node-dead-recovery.md) | Một node mất hoàn toàn (không bật lại được), VM trên node đó ngừng, GUI hiện node đỏ, Ceph báo OSD down và PG degraded. |
+| [Node dừng: HA khởi động lại đồng loạt VM làm tràn RAM (domino)](docs/cases/pve/ha-domino.md) | Một node dừng hoặc bị fence, VM của nó tự bật lại trên các host còn lại, RAM các host đầy, hệ thống chậm hoặc sập lan sang node khác. |
+| [PBS hỏng hoặc tắt: dựng PBS mới nhận lại Datastore S3 (adopt) và restore](docs/cases/pve/pbs-s3-recovery.md) | Máy PBS cũ lỗi phần cứng, cháy, hoặc chủ động tắt, cần khôi phục dữ liệu backup đang nằm trên bucket S3. |
+| [LUN iSCSI mới hoặc Volume Group không hiện trên một số node (Shared LVM)](docs/cases/pve/lun-not-visible.md) | Sau khi thêm LUN hoặc mở rộng VG, một số node không thấy thiết bị hoặc không thấy VG, pvesm status báo storage lỗi. |
+| [Storage NFS offline hoặc không thêm được vào Proxmox](docs/cases/pve/nfs-storage-offline.md) | Storage NFS hiện dấu hỏi hoặc offline, không thêm được vào Datacenter > Storage, lệnh pvesm status chậm hoặc treo. |
+| [PBS S3: ENOENT hoặc Permission denied với cache, không thấy backup](docs/cases/pve/pbs-s3-permission.md) | Tạo hoặc mount datastore S3 báo ENOENT hoặc Permission denied, backup lỗi, hoặc PBS mới không thấy bản backup cũ. |
+
+## Runbook (quy trình thao tác từng bước)
+
+| Runbook | Mục tiêu |
+|---|---|
+| [Nâng cấp Ceph Quincy 17.2.8 → Reef 18.2.8 → Squid 19.2.4 trên PVE 8.4 (3 node, có CephFS)](docs/runbooks/rb-ceph-upgrade-quincy-reef-squid.md) | Nâng Ceph hai bước liên tiếp (Quincy lên Reef, rồi Reef lên Squid) trên cluster 3 node hyper-converged (mỗi node có MON, MGR, OSD, MDS), PVE giữ nguyên 8.4. Ghi chú gốc dừng ở PVE 8.4 + Squid 19.2.4; bước tiếp theo là pve8to9. |
+| [Bảo trì production: tắt HA và đặt cờ bảo trì Ceph trước khi tắt node](docs/runbooks/rb-prod-maintenance.md) | Tắt hoặc reboot node trong môi trường production mà không kích hoạt fencing/HA di chuyển VM đồng loạt, và không để Ceph backfill/recovery không cần thiết. |
+| [PBS: tạo Datastore S3 với local cache ZFS và backup từ PVE](docs/runbooks/rb-pbs-s3-datastore.md) | Dùng một bucket S3 (nhà cung cấp S3-compatible) làm datastore của PBS 4.x, có vùng đệm local cache trên ZFS, rồi thêm vào PVE và backup thử. |
+| [Nâng cấp một node Proxmox VE từ 5.4 lên 8.x (qua 6, 7, 8) kèm ZFS](docs/runbooks/rb-pve5-to-8-single.md) | Nâng một node đơn Proxmox rất cũ (5.4, Debian stretch) lên 8.x theo chuỗi 5 lên 6 lên 7 lên 8, rồi import lại các zpool dữ liệu. |
+| [SAN iSCSI + Shared LVM cho cluster Proxmox, và mở rộng dung lượng online (pvmove)](docs/runbooks/rb-san-iscsi-shared-lvm.md) | Cho 3 node Proxmox cùng đăng nhập một LUN iSCSI và dùng chung một Volume Group (Shared LVM) để chia volume cho VM; sau đó mở rộng dung lượng không mất dữ liệu, không downtime. |
+| [NAS NFS làm storage dùng chung cho cluster Proxmox](docs/runbooks/rb-nas-nfs-storage.md) | Cho 3 node Proxmox mount chung một thư mục xuất từ NFS server, chứa trực tiếp file .qcow2 hoặc .raw của VM. Dễ triển khai, phù hợp lab hoặc tải vừa phải. |
 
 ## Proxmox host
 

@@ -44,6 +44,6 @@ ceph osd unset noout
 
 ## Lưu ý
 
-Mỗi lần chỉ làm một node. Đừng reboot node kế tiếp khi PG chưa active+clean. Quên unset noout là lỗi hay gặp: nếu sau đó một OSD chết thật, Ceph sẽ không tự phục hồi.
+Mỗi lần chỉ làm một node. Đừng reboot node kế tiếp khi PG chưa active+clean. Quên unset noout là lỗi hay gặp: nếu sau đó một OSD chết thật, Ceph sẽ không tự phục hồi. Quy trình đầy đủ cho production (tắt HA, 6 cờ Ceph) xem runbook bảo trì production.
 
 <!-- từ khóa: reboot bảo trì node maintenance noout migrate nâng cấp kernel -->

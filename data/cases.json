@@ -344,7 +344,7 @@
     ]
    }
   ],
-  "notes": "Mỗi lần chỉ làm một node. Đừng reboot node kế tiếp khi PG chưa active+clean. Quên unset noout là lỗi hay gặp: nếu sau đó một OSD chết thật, Ceph sẽ không tự phục hồi.",
+  "notes": "Mỗi lần chỉ làm một node. Đừng reboot node kế tiếp khi PG chưa active+clean. Quên unset noout là lỗi hay gặp: nếu sau đó một OSD chết thật, Ceph sẽ không tự phục hồi. Quy trình đầy đủ cho production (tắt HA, 6 cờ Ceph) xem runbook bảo trì production.",
   "scope": "pve"
  },
  {
@@ -1086,5 +1086,1238 @@
    }
   ],
   "notes": "Pool đầy 100% có thể làm hỏng filesystem trong VM, nên đặt cảnh báo ở khoảng 80%. Cẩn thận khi overprovision."
+ },
+ {
+  "id": "pg-down-incomplete",
+  "scope": "ceph",
+  "title": "PG down, peering kẹt hoặc unfound objects (mất nhiều OSD)",
+  "tags": "ceph pg down peering incomplete unfound objects mất dữ liệu osd lost mark_unfound_lost stuck inactive",
+  "symptoms": "HEALTH_ERR, \"N pgs down\", pg ở trạng thái down+peering, IO vào một số object bị treo; hoặc \"N unfound\" (objects unfound).",
+  "causes": "Nhiều OSD cùng chứa bản sao của một PG bị mất lần lượt (OSD thứ nhất chết, chưa kịp chép dữ liệu mới thì OSD thứ hai chết), peering bị chặn vì chờ OSD đã down.",
+  "steps": [
+   {
+    "t": "Xem PG nào down và có phải do peering không",
+    "cmds": [
+     "ceph health detail",
+     "ceph pg dump_stuck inactive"
+    ]
+   },
+   {
+    "t": "Hỏi PG vì sao kẹt: phần recovery_state sẽ nói peering đang bị chặn bởi OSD nào",
+    "cmds": [
+     "ceph pg <pgid> query"
+    ]
+   },
+   {
+    "t": "Cố gắng đưa OSD bị chặn sống lại trước (start service, sửa đĩa, đưa node về)",
+    "cmds": [
+     "ceph osd tree down",
+     "systemctl start ceph-osd@<osd-id>"
+    ]
+   },
+   {
+    "t": "Với unfound: liệt kê object unfound và OSD có thể còn giữ bản sao",
+    "cmds": [
+     "ceph pg <pgid> list_unfound",
+     "ceph pg <pgid> query"
+    ]
+   },
+   {
+    "t": "BIỆN PHÁP CUỐI, chỉ khi OSD chắc chắn không thể lấy lại: khai báo OSD mất rồi bỏ hoặc quay về bản cũ của object unfound (mất dữ liệu)",
+    "cmds": [
+     "ceph osd lost <osd-id> --yes-i-really-mean-it",
+     "ceph pg <pgid> mark_unfound_lost revert"
+    ]
+   }
+  ],
+  "notes": "Hai lệnh ở bước cuối làm mất dữ liệu vĩnh viễn, tài liệu Ceph chỉ dùng khi đã hết cách lấy lại OSD. Chụp output của ceph pg query và ceph health detail trước khi chạy. Luôn ưu tiên đưa OSD cũ trở lại, kể cả đưa đĩa sang máy khác.",
+  "refs": [
+   {
+    "t": "Ceph docs: Troubleshooting PGs",
+    "u": "https://docs.ceph.com/en/reef/rados/troubleshooting/troubleshooting-pg/"
+   }
+  ]
+ },
+ {
+  "id": "bluefs-spillover",
+  "scope": "ceph",
+  "title": "BLUEFS_SPILLOVER: metadata RocksDB tràn sang đĩa chậm",
+  "tags": "ceph bluefs spillover db wal ssd nvme hdd metadata tràn rocksdb chậm cảnh báo bluestore",
+  "symptoms": "HEALTH_WARN \"BlueFS spillover detected on N OSD(s)\", latency của các OSD HDD tăng.",
+  "causes": "Phân vùng DB/WAL trên SSD/NVMe quá nhỏ so với dung lượng OSD (hoặc omap tăng nhiều, ví dụ bucket index RGW) nên metadata phải ghi xuống đĩa dữ liệu chậm.",
+  "steps": [
+   {
+    "t": "Xem OSD nào bị và mức tràn",
+    "cmds": [
+     "ceph health detail"
+    ]
+   },
+   {
+    "t": "Đo lượng dữ liệu đang nằm trên đĩa chậm (slow_used_bytes lớn hơn 0 là đang tràn)",
+    "cmds": [
+     "ceph daemon osd.<osd-id> perf dump bluefs"
+    ]
+   },
+   {
+    "t": "Giảm tạm thời bằng compact (cảnh báo có thể quay lại)",
+    "cmds": [
+     "ceph tell osd.<osd-id> compact"
+    ]
+   },
+   {
+    "t": "Xử lý gốc: mở rộng thiết bị DB, hoặc dừng OSD rồi chuyển dữ liệu tràn về lại DB bằng công cụ bluestore",
+    "cmds": [
+     "systemctl stop ceph-osd@<osd-id>",
+     "ceph-bluestore-tool bluefs-bdev-migrate --path /var/lib/ceph/osd/ceph-<osd-id> --devs-source /var/lib/ceph/osd/ceph-<osd-id>/block --dev-target /var/lib/ceph/osd/ceph-<osd-id>/block.db",
+     "systemctl start ceph-osd@<osd-id>"
+    ]
+   }
+  ],
+  "notes": "Mức khuyến nghị tham khảo là DB khoảng 4% dung lượng OSD. Có thể tắt cảnh báo bằng ceph config set osd bluestore_warn_on_bluefs_spillover false nhưng đó chỉ là che cảnh báo, không giải quyết nguyên nhân. Làm lần lượt từng OSD, kiểm tra noout/ok-to-stop trước khi dừng.",
+  "refs": [
+   {
+    "t": "Netdata: Ceph BlueStore DB spillover",
+    "u": "https://www.netdata.cloud/guides/ceph/ceph-bluestore-db-spillover/"
+   },
+   {
+    "t": "Red Hat: BlueFS spillover warning",
+    "u": "https://access.redhat.com/node/4820151"
+   }
+  ]
+ },
+ {
+  "id": "cluster-full-emergency",
+  "scope": "ceph",
+  "title": "Cluster đầy khẩn cấp: ghi bị chặn (OSD_FULL), backfill_toofull",
+  "tags": "ceph full osd_full cluster đầy không ghi được backfill_toofull recovery toofull đầy khẩn cấp gc snapshot",
+  "symptoms": "HEALTH_ERR \"full osd(s)\", VM không ghi được, PG có backfill_toofull hoặc recovery_toofull nên recovery không chạy.",
+  "causes": "Một hoặc vài OSD vượt ngưỡng full (mặc định 95%) do dữ liệu tăng nhanh hoặc phân bố lệch; Ceph chặn ghi để tránh hỏng dữ liệu. Snapshot và rác RGW chưa gc cũng giữ dung lượng.",
+  "steps": [
+   {
+    "t": "Xác định OSD nào full và mức chung của cluster",
+    "cmds": [
+     "ceph health detail",
+     "ceph df",
+     "ceph osd df tree"
+    ]
+   },
+   {
+    "t": "Giải phóng chỗ trước: xóa snapshot, image RBD cũ, dữ liệu không quan trọng; nếu có RGW thì chạy gc",
+    "cmds": [
+     "radosgw-admin gc process"
+    ]
+   },
+   {
+    "t": "Chỉ khi không còn cách nào: tăng nhẹ ngưỡng full để mở lại ghi, đủ để xóa dữ liệu (nguy hiểm)",
+    "cmds": [
+     "ceph osd set-full-ratio 0.96"
+    ]
+   },
+   {
+    "t": "Khi đã thoát khỏi tình trạng đầy, trả về mặc định và rebalance",
+    "cmds": [
+     "ceph osd set-full-ratio 0.95",
+     "ceph osd reweight-by-utilization"
+    ]
+   },
+   {
+    "t": "Dài hạn: thêm OSD hoặc node, theo dõi PG backfill",
+    "cmds": [
+     "ceph -s"
+    ]
+   }
+  ],
+  "notes": "Nâng ngưỡng full chỉ là mượn thêm vài phần trăm, OSD chạm 100% có thể không khởi động lại được. Cảnh báo theo OSD đầy nhất chứ không theo mức trung bình của cluster. Cluster nên giữ dưới khoảng 80% để còn chỗ cho recovery.",
+  "refs": [
+   {
+    "t": "Ceph docs: Health checks",
+    "u": "https://docs.ceph.com/en/mimic/rados/operations/health-checks"
+   },
+   {
+    "t": "Netdata: Ceph OSD_FULL",
+    "u": "https://www.netdata.cloud/guides/ceph/ceph-osd-full/"
+   },
+   {
+    "t": "Netdata: backfill_toofull",
+    "u": "https://www.netdata.cloud/guides/ceph/ceph-backfill-toofull/"
+   }
+  ]
+ },
+ {
+  "id": "osd-latency-consumer-ssd",
+  "scope": "ceph",
+  "title": "Latency OSD cao, IOPS thấp do SSD consumer (không có PLP)",
+  "tags": "ceph latency cao iops thấp ssd consumer plp power loss protection nvme enterprise commit latency chậm vm",
+  "symptoms": "ceph osd perf cho commit/apply latency hàng chục đến hàng trăm ms ở một số OSD, VM chậm, thỉnh thoảng slow ops, benchmark cho IOPS rất thấp.",
+  "causes": "Ceph ghi đồng bộ (sync write). SSD consumer không có bảo vệ mất điện (PLP) không cache được ghi đồng bộ nên latency rất cao và tụt mạnh khi tải liên tục.",
+  "steps": [
+   {
+    "t": "So sánh latency giữa các OSD, tìm OSD tệ nhất",
+    "cmds": [
+     "ceph osd perf"
+    ]
+   },
+   {
+    "t": "Chạy benchmark ngắn trên OSD nghi ngờ (cẩn thận giờ cao điểm)",
+    "cmds": [
+     "ceph tell osd.<osd-id> bench"
+    ]
+   },
+   {
+    "t": "Kiểm tra model đĩa và SMART",
+    "cmds": [
+     "lsblk -d -o NAME,MODEL,SIZE",
+     "smartctl -a /dev/<dev>"
+    ]
+   },
+   {
+    "t": "Loại trừ nguyên nhân khác: mạng và recovery đang chạy",
+    "cmds": [
+     "ethtool -S <if>",
+     "ceph -s"
+    ]
+   }
+  ],
+  "notes": "Cộng đồng Proxmox khuyến nghị SSD enterprise có PLP cho Ceph, giải pháp thật sự thường là thay đĩa. Đừng mua đĩa thay thế trước khi so sánh latency giữa các OSD cùng loại để chắc là đĩa chứ không phải mạng.",
+  "refs": [
+   {
+    "t": "Proxmox forum: Ceph low performance",
+    "u": "https://forum.proxmox.com/threads/ceph-low-performance.183462/"
+   },
+   {
+    "t": "Proxmox forum: High latency on Proxmox Ceph cluster",
+    "u": "https://forum.proxmox.com/threads/high-latency-on-proxmox-ceph-cluster.181091/"
+   }
+  ]
+ },
+ {
+  "id": "ceph-upgrade-pve",
+  "scope": "ceph",
+  "title": "Nâng cấp Ceph trên Proxmox (ví dụ Reef lên Squid)",
+  "tags": "ceph upgrade nâng cấp reef squid quincy mon mgr osd require-osd-release noout proxmox ceph.list repository",
+  "symptoms": "Cần nâng cấp phiên bản Ceph mà không làm gián đoạn VM; sau nâng cấp có cảnh báo require-osd-release.",
+  "causes": "Nâng cấp Ceph phải đi đúng thứ tự: MON rồi MGR rồi OSD, và phải chốt require-osd-release sau cùng.",
+  "steps": [
+   {
+    "t": "Trước khi bắt đầu: cluster phải HEALTH_OK, biết phiên bản hiện tại",
+    "cmds": [
+     "ceph -s",
+     "ceph versions"
+    ]
+   },
+   {
+    "t": "Đặt noout cho cả quá trình",
+    "cmds": [
+     "ceph osd set noout"
+    ]
+   },
+   {
+    "t": "Đổi repository Ceph sang bản mới (theo hướng dẫn chính thức) rồi nâng cấp gói trên từng node",
+    "cmds": [
+     "sed -i \"s/reef/squid/\" /etc/apt/sources.list.d/ceph.list",
+     "apt update",
+     "apt full-upgrade"
+    ]
+   },
+   {
+    "t": "Restart theo thứ tự, từng node một: MON trước, kiểm tra min_mon_release",
+    "cmds": [
+     "systemctl restart ceph-mon.target",
+     "ceph mon dump | grep min_mon_release"
+    ]
+   },
+   {
+    "t": "Tiếp theo MGR, kiểm tra các mgr chạy",
+    "cmds": [
+     "systemctl restart ceph-mgr.target",
+     "ceph -s"
+    ]
+   },
+   {
+    "t": "Cuối cùng OSD, từng node một, chờ PG active+clean giữa các node",
+    "cmds": [
+     "systemctl restart ceph-osd.target",
+     "ceph osd stat"
+    ]
+   },
+   {
+    "t": "Chốt phiên bản và gỡ noout",
+    "cmds": [
+     "ceph osd require-osd-release squid",
+     "ceph osd unset noout"
+    ]
+   }
+  ],
+  "notes": "Không bỏ qua phiên bản trung gian (Proxmox khuyến nghị lên Reef trước khi lên Squid). Đảm bảo không còn OSD kiểu FileStore. Quên ceph osd unset noout là lỗi hay gặp. Luôn đọc trang hướng dẫn nâng cấp tương ứng trên pve.proxmox.com vì từng phiên bản có lưu ý riêng.",
+  "refs": [
+   {
+    "t": "Proxmox wiki: Ceph Reef to Squid",
+    "u": "https://pve.proxmox.com/wiki/Ceph_Reef_to_Squid"
+   },
+   {
+    "t": "Proxmox wiki: Ceph Quincy to Reef",
+    "u": "https://pve.proxmox.com/wiki/Ceph_Quincy_to_Reef"
+   }
+  ]
+ },
+ {
+  "id": "corosync-flapping",
+  "scope": "pve",
+  "title": "Corosync link chập chờn, retransmit, node tự reboot (HA watchdog)",
+  "tags": "proxmox corosync flapping retransmit knet link down token cluster reboot watchdog fence mất quorum bond lacp mạng cluster riêng",
+  "symptoms": "Log corosync có \"Retransmit List\", knet link down/up, \"Token has not been received\"; cluster mất quorum rồi phục hồi; các node có HA tự reboot cùng lúc.",
+  "causes": "Mạng corosync bị trễ hoặc rớt gói: dùng chung đường với lưu lượng Ceph/backup/replication, đặt link corosync trên bond (failover của bond cộng với phục hồi link của corosync), MTU lệch hoặc switch lỗi.",
+  "steps": [
+   {
+    "t": "Xem log corosync quanh thời điểm lỗi",
+    "cmds": [
+     "journalctl -u corosync --since \"1 hour ago\""
+    ]
+   },
+   {
+    "t": "Trạng thái link hiện tại và quorum",
+    "cmds": [
+     "corosync-cfgtool -s",
+     "pvecm status"
+    ]
+   },
+   {
+    "t": "Xác nhận corosync thật sự đang đi qua đường mạng riêng đã dự định, và đường đó thông MTU",
+    "cmds": [
+     "cat /etc/pve/corosync.conf",
+     "ping -M do -s 1472 <node-ip>"
+    ]
+   },
+   {
+    "t": "Kiểm tra lỗi NIC và cổng switch",
+    "cmds": [
+     "ip -s link show <if>",
+     "ethtool -S <if>"
+    ]
+   }
+  ],
+  "notes": "Hướng dẫn từ cộng đồng và nhân viên Proxmox: dùng NIC vật lý riêng cho corosync (1G đủ vì độ trễ mới là yếu tố quan trọng), thêm link thứ hai (link1) để dự phòng thay vì dùng bond cho corosync, và không để Ceph, backup, replication chiếm đường corosync. Sửa corosync.conf cần theo đúng quy trình trong tài liệu Cluster Manager (sửa bản .new và tăng config_version). Node có HA reboot khi mất quorum là hành vi thiết kế của watchdog.",
+  "refs": [
+   {
+    "t": "Proxmox forum: Retransmit list, cả HA cluster reboot",
+    "u": "https://forum.proxmox.com/threads/totem-retransmit-list-causing-entire-ha-cluster-to-reboot-unexpectedly.167112/"
+   },
+   {
+    "t": "Proxmox forum: Nodes constantly fencing",
+    "u": "https://forum.proxmox.com/goto/post?id=776001"
+   }
+  ]
+ },
+ {
+  "id": "ghost-node-rejoin",
+  "scope": "pve",
+  "title": "Xóa node hỏng và join lại cùng tên (node ma xám trong GUI)",
+  "tags": "proxmox xóa node delnode node ma xám gui join lại cùng tên hostname reinstall updatecerts /etc/pve/nodes known_hosts",
+  "symptoms": "Đã pvecm delnode nhưng node vẫn hiện xám trong GUI; cài lại node cùng tên không join được hoặc báo lỗi SSH/chứng chỉ.",
+  "causes": "Cluster giữ lại thư mục cấu hình của node đã xóa trong /etc/pve/nodes; chứng chỉ và khóa SSH cũ trùng tên.",
+  "steps": [
+   {
+    "t": "Xác nhận node đã thật sự bị gỡ khỏi cluster (và máy cũ đã tắt hẳn)",
+    "cmds": [
+     "pvecm status",
+     "pvecm nodes"
+    ]
+   },
+   {
+    "t": "Nếu chưa gỡ, chạy từ một node còn sống",
+    "cmds": [
+     "pvecm delnode <node>"
+    ]
+   },
+   {
+    "t": "Xem thư mục còn sót của node, rồi xóa ĐÚNG thư mục của node đã gỡ (xóa nhầm tên là hỏng cluster)",
+    "cmds": [
+     "ls /etc/pve/nodes",
+     "rm -rf /etc/pve/nodes/<OLD-NODE-NAME>"
+    ]
+   },
+   {
+    "t": "Cài lại node mới sạch hoàn toàn rồi join, sau đó cập nhật chứng chỉ vì dùng lại tên cũ",
+    "cmds": [
+     "pvecm add <existing-node-ip>",
+     "pvecm updatecerts"
+    ]
+   },
+   {
+    "t": "Nếu cụm có Ceph, kiểm tra cấu hình còn nhắc IP của node cũ không",
+    "cmds": [
+     "cat /etc/pve/ceph.conf"
+    ]
+   }
+  ],
+  "notes": "Node đã gỡ không được bật lại với cấu hình cũ. Chỉ nên join lại cùng tên khi node đã được cài lại từ đầu hoặc là máy hoàn toàn mới. Nếu node đó có MON hoặc OSD Ceph thì gỡ chúng khỏi Ceph đúng cách trước khi xóa node.",
+  "refs": [
+   {
+    "t": "Proxmox forum: Older node was re-installed and wants to join",
+    "u": "https://forum.proxmox.com/goto/post?id=427504"
+   },
+   {
+    "t": "Proxmox forum: Remove node from cluster",
+    "u": "https://forum.proxmox.com/goto/post?id=640499"
+   }
+  ]
+ },
+ {
+  "id": "cfs-lock-timeout",
+  "scope": "pve",
+  "title": "Lỗi cfs-lock \"got lock request timeout\" (pmxcfs, HA, replication)",
+  "tags": "proxmox cfs-lock got lock request timeout pmxcfs pve-cluster /etc/pve ha replication pvescheduler authkey lỗi lock cluster",
+  "symptoms": "Log có \"cfs-lock ... error: got lock request timeout\" (từ pvescheduler, pvestatd, ha-crm), tác vụ HA/replication/backup lỗi, GUI báo unknown.",
+  "causes": "Hệ thống file cụm (pmxcfs) không xin được khóa: thường là triệu chứng của cluster mất đồng bộ, corosync/mạng có vấn đề, hoặc pmxcfs trên một node bị treo.",
+  "steps": [
+   {
+    "t": "Quorum và corosync có ổn không (đây là gốc phổ biến nhất)",
+    "cmds": [
+     "pvecm status",
+     "corosync-cfgtool -s"
+    ]
+   },
+   {
+    "t": "Trạng thái và log của pve-cluster",
+    "cmds": [
+     "systemctl status pve-cluster corosync",
+     "journalctl -u pve-cluster -u pvescheduler --since \"1 hour ago\""
+    ]
+   },
+   {
+    "t": "Thử ghi vào /etc/pve để biết pmxcfs có phản hồi không",
+    "cmds": [
+     "touch /etc/pve/.writetest",
+     "rm /etc/pve/.writetest"
+    ]
+   },
+   {
+    "t": "Nếu pmxcfs treo trên một node, restart dịch vụ cụm node đó (từng node một)",
+    "cmds": [
+     "systemctl restart pve-cluster"
+    ]
+   }
+  ],
+  "notes": "Có người xóa thủ công thư mục khóa trong /etc/pve/priv/lock để hết lỗi nhưng chỉ tạm thời, lỗi tái phát vì nguyên nhân gốc (cluster hoặc mạng) vẫn còn. Chỉ xóa khóa khi hiểu rõ khóa nào và chắc không còn tiến trình nào đang giữ.",
+  "refs": [
+   {
+    "t": "Proxmox forum: cfs lock domain-ha timeout",
+    "u": "https://forum.proxmox.com/threads/cfs-lock-domain-ha-timeout-master-old-timestamp.48347/latest"
+   },
+   {
+    "t": "Proxmox forum: cluster 3 node status unknown, cfs-lock",
+    "u": "https://forum.proxmox.com/threads/cluster-of-3-nodes-with-status-unknown-only-if-2-specific-nodes-are-online.164399/"
+   }
+  ]
+ },
+ {
+  "id": "pve-upgrade-8to9",
+  "scope": "pve",
+  "title": "Nâng cấp Proxmox VE 8 lên 9 trong cluster có Ceph",
+  "tags": "proxmox nâng cấp upgrade pve 8 9 pve8to9 debian trixie ceph squid cluster full-upgrade reboot",
+  "symptoms": "Cần nâng cấp cluster Proxmox đang chạy production (có Ceph, HA) mà không gián đoạn dịch vụ.",
+  "causes": "Nâng cấp bản chính có thứ tự bắt buộc và phải làm từng node, nếu sai thứ tự có thể kẹt gói hoặc mất tính tương thích với Ceph.",
+  "steps": [
+   {
+    "t": "Chạy bộ kiểm tra trước nâng cấp trên mọi node và sửa hết cảnh báo",
+    "cmds": [
+     "pve8to9 --full"
+    ]
+   },
+   {
+    "t": "Lưu lại trạng thái trước khi làm (cluster, Ceph)",
+    "cmds": [
+     "pvecm status",
+     "ceph -s",
+     "ceph osd tree"
+    ]
+   },
+   {
+    "t": "Đưa Ceph lên bản yêu cầu (Squid) trước, theo case nâng cấp Ceph",
+    "cmds": [
+     "ceph versions"
+    ]
+   },
+   {
+    "t": "Từng node một: di chuyển VM đi, nâng cấp gói, reboot",
+    "cmds": [
+     "pvenode migrateall <target-node>",
+     "apt update",
+     "apt full-upgrade"
+    ]
+   },
+   {
+    "t": "Sau mỗi node kiểm tra rồi mới làm node kế tiếp",
+    "cmds": [
+     "pveversion -v",
+     "pvecm status",
+     "ceph -s"
+    ]
+   }
+  ],
+  "notes": "Làm theo trang hướng dẫn nâng cấp chính thức của Proxmox (có lưu ý riêng từng phiên bản), bài này chỉ là bộ khung kiểm tra. Nên có backup đầy đủ, và migrate VM từ node mới về node cũ chưa chắc được nên làm theo hướng cũ sang mới. Thực hiện ngoài giờ cao điểm.",
+  "refs": [
+   {
+    "t": "Proxmox wiki: Ceph Reef to Squid",
+    "u": "https://pve.proxmox.com/wiki/Ceph_Reef_to_Squid"
+   },
+   {
+    "t": "WZ-IT: Proxmox VE 8 to 9 upgrade guide",
+    "u": "https://wz-it.com/en/blog/proxmox-ve-8-to-9-upgrade-guide-enterprise/"
+   }
+  ]
+ },
+ {
+  "id": "node-dead-recovery",
+  "scope": "pve",
+  "title": "Một node chết hẳn (hỏng phần cứng): khôi phục dịch vụ",
+  "tags": "proxmox node chết hỏng phần cứng khôi phục vm không ha move config qemu-server ceph degraded mất node",
+  "symptoms": "Một node mất hoàn toàn (không bật lại được), VM trên node đó ngừng, GUI hiện node đỏ, Ceph báo OSD down và PG degraded.",
+  "causes": "Hỏng phần cứng, nguồn, mainboard. Cluster còn quorum nhưng cần đưa dịch vụ lên node khác.",
+  "steps": [
+   {
+    "t": "Xác nhận node thật sự chết (không chỉ đứt mạng) và cluster còn quorum",
+    "cmds": [
+     "pvecm status"
+    ]
+   },
+   {
+    "t": "Tình trạng Ceph: cluster sẽ degraded nhưng vẫn phục vụ nếu còn đủ bản sao",
+    "cmds": [
+     "ceph -s",
+     "ceph osd tree down"
+    ]
+   },
+   {
+    "t": "VM có HA sẽ tự chạy lại sau khi fence, xem trạng thái",
+    "cmds": [
+     "ha-manager status"
+    ]
+   },
+   {
+    "t": "VM không HA mà đĩa nằm trên Ceph: chuyển file cấu hình sang node còn sống rồi start (CHỈ khi chắc node chết đã tắt hẳn)",
+    "cmds": [
+     "mv /etc/pve/nodes/<dead-node>/qemu-server/<vmid>.conf /etc/pve/nodes/<alive-node>/qemu-server/",
+     "qm start <vmid>"
+    ]
+   },
+   {
+    "t": "Nếu thay thế node sẽ lâu, để Ceph tự recover; nếu sắp đưa lại trong thời gian ngắn, đặt noout để tránh rebalance",
+    "cmds": [
+     "ceph osd set noout"
+    ]
+   }
+  ],
+  "notes": "Không bao giờ chạy cùng một VM ở hai node: hai bản cùng ghi vào một đĩa sẽ hỏng dữ liệu. Tắt hẳn node chết (rút nguồn, IPMI power off) trước khi chuyển cấu hình. Sau khi node mới vào lại, theo case xóa node hỏng và join lại cùng tên."
+ },
+ {
+  "id": "maintenance-flags-left",
+  "scope": "ceph",
+  "title": "Cờ bảo trì Ceph còn sót sau bảo trì (noout, noscrub, norecover...)",
+  "tags": "ceph flags còn sót quên gỡ noout nobackfill norecover norebalance noscrub nodeep-scrub health warn flag(s) set unset bảo trì",
+  "symptoms": "HEALTH_WARN \"noout,nobackfill,norecover,norebalance,noscrub,nodeep-scrub flag(s) set\", PG không recover, cảnh báo scrub quá hạn.",
+  "causes": "Quên bỏ các cờ đã đặt trước khi bảo trì hoặc nâng cấp. Khi còn noout, OSD chết thật cũng không được out để recover, còn norecover và nobackfill làm dữ liệu giữ trạng thái degraded.",
+  "steps": [
+   {
+    "t": "Xem cờ nào đang bật (cũng thấy ở GUI: Ceph, OSD, Manage Global Flags)",
+    "cmds": [
+     "ceph health detail",
+     "ceph osd dump | grep flags"
+    ]
+   },
+   {
+    "t": "Bỏ từng cờ khi bảo trì đã xong và cluster đã ổn",
+    "cmds": [
+     "ceph osd unset noout",
+     "ceph osd unset nobackfill",
+     "ceph osd unset norecover",
+     "ceph osd unset norebalance",
+     "ceph osd unset noscrub",
+     "ceph osd unset nodeep-scrub"
+    ]
+   },
+   {
+    "t": "Theo dõi recovery và scrub chạy lại",
+    "cmds": [
+     "ceph -s",
+     "ceph -w"
+    ]
+   }
+  ],
+  "notes": "Nên chỉ bỏ cờ khi đã chắc mọi OSD up/in. Bỏ cờ xong recovery và backfill sẽ chạy dồn nên có thể ảnh hưởng IO, tham khảo case thêm OSD làm chậm production để giảm tải. Ghi checklist đặt cờ và bỏ cờ vào quy trình bảo trì."
+ },
+ {
+  "id": "ha-domino",
+  "scope": "pve",
+  "title": "Node dừng: HA khởi động lại đồng loạt VM làm tràn RAM (domino)",
+  "tags": "proxmox ha fencing domino tràn ram overload vm đồng loạt khởi động node dead sập hệ thống ha-manager tắt ha trước khi bảo trì",
+  "symptoms": "Một node dừng hoặc bị fence, VM của nó tự bật lại trên các host còn lại, RAM các host đầy, hệ thống chậm hoặc sập lan sang node khác.",
+  "causes": "Cơ chế fencing đánh dấu node dead rồi migrate hoặc khởi động lại VM trên host khác. VM đang dừng không dùng tài nguyên, nhưng khi nhiều VM bật đồng loạt thì RAM bị chiếm ngay, các host còn lại không đủ chỗ.",
+  "steps": [
+   {
+    "t": "Xem HA đang làm gì và VM nào đang bật lại",
+    "cmds": [
+     "ha-manager status",
+     "ha-manager config"
+    ]
+   },
+   {
+    "t": "Kiểm tra RAM trên các host còn lại",
+    "cmds": [
+     "free -h",
+     "pvesh get /nodes/<node>/status"
+    ]
+   },
+   {
+    "t": "Trước bảo trì có kế hoạch: tắt HA theo thứ tự (pve-ha-lrm ở mọi host trước, rồi pve-ha-crm), xem runbook bảo trì production",
+    "cmds": [
+     "systemctl stop pve-ha-lrm",
+     "systemctl stop pve-ha-crm"
+    ]
+   }
+  ],
+  "notes": "Phòng ngừa tốt nhất là tính dự phòng RAM kiểu N+1 (các node còn lại gánh được VM của node lớn nhất) và không bảo trì khi HA đang bật. Không dừng pve-ha-lrm và pve-ha-crm đồng loạt."
+ },
+ {
+  "id": "cephfs-mds-restart",
+  "scope": "ceph",
+  "title": "CephFS: MDS failover khi restart hoặc nâng cấp (max_mds lớn hơn 1)",
+  "tags": "ceph cephfs mds failover restart nâng cấp max_mds standby active rank ceph fs status",
+  "symptoms": "Restart ceph-mds.target hoặc nâng cấp làm CephFS gián đoạn ngắn, trạng thái MDS tạm là replay, reconnect hoặc rejoin.",
+  "causes": "Node đang giữ rank active của CephFS sẽ failover sang standby khi MDS restart. Gián đoạn ngắn là bình thường. Với max_mds lớn hơn 1 (nhiều rank active) cần cẩn thận hơn.",
+  "steps": [
+   {
+    "t": "Trước khi làm: ghi lại rank nào active ở node nào để dự đoán failover",
+    "cmds": [
+     "ceph fs status"
+    ]
+   },
+   {
+    "t": "Quy trình cẩn trọng cho MDS (theo ghi chú nâng cấp): đặt max_mds = 1, dừng hết MDS standby",
+    "cmds": [
+     "ceph fs set <fsname> max_mds 1",
+     "systemctl stop ceph-mds@<standby-id>"
+    ]
+   },
+   {
+    "t": "Nâng cấp hoặc restart MDS active, kiểm tra CephFS truy cập bình thường",
+    "cmds": [
+     "systemctl restart ceph-mds@<active-id>",
+     "ceph fs status"
+    ]
+   },
+   {
+    "t": "Bật lại các standby và trả max_mds về giá trị cũ",
+    "cmds": [
+     "systemctl start ceph-mds@<standby-id>",
+     "ceph fs set <fsname> max_mds 2"
+    ]
+   }
+  ],
+  "notes": "Nếu vận hành giữ nguyên max_mds = 2 trong nâng cấp (như ghi chú gốc), vẫn chấp nhận failover ngắn khi restart từng node nhưng phải kiểm tra ceph -s và ceph fs status sau mỗi lần restart. Làm từng node một."
+ },
+ {
+  "id": "pbs-s3-recovery",
+  "scope": "pve",
+  "title": "PBS hỏng hoặc tắt: dựng PBS mới nhận lại Datastore S3 (adopt) và restore",
+  "tags": "proxmox pbs backup server hỏng cháy tắt dựng lại s3 datastore adopt overwrite in-use marker restore vm cache mã hóa key encryption",
+  "symptoms": "Máy PBS cũ lỗi phần cứng, cháy, hoặc chủ động tắt, cần khôi phục dữ liệu backup đang nằm trên bucket S3.",
+  "causes": "Dữ liệu backup nằm trên S3 nên còn nguyên, chỉ mất lớp quản lý và local cache của PBS cũ. PBS mới cần nhận lại (adopt) bucket đó.",
+  "steps": [
+   {
+    "t": "Tắt hẳn PBS cũ trước. Trên PBS mới: tạo lại vùng cache trống (ZFS hoặc SSD đều được) và cấp quyền",
+    "cmds": [
+     "zfs create -o mountpoint=/s3-recovery-cache <pool>/s3-recovery-cache",
+     "chown backup:backup /s3-recovery-cache",
+     "chmod 700 /s3-recovery-cache"
+    ]
+   },
+   {
+    "t": "Tạo lại S3 Endpoint y hệt cũ (cùng Endpoint, Access/Secret Key, Fingerprint, tích Path Style)",
+    "cmds": []
+   },
+   {
+    "t": "Add Datastore: đặt lại cùng Name với datastore cũ, Local Cache = /s3-recovery-cache, chọn S3 Endpoint vừa tạo, Bucket = đúng tên bucket cũ. Advanced bắt buộc tích Overwrite in-use marker để PBS mới giành quyền kiểm soát bucket khỏi PBS cũ",
+    "cmds": []
+   },
+   {
+    "t": "Vào Datastore, Content: danh sách backup sẽ hiện ra sau vài giây khi PBS tải metadata từ S3 về cache",
+    "cmds": []
+   },
+   {
+    "t": "Trên PVE: xóa liên kết tới PBS cũ, thêm PBS mới, chọn VM, Backup, chọn bản backup, Restore, rồi kiểm tra dữ liệu trong VM",
+    "cmds": [
+     "qmrestore <backup-volume> <vmid>"
+    ]
+   }
+  ],
+  "notes": "Nếu PBS cũ có bật Encryption thì phải có file encryption key (.json) hoặc mật khẩu, mất key là mất dữ liệu vĩnh viễn dù S3 còn. Gặp ENOENT hoặc Permission denied thì chạy chown -R backup:backup <thư mục cache>. Chỉ tích Overwrite in-use marker khi chắc PBS cũ đã tắt hẳn."
+ },
+ {
+  "id": "rb-ceph-upgrade-quincy-reef-squid",
+  "kind": "runbook",
+  "scope": "ceph",
+  "title": "Nâng cấp Ceph Quincy 17.2.8 → Reef 18.2.8 → Squid 19.2.4 trên PVE 8.4 (3 node, có CephFS)",
+  "tags": "runbook nâng cấp upgrade ceph quincy reef squid pve 8.4 3 node hyper-converged cephfs mds mon mgr osd flags",
+  "goal": "Nâng Ceph hai bước liên tiếp (Quincy lên Reef, rồi Reef lên Squid) trên cluster 3 node hyper-converged (mỗi node có MON, MGR, OSD, MDS), PVE giữ nguyên 8.4. Ghi chú gốc dừng ở PVE 8.4 + Squid 19.2.4; bước tiếp theo là pve8to9.",
+  "prereq": "ceph -s = HEALTH_OK, toàn bộ OSD up/in, quorum MON đủ 3/3. Degraded phải về 0 mới nâng cấp; scrub, deep-scrub, backfilling chỉ cần theo dõi và ghi baseline (không bắt buộc dừng) miễn là không HEALTH_ERR và tốc độ ổn định. Ghi lại rank MDS nào đang active ở node nào để dự đoán failover. Làm tuần tự Node1 rồi Node2 rồi Node3, không nâng hai node cùng lúc.",
+  "steps": [
+   {
+    "t": "Kiểm tra trạng thái trước khi bắt đầu (chạy một lần, từ node bất kỳ)",
+    "cmds": [
+     "ceph -s",
+     "ceph health detail",
+     "ceph osd df tree",
+     "ceph mon stat",
+     "pvecm status",
+     "ceph fs status",
+     "ceph versions"
+    ]
+   },
+   {
+    "t": "Trên từng node: xác nhận repo hiện tại là quincy rồi đổi sang reef",
+    "cmds": [
+     "cat /etc/apt/sources.list.d/ceph.list",
+     "sed -i 's/quincy/reef/' /etc/apt/sources.list.d/ceph.list",
+     "apt update",
+     "apt policy ceph-osd"
+    ]
+   },
+   {
+    "t": "Xác nhận Candidate là 18.2.8-pve1 từ đúng repo ceph-reef rồi mới cài thật, sau đó kiểm tra đã cài đúng bản",
+    "cmds": [
+     "apt full-upgrade -y",
+     "apt policy ceph-osd",
+     "dpkg -l | grep ceph-osd"
+    ]
+   },
+   {
+    "t": "Maintain Ceph (chỉ một lần, áp dụng toàn cluster): đặt 6 cờ noout / nobackfill / norecover / norebalance / noscrub / nodeep-scrub (xem runbook bảo trì production)",
+    "cmds": [
+     "ceph osd set noout",
+     "ceph osd set nobackfill",
+     "ceph osd set norecover",
+     "ceph osd set norebalance",
+     "ceph osd set noscrub",
+     "ceph osd set nodeep-scrub"
+    ]
+   },
+   {
+    "t": "Restart theo đúng thứ tự, từng lệnh kiểm tra ceph -s trước khi đi tiếp. MON trước, quorum phải còn đủ",
+    "cmds": [
+     "systemctl restart ceph-mon.target",
+     "ceph -s"
+    ]
+   },
+   {
+    "t": "Tiếp theo MGR",
+    "cmds": [
+     "systemctl restart ceph-mgr.target",
+     "ceph -s"
+    ]
+   },
+   {
+    "t": "Rồi OSD. Có thể tạm thấy peering hoặc X osds down, đợi 10 đến 15 giây rồi kiểm tra lại, không chạy thêm lệnh khác",
+    "cmds": [
+     "systemctl restart ceph-osd.target",
+     "ceph -s"
+    ]
+   },
+   {
+    "t": "Cuối cùng MDS. Node giữ rank active của CephFS sẽ failover ngắn, đó là bình thường",
+    "cmds": [
+     "systemctl restart ceph-mds.target",
+     "ceph -s",
+     "ceph fs status"
+    ]
+   },
+   {
+    "t": "Cách cẩn trọng hơn cho MDS khi max_mds lớn hơn 1 (ghi chú gốc): dừng hết MDS standby, đặt max_mds = 1, restart MDS active, rồi trả max_mds lại",
+    "cmds": [
+     "ceph fs set <fsname> max_mds 1",
+     "systemctl stop ceph-mds@<standby-id>",
+     "systemctl restart ceph-mds@<active-id>",
+     "ceph fs set <fsname> max_mds 2"
+    ]
+   },
+   {
+    "t": "Khi cả 3 node xong: chốt phiên bản tối thiểu (bước này theo hướng dẫn Proxmox, ghi chú gốc chưa có), bỏ 6 cờ, theo dõi recovery",
+    "cmds": [
+     "ceph osd require-osd-release reef",
+     "ceph osd unset noout",
+     "ceph osd unset nobackfill",
+     "ceph osd unset norecover",
+     "ceph osd unset norebalance",
+     "ceph osd unset noscrub",
+     "ceph osd unset nodeep-scrub",
+     "ceph versions"
+    ]
+   },
+   {
+    "t": "Bước 2, Reef lên Squid: lặp lại đúng quy trình trên, chỉ đổi repo. Candidate phải là 19.2.4-1~bpo12+1 từ ceph-squid",
+    "cmds": [
+     "sed -i 's/reef/squid/' /etc/apt/sources.list.d/ceph.list",
+     "apt update",
+     "apt policy ceph-osd",
+     "apt full-upgrade -y"
+    ]
+   },
+   {
+    "t": "Sau Squid: restart MON, MGR, OSD, MDS như trên, rồi chốt phiên bản và bỏ cờ",
+    "cmds": [
+     "ceph osd require-osd-release squid",
+     "ceph versions"
+    ]
+   }
+  ],
+  "notes": "Điều kiện đạt mỗi bước: HEALTH_OK và ceph versions cho mon/mgr/osd/mds đều đúng phiên bản mới. Trạng thái đạt được: PVE 8.4 + Ceph Squid 19.2.4. Bước kế tiếp là nâng PVE 8 lên 9 (pve8to9) khi Ceph đã ở Squid. Xem thêm case nâng cấp Ceph (có nguồn Proxmox wiki) và case MDS."
+ },
+ {
+  "id": "rb-prod-maintenance",
+  "kind": "runbook",
+  "scope": "pve",
+  "title": "Bảo trì production: tắt HA và đặt cờ bảo trì Ceph trước khi tắt node",
+  "tags": "runbook bảo trì maintenance production tắt ha pve-ha-lrm pve-ha-crm ceph flags noout nobackfill norecover norebalance noscrub nodeep-scrub manage global flags",
+  "goal": "Tắt hoặc reboot node trong môi trường production mà không kích hoạt fencing/HA di chuyển VM đồng loạt, và không để Ceph backfill/recovery không cần thiết.",
+  "prereq": "Kiểm tra sức khỏe Ceph trước (ceph -s). Tránh thao tác khi đang có cảnh báo Warn hoặc Err nếu chưa được cấp trên cho phép.",
+  "steps": [
+   {
+    "t": "Kiểm tra trước khi làm",
+    "cmds": [
+     "ceph -s",
+     "ha-manager status"
+    ]
+   },
+   {
+    "t": "Tắt HA. Lý do: nếu không, khi một node dừng, fencing đánh dấu node dead rồi các VM được dừng và khởi động lại trên host khác; số VM lớn đồng loạt bật lên làm tràn RAM và gây sập dây chuyền (domino). Dừng pve-ha-lrm ở TẤT CẢ các host trước",
+    "cmds": [
+     "systemctl stop pve-ha-lrm"
+    ]
+   },
+   {
+    "t": "Sau khi lrm đã dừng ở mọi host mới dừng pve-ha-crm. Không làm đồng loạt cả hai",
+    "cmds": [
+     "systemctl stop pve-ha-crm"
+    ]
+   },
+   {
+    "t": "Maintain Ceph. Lý do: tắt node hoặc dừng OSD không báo trước thì cluster coi là mất đột ngột, báo HEALTH_WARN/ERR và backfill sang OSD khác, gây I/O thừa ảnh hưởng workload. Trên GUI: Ceph, OSD, Manage Global Flags, chọn 6 cờ rồi Apply. Dòng lệnh tương đương",
+    "cmds": [
+     "ceph osd set noout",
+     "ceph osd set nobackfill",
+     "ceph osd set norecover",
+     "ceph osd set norebalance",
+     "ceph osd set noscrub",
+     "ceph osd set nodeep-scrub"
+    ]
+   },
+   {
+    "t": "Xác nhận 6 cờ đã bật",
+    "cmds": [
+     "ceph osd dump | grep flags",
+     "ceph -s"
+    ]
+   },
+   {
+    "t": "Thực hiện bảo trì (tắt, sửa, reboot node), chờ node và OSD lên lại",
+    "cmds": [
+     "ceph osd stat",
+     "pvecm status"
+    ]
+   },
+   {
+    "t": "Hoàn tác: bỏ 6 cờ trước",
+    "cmds": [
+     "ceph osd unset noout",
+     "ceph osd unset nobackfill",
+     "ceph osd unset norecover",
+     "ceph osd unset norebalance",
+     "ceph osd unset noscrub",
+     "ceph osd unset nodeep-scrub"
+    ]
+   },
+   {
+    "t": "Bật lại HA (thứ tự start không có trong ghi chú gốc, thường lrm rồi crm), kiểm tra",
+    "cmds": [
+     "systemctl start pve-ha-lrm",
+     "systemctl start pve-ha-crm",
+     "ha-manager status"
+    ]
+   }
+  ],
+  "notes": "Quên bỏ cờ sau bảo trì là lỗi hay gặp, xem case cờ bảo trì còn sót. Ngoài ra cần đủ RAM dự phòng (N+1) để các VM của một node chết vẫn chạy được trên node còn lại."
+ },
+ {
+  "id": "rb-pbs-s3-datastore",
+  "kind": "runbook",
+  "scope": "pve",
+  "title": "PBS: tạo Datastore S3 với local cache ZFS và backup từ PVE",
+  "tags": "runbook pbs proxmox backup server s3 datastore local cache zfs endpoint path style bucket backup dedup",
+  "goal": "Dùng một bucket S3 (nhà cung cấp S3-compatible) làm datastore của PBS 4.x, có vùng đệm local cache trên ZFS, rồi thêm vào PVE và backup thử.",
+  "prereq": "PBS 4.x đã cài. Có Access Key và Secret Key của nhà cung cấp S3. Có một SSD hoặc mảng ZFS làm cache. Datastore S3 hiện ghi là tech preview.",
+  "steps": [
+   {
+    "t": "Tạo cache ZFS với điểm mount riêng, không lồng trong datastore local khác (tránh lỗi nested datastore), cấp quyền cho user backup",
+    "cmds": [
+     "zfs create -o mountpoint=/s3-cache <pool>/s3-cache",
+     "chown backup:backup /s3-cache",
+     "chmod 700 /s3-cache"
+    ]
+   },
+   {
+    "t": "Trên PBS Web GUI: Configuration, S3 Endpoints, Add. Điền ID, Endpoint (<s3-endpoint>), Access Key, Secret Key, tích Path Style (bắt buộc), Fingerprint (<fingerprint>)",
+    "cmds": []
+   },
+   {
+    "t": "Datastore, Add Datastore: Name, Type = S3 (tech preview), Local Cache = /s3-cache, S3 Endpoint ID, Bucket = <bucket>. Mục Advanced tích Overwrite in-use marker (cho phép datastore này giành quyền kiểm soát bucket đang bị đánh dấu in-use, xem runbook khôi phục khi PBS hỏng)",
+    "cmds": []
+   },
+   {
+    "t": "Trên PVE: Datacenter, Storage, Add, Proxmox Backup Server, rồi backup thử một VM",
+    "cmds": [
+     "vzdump <vmid> --storage <pbs-storage> --mode snapshot"
+    ]
+   },
+   {
+    "t": "Kết quả mong đợi: thấy thư mục vm/<vmid> ở phần Content của datastore S3",
+    "cmds": []
+   }
+  ],
+  "notes": "Dung lượng trên S3 thường nhỏ hơn nhiều so với đĩa VM (ví dụ VM đĩa 50GB chỉ khoảng 2.4GB) nhờ deduplication, nén, và bỏ qua vùng trống. Nếu bật Encryption thì phải lưu file key mã hóa (.json) hoặc mật khẩu ở nơi an toàn: mất key là mất dữ liệu vĩnh viễn dù S3 còn nguyên. Thư mục cache phải thuộc user backup, nếu gặp ENOENT hoặc Permission denied thì chạy chown -R backup:backup <đường dẫn cache>."
+ },
+ {
+  "id": "rb-pve5-to-8-single",
+  "kind": "runbook",
+  "scope": "pve",
+  "title": "Nâng cấp một node Proxmox VE từ 5.4 lên 8.x (qua 6, 7, 8) kèm ZFS",
+  "tags": "runbook nâng cấp upgrade proxmox 5.4 6 7 8 stretch buster bullseye bookworm single node zfs rpool zpool import upgrade apt dist-upgrade",
+  "goal": "Nâng một node đơn Proxmox rất cũ (5.4, Debian stretch) lên 8.x theo chuỗi 5 lên 6 lên 7 lên 8, rồi import lại các zpool dữ liệu.",
+  "prereq": "Xác định chính xác đĩa boot (đơn hoặc ZFS RAID1), lưu WWN/SN để nếu hỏng có thể cài mới OS và import lại zpool. Backup /etc/network/interfaces, /etc/pve/, /etc/hosts. Ghi lại tên các zfs pool. Nên chạy bộ kiểm tra có sẵn của từng bản (pve5to6, pve6to7, pve7to8 --full) trước mỗi bước (gợi ý bổ sung, ghi chú gốc chưa có).",
+  "steps": [
+   {
+    "t": "Chuẩn bị",
+    "cmds": [
+     "zpool status rpool",
+     "lsblk -o NAME,SIZE,SERIAL,WWN"
+    ]
+   },
+   {
+    "t": "5.x: thêm repo no-subscription (lưu ý đúng tên file sources.list và dùng dấu nháy thẳng)",
+    "cmds": [
+     "echo \"deb http://download.proxmox.com/debian/pve stretch pve-no-subscription\" >> /etc/apt/sources.list"
+    ]
+   },
+   {
+    "t": "Debian stretch đã hết hỗ trợ nên repo cũ không dùng được. Comment các dòng ftp.debian.org / security.debian.org cũ và dùng archive.debian.org",
+    "cmds": [
+     "deb http://archive.debian.org/debian stretch main contrib",
+     "deb http://archive.debian.org/debian stretch-updates main",
+     "deb http://archive.debian.org/debian-security stretch/updates main"
+    ]
+   },
+   {
+    "t": "Cập nhật lên bản mới nhất của 5.x rồi reboot",
+    "cmds": [
+     "apt update",
+     "apt dist-upgrade",
+     "reboot"
+    ]
+   },
+   {
+    "t": "5 lên 6: đổi suite, bỏ repo enterprise bằng cách thêm # vào /etc/apt/sources.list.d/pve-enterprise.list, nâng cấp. Các lựa chọn Y/N mặc định chọn N, rồi reboot để chạy kernel mới",
+    "cmds": [
+     "sed -i 's/stretch/buster/g' /etc/apt/sources.list",
+     "apt update",
+     "apt dist-upgrade",
+     "reboot"
+    ]
+   },
+   {
+    "t": "6 lên 7",
+    "cmds": [
+     "sed -i 's/buster\\/updates/bullseye-security/g;s/buster/bullseye/g' /etc/apt/sources.list",
+     "apt update",
+     "apt dist-upgrade",
+     "reboot"
+    ]
+   },
+   {
+    "t": "7 lên 8",
+    "cmds": [
+     "sed -i -e 's/bullseye/bookworm/g' /etc/apt/sources.list",
+     "apt update",
+     "apt dist-upgrade",
+     "reboot"
+    ]
+   },
+   {
+    "t": "Import lại các zpool DATA (theo tên, hoặc theo by-id), rồi nâng feature cho từng pool dữ liệu",
+    "cmds": [
+     "zpool import",
+     "zpool import <pool-name> -f -d /dev/disk/by-id/",
+     "zpool upgrade <pool-name>"
+    ]
+   },
+   {
+    "t": "Kiểm tra toàn bộ dữ liệu của pool",
+    "cmds": [
+     "zpool status <pool-name>",
+     "zfs list"
+    ]
+   }
+  ],
+  "notes": "Nếu apt báo không tìm thấy buster hoặc bullseye trên ftp.debian.org, các bản này cũng có thể đã chuyển sang archive.debian.org, đổi tương tự bước stretch. zpool upgrade không hoàn tác được và chỉ nên chạy cho pool dữ liệu, không chạy cho rpool nếu chưa chắc bootloader hỗ trợ các feature mới (có thể làm node không boot). Cluster nhiều node thì phải theo hướng dẫn chính thức của Proxmox vì còn bước nâng corosync, bài này chỉ cho node đơn."
+ },
+ {
+  "id": "rb-san-iscsi-shared-lvm",
+  "kind": "runbook",
+  "scope": "pve",
+  "title": "SAN iSCSI + Shared LVM cho cluster Proxmox, và mở rộng dung lượng online (pvmove)",
+  "tags": "runbook san iscsi lvm shared targetcli open-iscsi lun volume group pvmove vgextend mở rộng dung lượng block storage",
+  "goal": "Cho 3 node Proxmox cùng đăng nhập một LUN iSCSI và dùng chung một Volume Group (Shared LVM) để chia volume cho VM; sau đó mở rộng dung lượng không mất dữ liệu, không downtime.",
+  "prereq": "Một máy storage làm iSCSI target, 3 node Proxmox truy cập được tới nó. Mô hình: các node, iSCSI initiator, iSCSI target, LUN, Shared LVM, mỗi LV là một đĩa VM.",
+  "steps": [
+   {
+    "t": "Trên máy storage: cài và cấu hình iSCSI target (block backstore). Các lệnh trong targetcli shell",
+    "cmds": [
+     "apt install targetcli-fb -y",
+     "targetcli",
+     "cd /backstores/block",
+     "create pve-lun1 /dev/<dev>",
+     "cd /iscsi",
+     "create <iqn>",
+     "cd /iscsi/<iqn>/tpg1/luns",
+     "create /backstores/block/pve-lun1",
+     "cd /",
+     "saveconfig",
+     "exit"
+    ]
+   },
+   {
+    "t": "Trên MỖI node Proxmox: cài initiator, discovery, login",
+    "cmds": [
+     "apt install open-iscsi -y",
+     "systemctl enable --now iscsid",
+     "iscsiadm -m discovery -t sendtargets -p <IP_TARGET>:3260",
+     "iscsiadm -m node --targetname <iqn> --portal <IP_TARGET>:3260 --login",
+     "iscsiadm -m session",
+     "lsblk"
+    ]
+   },
+   {
+    "t": "Trên GUI: Datacenter, Storage, Add, iSCSI (Portal, Target, bỏ tick Use LUNs directly, Nodes = All). Rồi Add, LVM: Base storage = iSCSI vừa tạo, Volume group đặt tên không khoảng trắng hay ký tự lạ, tick Shared, Nodes = All",
+    "cmds": []
+   },
+   {
+    "t": "Kiểm tra trên từng node",
+    "cmds": [
+     "pvesm status",
+     "vgs"
+    ]
+   },
+   {
+    "t": "Mở rộng, bước 1: tạo LUN mới trên iSCSI target",
+    "cmds": [
+     "targetcli",
+     "cd /backstores/block",
+     "create pve-lun2 /dev/<new-dev>",
+     "cd /iscsi/<iqn>/tpg1/luns",
+     "create /backstores/block/pve-lun2",
+     "cd /",
+     "saveconfig",
+     "exit"
+    ]
+   },
+   {
+    "t": "Bước 2: rescan trên cả 3 node để nhận LUN mới",
+    "cmds": [
+     "iscsiadm -m session --rescan",
+     "lsblk"
+    ]
+   },
+   {
+    "t": "Bước 3: trên MỘT node, thêm PV mới vào VG. Trước đó kiểm tra VG còn đủ free extent trên PV đích để chứa dữ liệu từ PV nguồn",
+    "cmds": [
+     "vgs",
+     "pvcreate /dev/<new-dev>",
+     "vgextend <vg-name> /dev/<new-dev>"
+    ]
+   },
+   {
+    "t": "Bước 4: chuyển dữ liệu từ PV cũ sang PV mới (online, VM vẫn chạy). Nên làm ngoài giờ cao điểm",
+    "cmds": [
+     "pvmove /dev/<old-dev> /dev/<new-dev>"
+    ]
+   },
+   {
+    "t": "Bước 5: gỡ PV cũ khỏi VG",
+    "cmds": [
+     "vgreduce <vg-name> /dev/<old-dev>",
+     "pvremove /dev/<old-dev>"
+    ]
+   },
+   {
+    "t": "Bước 6: trên 2 node còn lại chỉ cần làm mới cache, không cần pvcreate hay vgextend lại",
+    "cmds": [
+     "pvscan --cache",
+     "vgscan"
+    ]
+   },
+   {
+    "t": "Bước 7: xác nhận dung lượng mới trên cả 3 node",
+    "cmds": [
+     "pvesm status",
+     "vgs"
+    ]
+   }
+  ],
+  "notes": "Cấu hình target trong ghi chú gốc (authentication=0, generate_node_acls=1, demo_mode_write_protect=0) cho phép truy cập không xác thực, chỉ phù hợp lab. Production nên giới hạn ACL theo IQN của từng node và bật CHAP. Dù về lý thuyết pvmove không gây downtime, nó tạo tải I/O khi copy dữ liệu."
+ },
+ {
+  "id": "rb-nas-nfs-storage",
+  "kind": "runbook",
+  "scope": "pve",
+  "title": "NAS NFS làm storage dùng chung cho cluster Proxmox",
+  "tags": "runbook nas nfs storage dùng chung exports nfs-kernel-server showmount mount share qcow2",
+  "goal": "Cho 3 node Proxmox mount chung một thư mục xuất từ NFS server, chứa trực tiếp file .qcow2 hoặc .raw của VM. Dễ triển khai, phù hợp lab hoặc tải vừa phải.",
+  "prereq": "Một máy đóng vai NFS server, các node Proxmox truy cập được tới nó.",
+  "steps": [
+   {
+    "t": "Trên NFS server: cài, tạo thư mục, khai báo export (thay <subnet> bằng dải mạng được phép), khởi động dịch vụ",
+    "cmds": [
+     "apt update && apt install nfs-kernel-server -y",
+     "mkdir -p /mnt/pve-shared",
+     "chown nobody:nogroup /mnt/pve-shared",
+     "chmod 777 /mnt/pve-shared",
+     "echo \"/mnt/pve-shared <subnet>(rw,sync,no_subtree_check,no_root_squash)\" >> /etc/exports",
+     "exportfs -a",
+     "systemctl restart nfs-kernel-server",
+     "systemctl enable nfs-kernel-server"
+    ]
+   },
+   {
+    "t": "Trên các node Proxmox: kiểm tra kết nối tới export trước",
+    "cmds": [
+     "apt install nfs-common -y",
+     "showmount -e <IP_NFS_SERVER>"
+    ]
+   },
+   {
+    "t": "Trên GUI: Datacenter, Storage, Add, NFS. Server = IP NFS server, Export = /mnt/pve-shared, Content = Disk image, ISO image, Container template, Nodes = All",
+    "cmds": []
+   },
+   {
+    "t": "Kiểm tra trên từng node",
+    "cmds": [
+     "pvesm status"
+    ]
+   }
+  ],
+  "notes": "chmod 777 và no_root_squash trong ghi chú gốc tiện cho lab nhưng quá rộng cho production, nên giới hạn quyền thư mục và dải mạng. NFS treo thường làm pvestatd treo theo (xem case dấu hỏi unknown)."
+ },
+ {
+  "id": "lun-not-visible",
+  "scope": "pve",
+  "kind": "case",
+  "title": "LUN iSCSI mới hoặc Volume Group không hiện trên một số node (Shared LVM)",
+  "tags": "iscsi lun không thấy vg shared lvm rescan pvscan vgscan session rớt san proxmox node không nhận mở rộng",
+  "symptoms": "Sau khi thêm LUN hoặc mở rộng VG, một số node không thấy thiết bị hoặc không thấy VG, pvesm status báo storage lỗi.",
+  "causes": "Node chưa rescan iSCSI, session iSCSI bị rớt, hoặc cache LVM trên node đó chưa được làm tươi.",
+  "steps": [
+   {
+    "t": "Kiểm tra session iSCSI còn không, rescan để nhận LUN mới",
+    "cmds": [
+     "iscsiadm -m session",
+     "iscsiadm -m session --rescan",
+     "lsblk"
+    ]
+   },
+   {
+    "t": "Làm tươi cache LVM trên node bị thiếu",
+    "cmds": [
+     "pvscan --cache",
+     "vgscan",
+     "vgs"
+    ]
+   },
+   {
+    "t": "Kiểm tra storage từ phía Proxmox",
+    "cmds": [
+     "pvesm status"
+    ]
+   }
+  ],
+  "notes": "Chỉ chạy pvcreate và vgextend trên một node, các node còn lại chỉ cần rescan và làm tươi cache. Session rớt liên tục thì kiểm tra mạng iSCSI và cân nhắc multipath. Xem runbook SAN iSCSI + Shared LVM."
+ },
+ {
+  "id": "nfs-storage-offline",
+  "scope": "pve",
+  "kind": "case",
+  "title": "Storage NFS offline hoặc không thêm được vào Proxmox",
+  "tags": "nfs storage offline không mount showmount exportfs nfs-common firewall proxmox không thêm được nas",
+  "symptoms": "Storage NFS hiện dấu hỏi hoặc offline, không thêm được vào Datacenter > Storage, lệnh pvesm status chậm hoặc treo.",
+  "causes": "Node thiếu nfs-common, export không cho phép subnet của node, tường lửa chặn, hoặc NFS server đã dừng.",
+  "steps": [
+   {
+    "t": "Từ node: server có export gì",
+    "cmds": [
+     "apt install nfs-common -y",
+     "showmount -e <IP_NFS_SERVER>"
+    ]
+   },
+   {
+    "t": "Trên NFS server: dịch vụ và danh sách export hiện hành",
+    "cmds": [
+     "systemctl status nfs-kernel-server",
+     "exportfs -v"
+    ]
+   },
+   {
+    "t": "Thử mount tay để thấy lỗi rõ",
+    "cmds": [
+     "mkdir -p /mnt/nfstest",
+     "mount -t nfs <IP_NFS_SERVER>:/mnt/pve-shared /mnt/nfstest"
+    ]
+   },
+   {
+    "t": "Xem trạng thái storage (dùng timeout để lệnh không bị kẹt)",
+    "cmds": [
+     "timeout 20 pvesm status"
+    ]
+   }
+  ],
+  "notes": "Storage NFS treo có thể kéo theo pvestatd treo làm node hiện dấu hỏi (xem case dấu hỏi). Nhớ umount thư mục thử sau khi kiểm tra."
+ },
+ {
+  "id": "pbs-s3-permission",
+  "scope": "pve",
+  "kind": "case",
+  "title": "PBS S3: ENOENT hoặc Permission denied với cache, không thấy backup",
+  "tags": "pbs s3 enoent permission denied cache chown backup datastore nested không thấy backup overwrite in-use marker",
+  "symptoms": "Tạo hoặc mount datastore S3 báo ENOENT hoặc Permission denied, backup lỗi, hoặc PBS mới không thấy bản backup cũ.",
+  "causes": "Thư mục cache không thuộc user backup, cache lồng trong datastore local, hoặc chưa bật Overwrite in-use marker khi nhận lại bucket cũ.",
+  "steps": [
+   {
+    "t": "Kiểm tra chủ sở hữu, quyền và dataset của thư mục cache",
+    "cmds": [
+     "ls -ld /s3-cache",
+     "zfs list"
+    ]
+   },
+   {
+    "t": "Cấp lại quyền cho user backup",
+    "cmds": [
+     "chown -R backup:backup /s3-cache",
+     "chmod 700 /s3-cache"
+    ]
+   },
+   {
+    "t": "Xem log dịch vụ PBS quanh thời điểm lỗi",
+    "cmds": [
+     "journalctl -u proxmox-backup-proxy --since \"30 min ago\""
+    ]
+   }
+  ],
+  "notes": "Cache phải là điểm mount riêng, không nằm trong datastore local khác. Nhận lại bucket cũ mà không thấy backup thì kiểm tra đã tick Overwrite in-use marker (chỉ khi PBS cũ đã tắt hẳn). Xem runbook PBS S3."
  }
 ]
