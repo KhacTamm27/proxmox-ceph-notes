@@ -129,6 +129,7 @@ details.case ol li{padding:7px 0}
 .rcase{display:block;padding:8px 0;border-top:1px solid var(--line);font-size:13px;font-weight:650;text-decoration:none}
 .results-empty{padding:14px;color:var(--muted);text-align:center}
 .triage-card{margin:10px 0;border:1px solid color-mix(in srgb,var(--brand) 35%,var(--line));border-radius:13px;background:var(--panel-2)}
+.triage-heading{margin:16px 0 6px;color:var(--muted);font-size:12px;font-weight:750}
 .triage-card summary{padding:13px 15px;cursor:pointer;font-size:14px;font-weight:750}
 .triage-card summary small{display:block;margin-top:3px;color:var(--muted);font-size:12px;font-weight:450}
 .triage-body{padding:0 15px 15px}
@@ -361,8 +362,12 @@ $('#tabceph').addEventListener('click',()=>show('ceph',true));
 $('#tabpve').addEventListener('click',()=>show('pve',true));
 $('#tabrun').addEventListener('click',()=>show('run',true));
 $('#tabscr').addEventListener('click',()=>show('scr',true));
-const SEARCH_STOPWORDS=new Set(['bi','la','toi','dang','gap','loi','cua','can','gi','the','nao','lam','sao','cho','voi','mot','nhung','cac','va','tren','duoc','khong','is','a','an','for','to','my','it','i','have','got','getting','please']);
+const SEARCH_STOPWORDS=new Set(['bi','la','toi','dang','gap','loi','cua','can','gi','the','nao','lam','sao','cho','voi','mot','nhung','cac','va','tren','duoc','khong','kiem','tra','xem','check','checking','is','a','an','for','to','my','it','i','have','got','getting','please']);
 function searchTerms(v){return N(v).split(/[^a-z0-9]+/).filter(w=>w&&!SEARCH_STOPWORDS.has(w))}
+function relevanceScore(primary,secondary,terms){
+  const p=N(primary),s=N(secondary);
+  return terms.reduce((score,term)=>score+(p.includes(term)?6:s.includes(term)?2:0),0);
+}
 function oneTranspositionApart(a,b){
   if(a.length!==b.length)return false;
   let i=0;
@@ -371,13 +376,12 @@ function oneTranspositionApart(a,b){
 }
 function triageMatches(v){
   const terms=searchTerms(v);
-  if(!terms.length)return [];
-  const required=terms.length===1?1:2;
+  if(terms.length<2)return [];
   return TRIAGE.map(item=>{
-    const words=N([item.title,item.aliases,item.summary].join(' ')).split(/[^a-z0-9]+/).filter(Boolean);
+    const words=N([item.title,item.aliases].join(' ')).split(/[^a-z0-9]+/).filter(Boolean);
     const matched=terms.filter(term=>words.some(word=>word===term||(term.length>=4&&oneTranspositionApart(term,word))));
     return {item,score:matched.length};
-  }).filter(hit=>hit.score>=required).sort((a,b)=>b.score-a.score);
+  }).filter(hit=>hit.score>=2).sort((a,b)=>b.score-a.score);
 }
 function renderTriage(hit){
   const item=hit.item,d=el('details','triage-card');d.open=true;
@@ -417,7 +421,12 @@ function renderResults(v){
     const t=N(it.c+' '+it.p+' '+(it.v||'')+' '+(it.k||'')+' '+s.name+' '+b.name);
     if(toks.every(w=>t.includes(w)))hits.push({b,it});
   })));
-  const ch=CASES.filter(c=>toks.every(w=>ct(c).includes(w)));
+  const ch=CASES.map((c,index)=>({
+    c,
+    index,
+    score:relevanceScore(c.title,[c.tags,c.symptoms,c.causes,c.goal,c.prereq].filter(Boolean).join(' '),toks)
+  })).filter(({c})=>toks.every(w=>ct(c).includes(w)))
+    .sort((a,b)=>b.score-a.score||a.index-b.index).map(({c})=>c);
   const sh=SCRIPTS.filter(s=>toks.every(w=>st(s).includes(w)));
   const head=el('div','rhead');
   head.append(el('span',null,'Kết quả: '+guided.length+' hướng dẫn chẩn đoán, '+hits.length+' lệnh, '+ch.length+' case, '+sh.length+' script'));
@@ -427,7 +436,6 @@ function renderResults(v){
     head.append(pb);
   }
   res.append(head);
-  guided.forEach(hit=>res.append(renderTriage(hit)));
   if(!hits.length&&!ch.length&&!sh.length&&!guided.length){
     res.append(el('p','results-empty','Chưa tìm thấy nội dung phù hợp. Thử từ khóa ngắn hơn hoặc tìm bằng cả tiếng Việt và tiếng Anh.'));
   }
@@ -439,6 +447,11 @@ function renderResults(v){
     row.append(a,box);res.append(row);
   });
   if(hits.length>30)res.append(el('p','note','Còn '+(hits.length-30)+' lệnh nữa, thu hẹp từ khóa để xem.'));
+  if(guided.length){
+    const gh=el('div','triage-heading','Chưa biết nguyên nhân? Bắt đầu kiểm tra theo các bước');
+    res.append(gh);
+    guided.forEach(hit=>res.append(renderTriage(hit)));
+  }
   res.hidden=false;
 }
 ['VM crash','VM không start','storage chậm','mất quorum','OSD latency','network LACP','VLAN trunk','RGW 503','scrub lỗi','storage đầy','kiểm tra host'].forEach(x=>{

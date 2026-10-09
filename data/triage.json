@@ -79,7 +79,7 @@
     "id": "storage-slow",
     "title": "Storage chậm / VM I/O latency cao",
     "scope": "mixed",
-    "aliases": "storage slow latency high iops chậm chậm chạp lag disk io vm slow pvesm nfs ceph rbd iscsi datastore storage bị chậm storage chậm storgae",
+    "aliases": "storage slow latency high iops chậm chậm chạp lag disk io vm slow pvesm nfs ceph rbd iscsi datastore osd slow ops disk latency ceph osd latency storage bị chậm storage chậm storgae",
     "summary": "Bắt đầu bằng các phép đo chỉ đọc, xác định chậm ở node, thiết bị local hay backend dùng chung; sau đó chọn nhánh Ceph, NFS hoặc iSCSI theo loại storage.",
     "steps": [
       {
