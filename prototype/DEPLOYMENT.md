@@ -4,6 +4,29 @@ This extends the Phase 1 static page with an **opt-in** status collector. The br
 
 The real cluster is not contacted by the repository build or tests. Do not enter credentials in this repository, source code, chat, browser storage, or a ticket.
 
+## Chỗ nhập thông tin cluster trên VM (không nhập trong Git)
+
+Thông tin kết nối chỉ điền trên VM ứng dụng, trong file `/etc/pve-diagnostic/connector.env`. Không sửa `connector.env.example` thành file thật và không commit file đã điền. Sau khi đã tạo user dịch vụ và thư mục `/etc/pve-diagnostic`, tạo file cấu hình riêng rồi mở bằng `sudoedit`:
+
+```bash
+sudo install -o root -g pve-diagnostic -m 640 \
+  "$HOME/pve-diagnostic-phase2/prototype/connector.env.example" \
+  /etc/pve-diagnostic/connector.env
+sudoedit /etc/pve-diagnostic/connector.env
+```
+
+Trong editor trên VM, giữ nguyên tên biến và chỉ thay giá trị:
+
+| Biến | Điền giá trị nào |
+|---|---|
+| `PVE_API_URL` | HTTPS origin của PVE, dạng `https://<hostname-trong-certificate>:8006`; hostname/IP phải khớp TLS certificate. |
+| `PVE_API_TOKEN_ID` | Token ID đầy đủ, dạng `<user>@<realm>!<token-name>`; phần user/realm nằm ngay trong ID này. |
+| `PVE_API_TOKEN_SECRET` | Secret Proxmox chỉ hiển thị lúc tạo token; nhập trực tiếp vào file trên VM, không gửi qua chat hoặc Git. |
+| `PVE_CA_FILE` | Giữ `/etc/pve-diagnostic/pve-root-ca.pem`; cài public CA certificate đã xác minh tại đúng đường dẫn này. |
+| `PVE_API_TIMEOUT` | Timeout tính bằng giây; mặc định `8`. |
+
+Không điền password tài khoản người dùng Proxmox. Backend dùng API token riêng; user/token phải được cấp quyền audit-only theo phần bên dưới. Bảo đảm quyền file là `root:pve-diagnostic` và mode `640`. File CA và file cấu hình thật đều nằm ngoài web root và repository.
+
 ## Security boundary for the temporary HTTP-over-VPN pilot
 
 The operator has chosen to defer HTTPS for now. Treat that as a short-lived pilot exception, not end-state security:
