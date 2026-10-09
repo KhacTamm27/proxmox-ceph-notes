@@ -191,6 +191,30 @@
   "Host, thiết bị, phiên bản của một OSD",
   "osd đĩa device host"
  ],
+ "ceph device ls": [
+  "Liệt kê thiết bị và dự đoán thời gian còn lại",
+  "devicehealth tuổi thọ đĩa sắp hỏng dự đoán"
+ ],
+ "ceph device ls-by-daemon osd.<id>": [
+  "Thiết bị vật lý được OSD sử dụng",
+  "osd device đĩa nào serial"
+ ],
+ "ceph device info <devid>": [
+  "Thông tin định danh, vị trí và sức khỏe thiết bị",
+  "device id serial vị trí sức khỏe đĩa"
+ ],
+ "ceph device get-health-metrics <devid>": [
+  "Đọc chỉ số sức khỏe thiết bị đã thu thập",
+  "smart metrics devicehealth wear lỗi đĩa"
+ ],
+ "ceph device scrape-health-metrics <devid>": [
+  "Thu thập lại chỉ số sức khỏe của một thiết bị",
+  "smart metrics refresh scrape đĩa lỗi cập nhật"
+ ],
+ "ceph device check-health": [
+  "Đánh giá chỉ số và phát cảnh báo thiết bị sắp hỏng",
+  "devicehealth cảnh báo disk sắp hỏng predicted failure"
+ ],
  "ceph osd find <osd-id>": [
   "OSD này nằm ở host nào",
   "tìm osd host vị trí"

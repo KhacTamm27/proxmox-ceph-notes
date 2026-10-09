@@ -1,6 +1,6 @@
 # B4 · OSD status
 
-[← Mục lục](../../README.md) · Ceph · 16 lệnh
+[← Mục lục](../../README.md) · Ceph · 22 lệnh
 
 [← B3 MGR and modules](../ceph/B03-mgr-and-modules.md) · [B5 OSD flags and maintenance →](../ceph/B05-osd-flags-and-maintenance.md)
 
@@ -62,6 +62,34 @@ ceph osd metadata <osd-id>
 # OSD này nằm ở host nào | Host and CRUSH location
 # từ khóa: tìm osd host vị trí
 ceph osd find <osd-id>
+```
+
+## Device health
+
+```bash
+# Liệt kê thiết bị và dự đoán thời gian còn lại | Devices and predicted life expectancy
+# từ khóa: devicehealth tuổi thọ đĩa sắp hỏng dự đoán
+ceph device ls
+
+# Thiết bị vật lý được OSD sử dụng | Device used by an OSD
+# từ khóa: osd device đĩa nào serial
+ceph device ls-by-daemon osd.<id>
+
+# Thông tin định danh, vị trí và sức khỏe thiết bị | Device identity, location and health
+# từ khóa: device id serial vị trí sức khỏe đĩa
+ceph device info <devid>
+
+# Đọc chỉ số sức khỏe thiết bị đã thu thập | Stored device health metrics
+# từ khóa: smart metrics devicehealth wear lỗi đĩa
+ceph device get-health-metrics <devid>
+
+# Thu thập lại chỉ số sức khỏe của một thiết bị | Refresh metrics for one device
+# từ khóa: smart metrics refresh scrape đĩa lỗi cập nhật
+ceph device scrape-health-metrics <devid>
+
+# Đánh giá chỉ số và phát cảnh báo thiết bị sắp hỏng | Evaluate device health alerts
+# từ khóa: devicehealth cảnh báo disk sắp hỏng predicted failure
+ceph device check-health
 ```
 
 ## Perf

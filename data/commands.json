@@ -2089,6 +2089,41 @@
      ]
     },
     {
+     "name": "Device health",
+     "items": [
+      {
+       "c": "ceph device ls",
+       "p": "Devices and predicted life expectancy",
+       "d": false
+      },
+      {
+       "c": "ceph device ls-by-daemon osd.<id>",
+       "p": "Device used by an OSD",
+       "d": false
+      },
+      {
+       "c": "ceph device info <devid>",
+       "p": "Device identity, location and health",
+       "d": false
+      },
+      {
+       "c": "ceph device get-health-metrics <devid>",
+       "p": "Stored device health metrics",
+       "d": false
+      },
+      {
+       "c": "ceph device scrape-health-metrics <devid>",
+       "p": "Refresh metrics for one device",
+       "d": false
+      },
+      {
+       "c": "ceph device check-health",
+       "p": "Evaluate device health alerts",
+       "d": false
+      }
+     ]
+    },
+    {
      "name": "Perf",
      "items": [
       {

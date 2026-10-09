@@ -8,7 +8,11 @@ import argparse
 import json
 import re
 import shutil
+import sys
 from pathlib import Path
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 ROOT = Path(__file__).resolve().parent.parent
 ap = argparse.ArgumentParser()
@@ -195,4 +199,8 @@ html = (tpl.replace("/*__DATA__*/null", json.dumps(data, ensure_ascii=False))
 nrb = sum(c.get("kind") == "runbook" for c in cases)
 nce = sum(c["scope"] == "ceph" and c.get("kind") != "runbook" for c in cases)
 npv = sum(c["scope"] == "pve" and c.get("kind") != "runbook" for c in cases)
-print(f"ok: {len(slugs)} file .md, {nce + npv} case ({nce} Ceph, {npv} Proxmox), {nrb} runbook, {len(scr_list)} script, {total} lệnh, Việt hóa {covered}/{total}")
+print(
+    f"ok: {len(slugs)} file .md, {nce + npv} case ({nce} Ceph, {npv} Proxmox), "
+    f"{nrb} runbook, {len(scr_list)} script, {total} lệnh, Việt hóa {covered}/{total}"
+    .encode("utf-8", errors="replace").decode("utf-8")
+)

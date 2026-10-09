@@ -1,6 +1,6 @@
 # Proxmox + Ceph command notes
 
-Tài liệu cá nhân: 493 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệnh phá hủy hoặc ảnh hưởng dịch vụ, đọc kỹ trước khi chạy.
+Tài liệu cá nhân: 499 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệnh phá hủy hoặc ảnh hưởng dịch vụ, đọc kỹ trước khi chạy.
 
 ## Cách tìm nhanh
 
@@ -19,6 +19,7 @@ Tài liệu cá nhân: 493 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 | [Ceph nearfull / full / pool đầy](docs/cases/ceph/nearfull-full.md) | HEALTH_WARN "N osd(s) nearfull", HEALTH_ERR "full osd(s)", client không ghi được, backfill dừng. |
 | [Slow ops / blocked requests](docs/cases/ceph/slow-ops.md) | HEALTH_WARN "N slow ops", VM đơ hoặc IO chậm, "requests are blocked". |
 | [Thay đĩa OSD hỏng](docs/cases/ceph/osd-replace-disk.md) | OSD down kéo dài, SMART báo lỗi hoặc dmesg có I/O error, cần thay đĩa vật lý. |
+| [Ceph cảnh báo OSD device có nguy cơ hỏng](docs/cases/ceph/osd-device-health-warning.md) | Ceph báo device health hoặc thiết bị có dự đoán tuổi thọ thấp; một OSD vẫn up nhưng SMART/NVMe metrics xấu hoặc thiết bị bị đánh dấu out do dự đoán lỗi. |
 | [PG degraded / undersized, recovery chậm](docs/cases/ceph/pg-degraded-recovery.md) | HEALTH_WARN "Degraded data redundancy", "N pgs undersized/degraded", "objects misplaced", recovery chạy lâu. |
 | [Large omap objects (thường do bucket index RGW)](docs/cases/ceph/large-omap.md) | HEALTH_WARN "N large omap objects". |
 | [RGW/S3 trả 503 hoặc timeout, upload lỗi](docs/cases/ceph/rgw-503.md) | Client S3 nhận 503/timeout, upload thất bại, RGW phản hồi chậm. |
@@ -44,6 +45,7 @@ Tài liệu cá nhân: 493 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 | Sự cố | Triệu chứng |
 |---|---|
 | [Cluster Proxmox mất quorum](docs/cases/pve/pve-quorum-lost.md) | GUI báo "cluster not ready - no quorum", /etc/pve chuyển read-only, không start được VM, node hiện đỏ. |
+| [Storage dùng chung giữa hai cluster Proxmox gây xung đột lock/VMID](docs/cases/pve/pve-storage-shared-clusters.md) | VM start/migrate hoặc thao tác storage thất bại bất thường; cùng một NFS export, LUN hoặc Ceph pool đang được cấu hình cho hai cluster Proxmox độc lập; VMID có thể trùng. |
 | [Bảo trì hoặc reboot một node Proxmox + Ceph](docs/cases/pve/node-maintenance.md) | Cần reboot node để nâng cấp kernel hoặc thay phần cứng mà không làm gián đoạn VM và không kích hoạt rebalance. |
 | [VM bị lock (backup/snapshot), không start hoặc migrate được](docs/cases/pve/vm-locked.md) | Báo "VM is locked (backup)" hoặc "(snapshot)", không start, stop, migrate hoặc xóa được. |
 | [GUI Proxmox bị đăng xuất liên tục hoặc không đăng nhập được](docs/cases/pve/pve-gui-logout.md) | GUI bị đá ra sau một thời gian ngắn, báo "permission denied" hoặc "invalid ticket", trang tải chậm hoặc treo. |
@@ -114,7 +116,7 @@ Tài liệu cá nhân: 493 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 | B1 | [Health and status](docs/ceph/B01-health-and-status.md) | 14 | Overview, Health, Capacity, Versions, Log, Crash, Time, Report |
 | B2 | [MON](docs/ceph/B02-mon.md) | 8 | Status, Quorum, Admin socket, Maintenance, Features, Protocol, Map |
 | B3 | [MGR and modules](docs/ceph/B03-mgr-and-modules.md) | 12 | Status, Control, Modules, Balancer, IO, Progress |
-| B4 | [OSD status](docs/ceph/B04-osd-status.md) | 16 | Tree, Usage, State, Info, Perf, Ratios, Blocklist |
+| B4 | [OSD status](docs/ceph/B04-osd-status.md) | 22 | Tree, Usage, State, Info, Device health, Perf, Ratios, Blocklist |
 | B5 | [OSD flags and maintenance](docs/ceph/B05-osd-flags-and-maintenance.md) | 15 | Flags, Per subtree, Safety, State, Weight |
 | B6 | [OSD lifecycle and devices](docs/ceph/B06-osd-lifecycle-and-devices.md) | 15 | Inventory, Create, Replace, Remove, Wipe, Service, BlueStore, Maintenance, Class |
 | B7 | [OSD daemon and performance (admin socket)](docs/ceph/B07-osd-daemon-and-performance-admin-socket.md) | 9 | Ops, Perf, Config, Bench, Heartbeat |

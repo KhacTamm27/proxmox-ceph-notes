@@ -174,6 +174,57 @@
   "scope": "pve"
  },
  {
+  "id": "pve-storage-shared-clusters",
+  "scope": "pve",
+  "title": "Storage dùng chung giữa hai cluster Proxmox gây xung đột lock/VMID",
+  "tags": "proxmox pve storage dùng chung hai cluster two clusters multiple cluster cluster boundary lock vmid conflict shared shared storage nfs ceph pool lun tách node",
+  "symptoms": "VM start/migrate hoặc thao tác storage thất bại bất thường; cùng một NFS export, LUN hoặc Ceph pool đang được cấu hình cho hai cluster Proxmox độc lập; VMID có thể trùng.",
+  "causes": "Storage locking của Proxmox chỉ phối hợp trong phạm vi một cluster, không hoạt động xuyên ranh giới hai cluster. Hai cluster cùng truy cập storage có thể đồng thời thao tác lên cùng dữ liệu và phát sinh xung đột VMID.",
+  "steps": [
+   {
+    "t": "Xác định cluster hiện tại và cấu hình storage trên node nghi vấn",
+    "cmds": [
+     "pvecm status",
+     "cat /etc/pve/storage.cfg",
+     "pvesm status"
+    ]
+   },
+   {
+    "t": "Đối chiếu chính xác backend đang dùng: NFS export, LUN/target hoặc Ceph pool; kiểm tra cluster còn lại có cùng backend không",
+    "cmds": [
+     "pvesm list <storage-id>",
+     "ceph fsid",
+     "ceph osd pool ls"
+    ]
+   },
+   {
+    "t": "Ngừng cấp quyền truy cập đồng thời; chọn cluster sở hữu storage và cô lập cluster còn lại trước khi tiếp tục ghi",
+    "cmds": []
+   },
+   {
+    "t": "Tạo storage riêng cho cluster cần tách, chuyển VM và dữ liệu sang storage đó rồi xác minh bản chuyển",
+    "cmds": [
+     "pvesm status",
+     "qm config <vmid>"
+    ]
+   },
+   {
+    "t": "Chỉ sau khi đã chuyển dữ liệu và xác nhận không còn VM/client dùng backend cũ, gỡ cấu hình storage khỏi cluster không sở hữu nó",
+    "cmds": [
+     "pvesm remove <storage-id>",
+     "pvesm status"
+    ]
+   }
+  ],
+  "notes": "Không cho hai cluster ghi đồng thời lên cùng một datastore, Ceph pool hoặc LUN; không xóa hay format backend trong lúc còn VM/client sử dụng. Việc gỡ một node khỏi cluster không tự thu hồi quyền truy cập shared storage. Nếu đang tách node khỏi cluster, làm theo đúng quy trình Cluster Manager chính thức và bảo đảm storage đã được tách trước khi join sang cluster khác.",
+  "refs": [
+   {
+    "t": "Proxmox VE: Cluster Manager — separating a node",
+    "u": "https://pve.proxmox.com/pve-docs/chapter-pvecm.html"
+   }
+  ]
+ },
+ {
   "id": "nearfull-full",
   "title": "Ceph nearfull / full / pool đầy",
   "tags": "ceph nearfull full đầy disk dung lượng backfillfull osd đầy",
@@ -326,6 +377,63 @@
   ],
   "notes": "Chỉ xóa OSD khi safe-to-destroy trả về an toàn. Thay từng đĩa một, đợi cluster về HEALTH_OK rồi mới thay đĩa tiếp theo.",
   "scope": "ceph"
+ },
+ {
+  "id": "osd-device-health-warning",
+  "scope": "ceph",
+  "title": "Ceph cảnh báo OSD device có nguy cơ hỏng",
+  "tags": "ceph osd devicehealth device health device_health_toomany disk sắp hỏng disk failure predicted failure SMART health metrics tuổi thọ đĩa out",
+  "symptoms": "Ceph báo device health hoặc thiết bị có dự đoán tuổi thọ thấp; một OSD vẫn up nhưng SMART/NVMe metrics xấu hoặc thiết bị bị đánh dấu out do dự đoán lỗi.",
+  "causes": "Chỉ số SMART/NVMe cho thấy lỗi media, độ mòn cao hoặc Ceph devicehealth dự đoán thiết bị có thể hỏng. Cơ chế self-heal có thể tự đánh dấu OSD out nếu được bật và vượt ngưỡng.",
+  "steps": [
+   {
+    "t": "Xem health detail và danh sách thiết bị, dự đoán tuổi thọ",
+    "cmds": [
+     "ceph health detail",
+     "ceph device ls"
+    ]
+   },
+   {
+    "t": "Ánh xạ thiết bị nghi vấn về đúng OSD và node",
+    "cmds": [
+     "ceph device ls-by-daemon osd.<id>",
+     "ceph device info <devid>",
+     "ceph osd metadata <osd-id>"
+    ]
+   },
+   {
+    "t": "Đọc metrics Ceph và xác minh trực tiếp SMART/NVMe trên node chứa OSD",
+    "cmds": [
+     "ceph device get-health-metrics <devid>",
+     "smartctl -a /dev/<dev>"
+    ]
+   },
+   {
+    "t": "Nếu cần dữ liệu mới, scrape metrics của thiết bị rồi yêu cầu Ceph đánh giá lại health",
+    "cmds": [
+     "ceph device scrape-health-metrics <devid>",
+     "ceph device check-health"
+    ]
+   },
+   {
+    "t": "Nếu SMART xác nhận đĩa suy giảm: thay theo case Thay đĩa OSD hỏng; chỉ destroy khi safe-to-destroy cho phép",
+    "cmds": [
+     "ceph osd safe-to-destroy <osd-id>",
+     "ceph -s"
+    ]
+   }
+  ],
+  "notes": "Dự đoán sức khỏe là tín hiệu để điều tra, không phải bằng chứng chắc chắn đĩa sẽ hỏng; đối chiếu SMART/NVMe, log kernel và tải thực tế. Kiểm tra cấu hình devicehealth self-heal trước khi thay đổi trạng thái OSD; nếu Ceph tự đánh dấu nhiều OSD out và báo DEVICE_HEALTH_TOOMANY, ưu tiên kiểm tra từng thiết bị/PG và không ép in/start hàng loạt. Không wipe thiết bị hoặc destroy OSD trước khi xác định đúng serial/OSD và xác nhận an toàn dữ liệu.",
+  "refs": [
+   {
+    "t": "Ceph: Device management and health monitoring",
+    "u": "https://docs.ceph.com/en/reef/rados/operations/devices/"
+   },
+   {
+    "t": "Ceph: Health checks",
+    "u": "https://docs.ceph.com/en/reef/rados/operations/health-checks/"
+   }
+  ]
  },
  {
   "id": "node-maintenance",
