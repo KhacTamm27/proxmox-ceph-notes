@@ -7,59 +7,71 @@
 ## Status
 
 ```bash
-# Active and standby MGR
+# MGR đang active và standby | Active and standby MGR
+# từ khóa: mgr active standby
 ceph mgr stat
 
-# Module endpoints
+# Địa chỉ các module (dashboard, prometheus) | Module endpoints
+# từ khóa: mgr dashboard prometheus url
 ceph mgr services
 ```
 
 ## Control
 
 ```bash
-# Fail over active MGR
+# Chuyển MGR active sang node khác | Fail over active MGR
+# từ khóa: mgr treo failover
 ceph mgr fail
 ```
 
 ## Modules
 
 ```bash
-# Enabled and available modules
+# Module MGR đã bật và có sẵn | Enabled and available modules
+# từ khóa: mgr module
 ceph mgr module ls
 
-# Enable exporter
+# Bật exporter prometheus | Enable exporter
+# từ khóa: prometheus monitoring giám sát
 ceph mgr module enable prometheus
 
-# Disable module
+# Tắt một module MGR | Disable module
+# từ khóa: tắt module mgr
 ceph mgr module disable <module>
 ```
 
 ## Balancer
 
 ```bash
-# Balancer state
+# Trạng thái balancer | Balancer state
+# từ khóa: balancer cân bằng pg
 ceph balancer status
 
-# Set upmap mode
+# Đặt chế độ upmap cho balancer | Set upmap mode
+# từ khóa: balancer upmap
 ceph balancer mode upmap
 
-# Toggle balancer
+# Bật hoặc tắt balancer | Toggle balancer
+# từ khóa: bật tắt balancer
 ceph balancer on / ceph balancer off
 
-# Score current distribution
+# Chấm điểm độ cân bằng hiện tại | Score current distribution
+# từ khóa: balancer lệch dung lượng
 ceph balancer eval
 ```
 
 ## IO
 
 ```bash
-# Cluster IO rates (iostat module)
+# Tốc độ IO của cluster | Cluster IO rates (iostat module)
+# từ khóa: io tốc độ throughput
 ceph iostat
 ```
 
 ## Progress
 
 ```bash
-# Ongoing recovery progress
+# Tiến độ recovery đang chạy | Ongoing recovery progress
+# từ khóa: recovery tiến độ progress
 ceph progress
 ```

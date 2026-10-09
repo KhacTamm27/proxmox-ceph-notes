@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 470" width="940" height="470" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" role="img" aria-label="Luồng console VM: Portal, Nginx proxy, Proxmox node">
+  <defs>
+    <marker id="ar" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#334155"/></marker>
+  </defs>
+  <rect width="940" height="470" rx="12" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="470" y="32" text-anchor="middle" font-size="17" font-weight="700" fill="#0f172a">Console VM qua Nginx proxy: Portal → Proxy → Proxmox node</text>
+
+  <rect x="30" y="60" width="210" height="110" rx="10" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/>
+  <text x="135" y="92" text-anchor="middle" font-size="15" font-weight="700" fill="#0c4a6e">Portal / trang quản lý</text>
+  <text x="135" y="113" text-anchor="middle" font-size="13" fill="#0c4a6e">khách hàng (trình duyệt)</text>
+  <text x="135" y="140" text-anchor="middle" font-size="12" fill="#075985">B1: biết VMID và node</text>
+  <text x="135" y="157" text-anchor="middle" font-size="12" fill="#075985">đang giữ VM</text>
+
+  <rect x="355" y="60" width="240" height="110" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+  <text x="475" y="90" text-anchor="middle" font-size="15" font-weight="700" fill="#78350f">Nginx Console Proxy</text>
+  <text x="475" y="111" text-anchor="middle" font-size="13" fill="#78350f">Ubuntu + Nginx</text>
+  <text x="475" y="133" text-anchor="middle" font-size="12" fill="#92400e" font-family="ui-monospace,Menlo,Consolas,monospace">listen 5721 ssl</text>
+  <text x="475" y="153" text-anchor="middle" font-size="12" fill="#92400e">mỗi node Proxmox một cổng</text>
+
+  <rect x="710" y="60" width="200" height="110" rx="10" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+  <text x="810" y="90" text-anchor="middle" font-size="15" font-weight="700" fill="#14532d">Proxmox node</text>
+  <text x="810" y="115" text-anchor="middle" font-size="13" fill="#14532d" font-family="ui-monospace,Menlo,Consolas,monospace">:8006</text>
+  <text x="810" y="136" text-anchor="middle" font-size="12" fill="#166534">API · noVNC · WebSocket</text>
+  <text x="810" y="154" text-anchor="middle" font-size="12" fill="#166534">(mạng quản trị MGT)</text>
+
+  <line x1="242" y1="100" x2="353" y2="100" stroke="#334155" stroke-width="2.2" marker-end="url(#ar)"/>
+  <text x="297" y="88" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">B2 gửi URL</text>
+  <text x="297" y="121" text-anchor="middle" font-size="11" fill="#475569">kèm tiền tố</text>
+  <line x1="597" y1="100" x2="708" y2="100" stroke="#334155" stroke-width="2.2" marker-end="url(#ar)"/>
+  <text x="652" y="88" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">B3 bỏ tiền tố</text>
+  <text x="652" y="121" text-anchor="middle" font-size="11" fill="#475569">+ rewrite /api2</text>
+  <line x1="708" y1="145" x2="597" y2="145" stroke="#64748b" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+  <line x1="353" y1="145" x2="242" y2="145" stroke="#64748b" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+  <text x="652" y="162" text-anchor="middle" font-size="11" fill="#475569">WebSocket (noVNC)</text>
+  <text x="297" y="162" text-anchor="middle" font-size="11" fill="#475569">hiển thị console</text>
+
+  <rect x="30" y="215" width="420" height="105" rx="8" fill="#f8fafc" stroke="#94a3b8"/>
+  <text x="46" y="239" font-size="13" font-weight="700" fill="#0f172a">URL gửi vào proxy (có tiền tố)</text>
+  <text x="46" y="264" font-size="11.5" fill="#0f172a" font-family="ui-monospace,Menlo,Consolas,monospace">https://&lt;proxy&gt;:5721/?console=kvm&amp;novnc=1</text>
+  <text x="46" y="283" font-size="11.5" fill="#b45309" font-family="ui-monospace,Menlo,Consolas,monospace">&amp;vmid=5721118&amp;node=pfx-node1</text>
+  <text x="46" y="302" font-size="11.5" fill="#0f172a" font-family="ui-monospace,Menlo,Consolas,monospace">&amp;vmname=null&amp;resize=scale</text>
+
+  <rect x="490" y="215" width="420" height="105" rx="8" fill="#f8fafc" stroke="#94a3b8"/>
+  <text x="506" y="239" font-size="13" font-weight="700" fill="#0f172a">URL Nginx chuyển xuống Proxmox</text>
+  <text x="506" y="264" font-size="11.5" fill="#0f172a" font-family="ui-monospace,Menlo,Consolas,monospace">https://10.0.57.21:8006/?console=kvm&amp;novnc=1</text>
+  <text x="506" y="283" font-size="11.5" fill="#15803d" font-family="ui-monospace,Menlo,Consolas,monospace">&amp;vmid=118&amp;node=node1</text>
+  <text x="506" y="302" font-size="11.5" fill="#0f172a" font-family="ui-monospace,Menlo,Consolas,monospace">&amp;vmname=null&amp;resize=scale</text>
+  <line x1="452" y1="268" x2="488" y2="268" stroke="#334155" stroke-width="2.2" marker-end="url(#ar)"/>
+
+  <rect x="30" y="340" width="880" height="110" rx="8" fill="#fffbeb" stroke="#d97706"/>
+  <text x="46" y="364" font-size="13" font-weight="700" fill="#78350f">Quy ước tiền tố (Portal gắn thêm, Nginx bỏ đi)</text>
+  <text x="46" y="388" font-size="12.5" fill="#1f2937">• Cổng trên proxy = hai octet cuối IP quản trị của node (10.0.57.21 → 5721). Mỗi node một server block.</text>
+  <text x="46" y="408" font-size="12.5" fill="#1f2937">• vmid gửi vào = cổng + VMID thật. Ví dụ cổng 5721 + VM 118 = 5721118 → Nginx đổi lại thành 118.</text>
+  <text x="46" y="428" font-size="12.5" fill="#1f2937">• node gửi vào = tiền tố + tên node thật (pfx-node1) → Nginx bỏ "pfx-" còn node1; đường dẫn /api2 được rewrite tương ứng.</text>
+</svg>

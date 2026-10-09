@@ -11,37 +11,44 @@
 # từ khóa: slow ops blocked requests kẹt
 ceph daemon osd.<id> dump_ops_in_flight
 
-# Recent slowest ops (admin socket)
+# Các thao tác chậm nhất gần đây (admin socket) | Recent slowest ops (admin socket)
+# từ khóa: slow ops chậm thao tác lịch sử
 ceph daemon osd.<id> dump_historic_ops
 
-# OSD state (admin socket)
+# Trạng thái OSD (admin socket) | OSD state (admin socket)
+# từ khóa: osd trạng thái socket
 ceph daemon osd.<id> status
 ```
 
 ## Perf
 
 ```bash
-# Internal counters (admin socket)
+# Bộ đếm hiệu năng nội bộ (admin socket) | Internal counters (admin socket)
+# từ khóa: perf counter hiệu năng
 ceph daemon osd.<id> perf dump
 
-# Live counters (admin socket)
+# Bộ đếm trực tiếp theo thời gian thực | Live counters (admin socket)
+# từ khóa: perf realtime
 ceph daemonperf osd.<id>
 ```
 
 ## Config
 
 ```bash
-# Effective config (admin socket)
+# Cấu hình đang áp dụng của OSD (admin socket) | Effective config (admin socket)
+# từ khóa: config osd hiệu lực
 ceph daemon osd.<id> config show
 
-# Effective config from MON
+# Cấu hình đang áp dụng, lấy từ MON | Effective config from MON
+# từ khóa: config osd hiệu lực
 ceph config show osd.<id>
 ```
 
 ## Bench
 
 ```bash
-# Raw OSD write bench
+# Benchmark ghi thô của OSD | Raw OSD write bench
+# từ khóa: benchmark osd iops đĩa chậm
 ceph tell osd.<id> bench
 ```
 

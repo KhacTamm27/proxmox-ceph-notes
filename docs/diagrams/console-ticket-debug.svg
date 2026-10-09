@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 360" width="940" height="360" font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" role="img" aria-label="Gỡ lỗi console: lấy ticket, đặt cookie, mở URL chuẩn, kiểm tra bằng F12">
+  <defs>
+    <marker id="ar2" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#334155"/></marker>
+  </defs>
+  <rect width="940" height="360" rx="12" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="470" y="32" text-anchor="middle" font-size="17" font-weight="700" fill="#0f172a">Gỡ lỗi console: ticket → cookie → URL chuẩn → F12</text>
+
+  <g font-size="12.5">
+    <rect x="20" y="58" width="160" height="128" rx="10" fill="#e0f2fe" stroke="#0369a1" stroke-width="2"/>
+    <text x="100" y="82" text-anchor="middle" font-weight="700" fill="#0c4a6e">1. Lấy ticket</text>
+    <text x="100" y="104" text-anchor="middle" fill="#075985">curl POST</text>
+    <text x="100" y="122" text-anchor="middle" fill="#075985" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="11">/access/ticket</text>
+    <text x="100" y="146" text-anchor="middle" fill="#075985">trả về ticket</text>
+    <text x="100" y="164" text-anchor="middle" fill="#075985">+ CSRF token</text>
+
+    <rect x="215" y="58" width="160" height="128" rx="10" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/>
+    <text x="295" y="82" text-anchor="middle" font-weight="700" fill="#4c1d95">2. Đặt cookie</text>
+    <text x="295" y="101" text-anchor="middle" fill="#5b21b6">F12 → Application</text>
+    <text x="295" y="117" text-anchor="middle" fill="#5b21b6">→ Cookies</text>
+    <text x="295" y="133" text-anchor="middle" fill="#5b21b6">(domain của proxy)</text>
+    <text x="295" y="152" text-anchor="middle" fill="#5b21b6" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="11">PVEAuthCookie</text>
+    <text x="295" y="169" text-anchor="middle" fill="#5b21b6">= ticket (mã hóa URL)</text>
+
+    <rect x="410" y="58" width="160" height="128" rx="10" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+    <text x="490" y="82" text-anchor="middle" font-weight="700" fill="#78350f">3. Mở URL chuẩn</text>
+    <text x="490" y="104" text-anchor="middle" fill="#92400e">qua proxy, có tiền tố</text>
+    <text x="490" y="124" text-anchor="middle" fill="#92400e" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="11">vmid=cổng+VMID</text>
+    <text x="490" y="144" text-anchor="middle" fill="#92400e" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="11">node=pfx-tênnode</text>
+
+    <rect x="605" y="58" width="160" height="128" rx="10" fill="#fce7f3" stroke="#be185d" stroke-width="2"/>
+    <text x="685" y="82" text-anchor="middle" font-weight="700" fill="#831843">4. F12 → Network</text>
+    <text x="685" y="104" text-anchor="middle" fill="#9d174d">lọc "vnc"</text>
+    <text x="685" y="126" text-anchor="middle" fill="#9d174d" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="11">vncproxy → 200</text>
+    <text x="685" y="146" text-anchor="middle" fill="#9d174d" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="11">vncwebsocket → 101</text>
+
+    <rect x="800" y="58" width="120" height="128" rx="10" fill="#dcfce7" stroke="#15803d" stroke-width="2"/>
+    <text x="860" y="82" text-anchor="middle" font-weight="700" fill="#14532d">5. Kết quả</text>
+    <text x="860" y="106" text-anchor="middle" fill="#166534">Thấy màn hình</text>
+    <text x="860" y="124" text-anchor="middle" fill="#166534">VM (noVNC)</text>
+    <text x="860" y="150" text-anchor="middle" fill="#b91c1c">hoặc đọc lỗi</text>
+    <text x="860" y="168" text-anchor="middle" fill="#b91c1c">401/403/404/502</text>
+  </g>
+  <line x1="181" y1="122" x2="213" y2="122" stroke="#334155" stroke-width="2.2" marker-end="url(#ar2)"/>
+  <line x1="376" y1="122" x2="408" y2="122" stroke="#334155" stroke-width="2.2" marker-end="url(#ar2)"/>
+  <line x1="571" y1="122" x2="603" y2="122" stroke="#334155" stroke-width="2.2" marker-end="url(#ar2)"/>
+  <line x1="766" y1="122" x2="798" y2="122" stroke="#334155" stroke-width="2.2" marker-end="url(#ar2)"/>
+
+  <rect x="20" y="212" width="900" height="128" rx="8" fill="#f8fafc" stroke="#94a3b8"/>
+  <text x="36" y="236" font-size="13" font-weight="700" fill="#0f172a">Kiểm tra nhanh bằng curl (không cần trình duyệt): đi đúng đường rewrite của proxy</text>
+  <text x="36" y="262" font-size="11.5" fill="#0f172a" font-family="ui-monospace,Menlo,Consolas,monospace">curl -sk -b "PVEAuthCookie=$ENC" \</text>
+  <text x="36" y="281" font-size="11.5" fill="#0f172a" font-family="ui-monospace,Menlo,Consolas,monospace">  https://&lt;proxy&gt;:5721/api2/json/nodes/pfx-node1/qemu/5721118/status/current</text>
+  <text x="36" y="308" font-size="12.5" fill="#1f2937">Trả JSON trạng thái VM → ticket, quyền, rewrite và đường tới node đều ổn. Lỗi thì xem mã lỗi ở bảng cuối runbook.</text>
+  <text x="36" y="328" font-size="12.5" fill="#1f2937">Ticket sống khoảng 2 giờ, hết hạn thì lặp lại bước 1.</text>
+</svg>

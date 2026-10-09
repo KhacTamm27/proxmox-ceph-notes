@@ -19,24 +19,28 @@ ceph versions
 # từ khóa: flags noout full ratio pool
 ceph osd dump
 
-# Finalize OSD release after upgrade
+# Chốt phiên bản OSD sau nâng cấp | Finalize OSD release after upgrade
+# từ khóa: nâng cấp upgrade require-osd-release cảnh báo
 ceph osd require-osd-release <release>
 ```
 
 ## Clients
 
 ```bash
-# Minimum client version (needed for upmap)
+# Phiên bản client tối thiểu (cần cho upmap) | Minimum client version (needed for upmap)
+# từ khóa: compat client upmap balancer
 ceph osd set-require-min-compat-client <release>
 
-# Connected client feature levels
+# Mức tính năng của các client đang kết nối | Connected client feature levels
+# từ khóa: client feature phiên bản cũ
 ceph features
 ```
 
 ## Pre-upgrade
 
 ```bash
-# Avoid rebalance during rolling restart
+# Tránh rebalance khi restart lần lượt | Avoid rebalance during rolling restart
+# từ khóa: noout bảo trì nâng cấp
 ceph osd set noout
 
 # Tổng quan sức khỏe cluster Ceph, lệnh đầu tiên cần chạy | Confirm all PGs `active+clean` before next node
@@ -47,6 +51,7 @@ ceph -s
 ## Post-upgrade
 
 ```bash
-# Restore normal behavior
+# Trả về hoạt động bình thường | Restore normal behavior
+# từ khóa: gỡ noout xong bảo trì
 ceph osd unset noout
 ```

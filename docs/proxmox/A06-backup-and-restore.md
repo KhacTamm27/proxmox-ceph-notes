@@ -7,71 +7,87 @@
 ## vzdump
 
 ```bash
-# Backup a guest
+# Backup một VM hoặc container | Backup a guest
+# từ khóa: backup sao lưu vzdump
 vzdump <vmid> --storage <storage> --mode snapshot --compress zstd
 
-# Backup all guests on node
+# Backup tất cả guest trên node | Backup all guests on node
+# từ khóa: backup tất cả
 vzdump --all --storage <storage>
 ```
 
 ## Restore
 
 ```bash
-# Restore VM
+# Restore VM từ backup | Restore VM
+# từ khóa: restore khôi phục vm
 qmrestore <archive-or-volid> <vmid> --storage <storage>
 
-# Restore container
+# Restore container từ backup | Restore container
+# từ khóa: restore khôi phục container
 pct restore <ctid> <archive-or-volid> --storage <storage>
 ```
 
 ## Jobs
 
 ```bash
-# List backup jobs
+# Liệt kê các job backup | List backup jobs
+# từ khóa: job backup lịch
 pvesh get /cluster/backup
 ```
 
 ## PBS client
 
 ```bash
-# List backup groups
+# Liệt kê nhóm backup trên PBS | List backup groups
+# từ khóa: pbs backup danh sách
 proxmox-backup-client list --repository <user@realm@host:datastore>
 
-# List snapshots
+# Liệt kê snapshot backup trên PBS | List snapshots
+# từ khóa: pbs snapshot
 proxmox-backup-client snapshot list --repository <repo>
 
-# File-level backup
+# Backup file/thư mục lên PBS | File-level backup
+# từ khóa: pbs backup file thư mục pxar
 proxmox-backup-client backup <name>.pxar:<path> --repository <repo>
 
-# File-level restore
+# Restore file/thư mục từ PBS | File-level restore
+# từ khóa: pbs restore file
 proxmox-backup-client restore <snapshot> <archive> <target> --repository <repo>
 ```
 
 ## PBS server (on PBS host)
 
 ```bash
-# List datastores
+# Liệt kê datastore của PBS | List datastores
+# từ khóa: pbs datastore
 proxmox-backup-manager datastore list
 ```
 
 ## PBS server
 
 ```bash
-# Start GC
+# Chạy dọn rác (GC) cho datastore | Start GC
+# từ khóa: pbs gc dọn rác giải phóng dung lượng
 proxmox-backup-manager garbage-collection start <datastore>
 
-# Verify jobs
+# Liệt kê job verify | Verify jobs
+# từ khóa: pbs verify kiểm tra toàn vẹn
 proxmox-backup-manager verify-job list
 
-# Prune jobs
+# Liệt kê job prune | Prune jobs
+# từ khóa: pbs prune giữ lại bản backup
 proxmox-backup-manager prune-job list
 
-# Sync jobs
+# Liệt kê job sync | Sync jobs
+# từ khóa: pbs sync đồng bộ
 proxmox-backup-manager sync-job list
 
-# Disks on PBS host
+# Liệt kê đĩa trên máy PBS | Disks on PBS host
+# từ khóa: pbs đĩa
 proxmox-backup-manager disk list
 
-# PBS users
+# Liệt kê user PBS | PBS users
+# từ khóa: pbs user
 proxmox-backup-manager user list
 ```

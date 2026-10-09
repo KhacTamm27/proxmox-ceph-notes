@@ -1,114 +1,1894 @@
 {
-"pvecm status": ["Xem quorum, số phiếu và link của cluster Proxmox", "quorum mất quorum no quorum cluster vote"],
-"pvecm nodes": ["Liệt kê các node trong cluster", "node thành viên danh sách"],
-"corosync-quorumtool -s": ["Chi tiết quorum theo corosync", "quorum votes"],
-"corosync-cfgtool -s": ["Trạng thái từng link knet giữa các node, phát hiện link đứt", "link down mạng cluster knet đứt"],
-"corosync-cfgtool -n": ["Danh sách node và link corosync", "node link"],
-"corosync-cmapctl runtime.members": ["Thành viên corosync đang chạy thực tế", "members runtime"],
-"journalctl -u corosync -f": ["Theo dõi log corosync theo thời gian thực", "log corosync retransmit token lost link"],
-"journalctl -u pve-cluster -f": ["Theo dõi log pmxcfs (thư mục /etc/pve)", "log pmxcfs etc/pve read-only"],
-"cat /etc/pve/corosync.conf": ["Xem cấu hình corosync của cluster", "config corosync"],
-"pvecm add <existing-node-ip> --link0 <ip>": ["Thêm node mới vào cluster (chạy trên node mới)", "join thêm node"],
-"pvecm delnode <node>": ["Xóa node khỏi cluster (nguy hiểm, node phải tắt hẳn trước)", "xóa node remove node"],
-"pvecm expected <n>": ["Ép số phiếu kỳ vọng khi mất quorum (khẩn cấp, dễ split-brain)", "mất quorum emergency expected votes"],
-"pvecm qdevice setup <qnetd-ip>": ["Thêm QDevice ngoài để cluster 2 node có quorum", "qdevice 2 node tie breaker"],
-"pvecm qdevice remove": ["Gỡ QDevice khỏi cluster", "qdevice"],
-"pmxcfs -l": ["Chạy pmxcfs chế độ local khi không có quorum (biện pháp cuối)", "không quorum sửa etc/pve local mode"],
-"systemctl restart pve-cluster corosync": ["Khởi động lại stack cluster khi treo hoặc lệch trạng thái", "restart cluster corosync treo"],
-
-"ceph -s": ["Tổng quan sức khỏe cluster Ceph, lệnh đầu tiên cần chạy", "status health tổng quan kiểm tra nhanh"],
-"ceph -w": ["Xem sự kiện cluster chạy liên tục (recovery, scrub, lỗi)", "watch live theo dõi realtime"],
-"ceph health detail": ["Chi tiết từng cảnh báo HEALTH_WARN/ERR, cho biết PG/OSD/pool nào lỗi", "warn error cảnh báo lỗi health nearfull inconsistent large omap"],
-"ceph status --format json-pretty": ["Trạng thái cluster dạng JSON để đưa vào script", "json script monitoring"],
-"ceph df": ["Dung lượng thô và theo từng pool", "đầy disk dung lượng usage capacity full"],
-"ceph df detail": ["Dung lượng mở rộng kèm quota", "quota dung lượng pool"],
-"ceph versions": ["Phiên bản các daemon, kiểm tra lệch version khi nâng cấp", "version nâng cấp upgrade mixed"],
-"ceph fsid": ["Lấy ID của cluster", "fsid cluster id"],
-"ceph log last 50": ["50 dòng log cluster gần nhất", "log gần đây cluster log"],
-"ceph crash ls": ["Danh sách daemon đã crash (cảnh báo RECENT_CRASH)", "crash daemon chết recent_crash"],
-"ceph crash info <crash-id>": ["Chi tiết một lần crash", "crash backtrace"],
-"ceph crash archive-all": ["Xác nhận đã xem mọi crash để hết cảnh báo", "xóa cảnh báo crash archive"],
-"ceph time-sync-status": ["Độ lệch giờ giữa các MON", "clock skew lệch giờ mất đồng bộ giờ ntp"],
-"ceph report": ["Xuất báo cáo đầy đủ để gửi hỗ trợ hoặc phân tích", "report báo cáo debug"],
-
-"ceph mon stat": ["Tóm tắt MON và quorum", "mon quorum monitor"],
-"ceph mon dump": ["Xem MON map", "monmap địa chỉ mon"],
-"ceph quorum_status -f json-pretty": ["Chi tiết quorum MON, biết MON nào đang vắng", "mon down quorum mất mon"],
-"ceph daemon mon.<id> mon_status": ["Trạng thái MON ngay trên host (khi ceph -s không phản hồi)", "mon không phản hồi admin socket treo"],
-"ceph tell mon.<id> compact": ["Nén store của MON khi MON phình to", "mon store lớn compact đầy disk"],
-"ceph mon feature ls": ["Tính năng MON đang bật", "feature"],
-"ceph mon enable-msgr2": ["Bật giao thức msgr2", "msgr2 v2 nâng cấp"],
-"ceph mon getmap -o monmap.bin": ["Xuất MON map ra file", "monmap backup"],
-
-"ceph osd tree": ["Cây CRUSH kèm trạng thái up/down của từng OSD", "osd down up tree host vị trí"],
-"ceph osd tree down": ["Chỉ liệt kê các OSD đang down", "osd down tìm osd chết"],
-"ceph osd tree --show-shadow": ["Cây CRUSH gồm cả shadow tree theo device class", "device class ssd hdd shadow"],
-"ceph osd df": ["Dung lượng dùng của từng OSD, tìm OSD đầy hoặc lệch", "osd đầy nearfull lệch dung lượng"],
-"ceph osd df tree": ["Dung lượng theo từng host và OSD", "nearfull đầy host osd lệch"],
-"ceph osd utilization": ["Mức dùng thấp nhất, cao nhất và độ lệch giữa các OSD", "cân bằng lệch utilization"],
-"ceph osd stat": ["Số OSD up và in, kiểm tra nhanh OSD có rớt không", "osd up in down flapping"],
-"ceph osd dump": ["OSD map: flag, ratio, thông tin pool", "flags noout full ratio pool"],
-"ceph osd ls": ["Danh sách ID OSD", "osd id"],
-"ceph osd metadata <osd-id>": ["Host, thiết bị, phiên bản của một OSD", "osd đĩa device host"],
-"ceph osd find <osd-id>": ["OSD này nằm ở host nào", "tìm osd host vị trí"],
-"ceph osd perf": ["Độ trễ commit và apply của từng OSD, tìm OSD chậm", "slow ops chậm latency đĩa lag"],
-"ceph osd set-nearfull-ratio 0.85": ["Đặt ngưỡng nearfull", "nearfull ngưỡng ratio"],
-"ceph osd set-backfillfull-ratio 0.90": ["Đặt ngưỡng backfillfull, vượt ngưỡng thì dừng backfill", "backfillfull ratio"],
-"ceph osd set-full-ratio 0.95": ["Đặt ngưỡng full, vượt thì chặn ghi", "full đầy chặn ghi ratio"],
-"ceph osd blocklist ls": ["Client đang bị chặn (blocklist)", "blocklist client treo rbd hang"],
-
-"ceph osd set noout / ceph osd unset noout": ["Không tự đánh dấu OSD out (bật trước khi bảo trì, nhớ tắt sau)", "bảo trì reboot maintenance noout"],
-"ceph osd set norebalance / ceph osd unset norebalance": ["Tạm dừng cân bằng lại dữ liệu", "rebalance tạm dừng"],
-"ceph osd set nobackfill / ceph osd unset nobackfill": ["Tạm dừng backfill", "backfill tạm dừng"],
-"ceph osd set norecover / ceph osd unset norecover": ["Tạm dừng recovery", "recovery tạm dừng"],
-"ceph osd set noscrub / ceph osd set nodeep-scrub": ["Tạm dừng scrub và deep-scrub (giờ cao điểm)", "scrub dừng cao điểm chậm"],
-"ceph osd set pause / ceph osd unset pause": ["Dừng toàn bộ IO của client (khẩn cấp)", "pause dừng io khẩn cấp"],
-"ceph osd set-group noout <host-or-chassis>": ["Đặt noout cho riêng một host hoặc chassis", "bảo trì một host noout"],
-"ceph osd unset-group noout <host-or-chassis>": ["Gỡ noout của một host hoặc chassis", "xong bảo trì noout"],
-"ceph osd ok-to-stop <osd-id>": ["Kiểm tra dừng OSD này có mất tính sẵn sàng không", "dừng osd an toàn bảo trì"],
-"ceph osd safe-to-destroy <osd-id>": ["Kiểm tra xóa OSD này có mất dữ liệu không", "thay đĩa xóa osd an toàn"],
-"ceph osd out <osd-id> / ceph osd in <osd-id>": ["Đánh dấu OSD out để di dời dữ liệu, hoặc in để đưa lại", "thay đĩa out in rebalance"],
-"ceph osd down <osd-id>": ["Đánh dấu OSD down (ép peering lại)", "ép down osd"],
-"ceph osd reweight <osd-id> 0.9": ["Giảm tạm trọng số OSD (0 đến 1)", "osd đầy giảm tải reweight"],
-"ceph osd crush reweight osd.<id> <weight>": ["Đổi trọng số CRUSH của OSD (thường theo dung lượng đĩa)", "crush weight đĩa mới"],
-"ceph osd reweight-by-utilization": ["Tự giảm trọng số các OSD đang quá đầy", "nearfull cân bằng tự động"],
-
-"ceph pg stat": ["Số PG theo từng trạng thái", "pg trạng thái tổng quan"],
-"ceph pg dump_stuck inactive": ["PG kẹt inactive (không phục vụ IO)", "pg inactive stuck treo mất dữ liệu"],
-"ceph pg dump_stuck unclean": ["PG kẹt unclean", "pg unclean stuck"],
-"ceph pg dump_stuck undersized": ["PG thiếu bản sao kẹt lâu", "undersized thiếu replica"],
-"ceph pg ls": ["Liệt kê toàn bộ PG", "pg danh sách"],
-"ceph pg ls-by-pool <pool>": ["PG của một pool", "pg pool"],
-"ceph pg ls-by-osd osd.<id>": ["PG đang nằm trên một OSD", "pg osd"],
-"ceph pg map <pgid>": ["PG này nằm trên OSD nào (up và acting)", "pg map vị trí acting"],
-"ceph pg <pgid> query": ["Trạng thái chi tiết của PG, lý do bị kẹt", "pg stuck peering incomplete lý do"],
-"ceph pg scrub <pgid> / ceph pg deep-scrub <pgid>": ["Chạy scrub hoặc deep-scrub cho một PG", "scrub kiểm tra toàn vẹn"],
-"ceph pg repair <pgid>": ["Sửa PG inconsistent (xác định bản lỗi trước khi chạy)", "inconsistent scrub error sửa pg repair"],
-"ceph pg repeer <pgid>": ["Ép PG peering lại", "peering stuck"],
-"ceph pg force-recovery <pgid>": ["Ưu tiên recovery PG này trước", "ưu tiên recovery"],
-"ceph pg force-backfill <pgid>": ["Ưu tiên backfill PG này trước", "ưu tiên backfill"],
-"ceph osd pg-upmap-items <pgid> <from> <to>": ["Chuyển tay PG từ OSD này sang OSD khác", "upmap chuyển pg cân bằng"],
-"ceph osd rm-pg-upmap-items <pgid>": ["Gỡ upmap thủ công của PG", "upmap gỡ"],
-
-"ceph config dump": ["Toàn bộ cấu hình tập trung đã đặt", "config cấu hình"],
-"ceph config get <who> <option>": ["Đọc một tùy chọn cấu hình", "config get"],
-"ceph config set <who> <option> <value>": ["Đặt tùy chọn cấu hình", "config set"],
-"ceph config rm <who> <option>": ["Đưa tùy chọn về mặc định", "config reset"],
-"ceph config set osd osd_max_backfills 1": ["Giới hạn số backfill đồng thời để đỡ ảnh hưởng client", "backfill chậm ảnh hưởng io throttle"],
-"ceph config set osd osd_recovery_max_active 1": ["Giới hạn số thao tác recovery đồng thời", "recovery throttle"],
-"ceph config set osd osd_recovery_sleep_ssd 0.1": ["Làm chậm recovery trên SSD cho đỡ tải", "recovery ssd throttle"],
-"ceph config set osd osd_mclock_profile high_client_ops": ["Ưu tiên IO của client hơn recovery (Quincy trở lên)", "mclock ưu tiên client slow ops"],
-"ceph config set osd osd_mclock_profile high_recovery_ops": ["Ưu tiên recovery hơn client (Quincy trở lên)", "mclock ưu tiên recovery nhanh"],
-"ceph config set osd osd_scrub_begin_hour 22": ["Giờ bắt đầu cửa sổ scrub", "scrub giờ cao điểm lịch"],
-"ceph config set osd osd_scrub_end_hour 6": ["Giờ kết thúc cửa sổ scrub", "scrub giờ lịch"],
-
-"ceph daemon osd.<id> dump_ops_in_flight": ["Các thao tác đang kẹt trên OSD (chạy trên host của OSD)", "slow ops blocked requests kẹt"],
-"journalctl -u ceph-osd@<osd-id> --since \"1 hour ago\"": ["Log OSD trong 1 giờ gần nhất, tìm nguyên nhân rớt OSD", "osd down flapping log crash oom"],
-"ceph config get osd osd_heartbeat_grace": ["Thời gian chờ heartbeat trước khi coi OSD là down", "heartbeat flapping down"],
-"ethtool -S <if>": ["Thống kê lỗi card mạng trên host OSD", "nic lỗi mạng drop crc flapping"],
-"ceph pg ls undersized": ["PG đang thiếu bản sao", "undersized degraded"],
-"radosgw-admin bucket limit check": ["Bucket vượt giới hạn shard (nguyên nhân large omap)", "large omap shard bucket index rgw"],
-"rados -p <pool> listomapkeys <object>": ["Đếm key omap của object nghi lớn", "large omap object"],
-"chronyc tracking": ["Độ lệch NTP trên máy hiện tại", "ntp chrony lệch giờ clock skew"],
-"rbd status <pool>/<image>": ["Ai đang mở image (watcher), để tìm client treo", "rbd treo client lock watcher hang"]
+ "pvecm status": [
+  "Xem quorum, số phiếu và link của cluster Proxmox",
+  "quorum mất quorum no quorum cluster vote"
+ ],
+ "pvecm nodes": [
+  "Liệt kê các node trong cluster",
+  "node thành viên danh sách"
+ ],
+ "corosync-quorumtool -s": [
+  "Chi tiết quorum theo corosync",
+  "quorum votes"
+ ],
+ "corosync-cfgtool -s": [
+  "Trạng thái từng link knet giữa các node, phát hiện link đứt",
+  "link down mạng cluster knet đứt"
+ ],
+ "corosync-cfgtool -n": [
+  "Danh sách node và link corosync",
+  "node link"
+ ],
+ "corosync-cmapctl runtime.members": [
+  "Thành viên corosync đang chạy thực tế",
+  "members runtime"
+ ],
+ "journalctl -u corosync -f": [
+  "Theo dõi log corosync theo thời gian thực",
+  "log corosync retransmit token lost link"
+ ],
+ "journalctl -u pve-cluster -f": [
+  "Theo dõi log pmxcfs (thư mục /etc/pve)",
+  "log pmxcfs etc/pve read-only"
+ ],
+ "cat /etc/pve/corosync.conf": [
+  "Xem cấu hình corosync của cluster",
+  "config corosync"
+ ],
+ "pvecm add <existing-node-ip> --link0 <ip>": [
+  "Thêm node mới vào cluster (chạy trên node mới)",
+  "join thêm node"
+ ],
+ "pvecm delnode <node>": [
+  "Xóa node khỏi cluster (nguy hiểm, node phải tắt hẳn trước)",
+  "xóa node remove node"
+ ],
+ "pvecm expected <n>": [
+  "Ép số phiếu kỳ vọng khi mất quorum (khẩn cấp, dễ split-brain)",
+  "mất quorum emergency expected votes"
+ ],
+ "pvecm qdevice setup <qnetd-ip>": [
+  "Thêm QDevice ngoài để cluster 2 node có quorum",
+  "qdevice 2 node tie breaker"
+ ],
+ "pvecm qdevice remove": [
+  "Gỡ QDevice khỏi cluster",
+  "qdevice"
+ ],
+ "pmxcfs -l": [
+  "Chạy pmxcfs chế độ local khi không có quorum (biện pháp cuối)",
+  "không quorum sửa etc/pve local mode"
+ ],
+ "systemctl restart pve-cluster corosync": [
+  "Khởi động lại stack cluster khi treo hoặc lệch trạng thái",
+  "restart cluster corosync treo"
+ ],
+ "ceph -s": [
+  "Tổng quan sức khỏe cluster Ceph, lệnh đầu tiên cần chạy",
+  "status health tổng quan kiểm tra nhanh"
+ ],
+ "ceph -w": [
+  "Xem sự kiện cluster chạy liên tục (recovery, scrub, lỗi)",
+  "watch live theo dõi realtime"
+ ],
+ "ceph health detail": [
+  "Chi tiết từng cảnh báo HEALTH_WARN/ERR, cho biết PG/OSD/pool nào lỗi",
+  "warn error cảnh báo lỗi health nearfull inconsistent large omap"
+ ],
+ "ceph status --format json-pretty": [
+  "Trạng thái cluster dạng JSON để đưa vào script",
+  "json script monitoring"
+ ],
+ "ceph df": [
+  "Dung lượng thô và theo từng pool",
+  "đầy disk dung lượng usage capacity full"
+ ],
+ "ceph df detail": [
+  "Dung lượng mở rộng kèm quota",
+  "quota dung lượng pool"
+ ],
+ "ceph versions": [
+  "Phiên bản các daemon, kiểm tra lệch version khi nâng cấp",
+  "version nâng cấp upgrade mixed"
+ ],
+ "ceph fsid": [
+  "Lấy ID của cluster",
+  "fsid cluster id"
+ ],
+ "ceph log last 50": [
+  "50 dòng log cluster gần nhất",
+  "log gần đây cluster log"
+ ],
+ "ceph crash ls": [
+  "Danh sách daemon đã crash (cảnh báo RECENT_CRASH)",
+  "crash daemon chết recent_crash"
+ ],
+ "ceph crash info <crash-id>": [
+  "Chi tiết một lần crash",
+  "crash backtrace"
+ ],
+ "ceph crash archive-all": [
+  "Xác nhận đã xem mọi crash để hết cảnh báo",
+  "xóa cảnh báo crash archive"
+ ],
+ "ceph time-sync-status": [
+  "Độ lệch giờ giữa các MON",
+  "clock skew lệch giờ mất đồng bộ giờ ntp"
+ ],
+ "ceph report": [
+  "Xuất báo cáo đầy đủ để gửi hỗ trợ hoặc phân tích",
+  "report báo cáo debug"
+ ],
+ "ceph mon stat": [
+  "Tóm tắt MON và quorum",
+  "mon quorum monitor"
+ ],
+ "ceph mon dump": [
+  "Xem MON map",
+  "monmap địa chỉ mon"
+ ],
+ "ceph quorum_status -f json-pretty": [
+  "Chi tiết quorum MON, biết MON nào đang vắng",
+  "mon down quorum mất mon"
+ ],
+ "ceph daemon mon.<id> mon_status": [
+  "Trạng thái MON ngay trên host (khi ceph -s không phản hồi)",
+  "mon không phản hồi admin socket treo"
+ ],
+ "ceph tell mon.<id> compact": [
+  "Nén store của MON khi MON phình to",
+  "mon store lớn compact đầy disk"
+ ],
+ "ceph mon feature ls": [
+  "Tính năng MON đang bật",
+  "feature"
+ ],
+ "ceph mon enable-msgr2": [
+  "Bật giao thức msgr2",
+  "msgr2 v2 nâng cấp"
+ ],
+ "ceph mon getmap -o monmap.bin": [
+  "Xuất MON map ra file",
+  "monmap backup"
+ ],
+ "ceph osd tree": [
+  "Cây CRUSH kèm trạng thái up/down của từng OSD",
+  "osd down up tree host vị trí"
+ ],
+ "ceph osd tree down": [
+  "Chỉ liệt kê các OSD đang down",
+  "osd down tìm osd chết"
+ ],
+ "ceph osd tree --show-shadow": [
+  "Cây CRUSH gồm cả shadow tree theo device class",
+  "device class ssd hdd shadow"
+ ],
+ "ceph osd df": [
+  "Dung lượng dùng của từng OSD, tìm OSD đầy hoặc lệch",
+  "osd đầy nearfull lệch dung lượng"
+ ],
+ "ceph osd df tree": [
+  "Dung lượng theo từng host và OSD",
+  "nearfull đầy host osd lệch"
+ ],
+ "ceph osd utilization": [
+  "Mức dùng thấp nhất, cao nhất và độ lệch giữa các OSD",
+  "cân bằng lệch utilization"
+ ],
+ "ceph osd stat": [
+  "Số OSD up và in, kiểm tra nhanh OSD có rớt không",
+  "osd up in down flapping"
+ ],
+ "ceph osd dump": [
+  "OSD map: flag, ratio, thông tin pool",
+  "flags noout full ratio pool"
+ ],
+ "ceph osd ls": [
+  "Danh sách ID OSD",
+  "osd id"
+ ],
+ "ceph osd metadata <osd-id>": [
+  "Host, thiết bị, phiên bản của một OSD",
+  "osd đĩa device host"
+ ],
+ "ceph osd find <osd-id>": [
+  "OSD này nằm ở host nào",
+  "tìm osd host vị trí"
+ ],
+ "ceph osd perf": [
+  "Độ trễ commit và apply của từng OSD, tìm OSD chậm",
+  "slow ops chậm latency đĩa lag"
+ ],
+ "ceph osd set-nearfull-ratio 0.85": [
+  "Đặt ngưỡng nearfull",
+  "nearfull ngưỡng ratio"
+ ],
+ "ceph osd set-backfillfull-ratio 0.90": [
+  "Đặt ngưỡng backfillfull, vượt ngưỡng thì dừng backfill",
+  "backfillfull ratio"
+ ],
+ "ceph osd set-full-ratio 0.95": [
+  "Đặt ngưỡng full, vượt thì chặn ghi",
+  "full đầy chặn ghi ratio"
+ ],
+ "ceph osd blocklist ls": [
+  "Client đang bị chặn (blocklist)",
+  "blocklist client treo rbd hang"
+ ],
+ "ceph osd set noout / ceph osd unset noout": [
+  "Không tự đánh dấu OSD out (bật trước khi bảo trì, nhớ tắt sau)",
+  "bảo trì reboot maintenance noout"
+ ],
+ "ceph osd set norebalance / ceph osd unset norebalance": [
+  "Tạm dừng cân bằng lại dữ liệu",
+  "rebalance tạm dừng"
+ ],
+ "ceph osd set nobackfill / ceph osd unset nobackfill": [
+  "Tạm dừng backfill",
+  "backfill tạm dừng"
+ ],
+ "ceph osd set norecover / ceph osd unset norecover": [
+  "Tạm dừng recovery",
+  "recovery tạm dừng"
+ ],
+ "ceph osd set noscrub / ceph osd set nodeep-scrub": [
+  "Tạm dừng scrub và deep-scrub (giờ cao điểm)",
+  "scrub dừng cao điểm chậm"
+ ],
+ "ceph osd set pause / ceph osd unset pause": [
+  "Dừng toàn bộ IO của client (khẩn cấp)",
+  "pause dừng io khẩn cấp"
+ ],
+ "ceph osd set-group noout <host-or-chassis>": [
+  "Đặt noout cho riêng một host hoặc chassis",
+  "bảo trì một host noout"
+ ],
+ "ceph osd unset-group noout <host-or-chassis>": [
+  "Gỡ noout của một host hoặc chassis",
+  "xong bảo trì noout"
+ ],
+ "ceph osd ok-to-stop <osd-id>": [
+  "Kiểm tra dừng OSD này có mất tính sẵn sàng không",
+  "dừng osd an toàn bảo trì"
+ ],
+ "ceph osd safe-to-destroy <osd-id>": [
+  "Kiểm tra xóa OSD này có mất dữ liệu không",
+  "thay đĩa xóa osd an toàn"
+ ],
+ "ceph osd out <osd-id> / ceph osd in <osd-id>": [
+  "Đánh dấu OSD out để di dời dữ liệu, hoặc in để đưa lại",
+  "thay đĩa out in rebalance"
+ ],
+ "ceph osd down <osd-id>": [
+  "Đánh dấu OSD down (ép peering lại)",
+  "ép down osd"
+ ],
+ "ceph osd reweight <osd-id> 0.9": [
+  "Giảm tạm trọng số OSD (0 đến 1)",
+  "osd đầy giảm tải reweight"
+ ],
+ "ceph osd crush reweight osd.<id> <weight>": [
+  "Đổi trọng số CRUSH của OSD (thường theo dung lượng đĩa)",
+  "crush weight đĩa mới"
+ ],
+ "ceph osd reweight-by-utilization": [
+  "Tự giảm trọng số các OSD đang quá đầy",
+  "nearfull cân bằng tự động"
+ ],
+ "ceph pg stat": [
+  "Số PG theo từng trạng thái",
+  "pg trạng thái tổng quan"
+ ],
+ "ceph pg dump_stuck inactive": [
+  "PG kẹt inactive (không phục vụ IO)",
+  "pg inactive stuck treo mất dữ liệu"
+ ],
+ "ceph pg dump_stuck unclean": [
+  "PG kẹt unclean",
+  "pg unclean stuck"
+ ],
+ "ceph pg dump_stuck undersized": [
+  "PG thiếu bản sao kẹt lâu",
+  "undersized thiếu replica"
+ ],
+ "ceph pg ls": [
+  "Liệt kê toàn bộ PG",
+  "pg danh sách"
+ ],
+ "ceph pg ls-by-pool <pool>": [
+  "PG của một pool",
+  "pg pool"
+ ],
+ "ceph pg ls-by-osd osd.<id>": [
+  "PG đang nằm trên một OSD",
+  "pg osd"
+ ],
+ "ceph pg map <pgid>": [
+  "PG này nằm trên OSD nào (up và acting)",
+  "pg map vị trí acting"
+ ],
+ "ceph pg <pgid> query": [
+  "Trạng thái chi tiết của PG, lý do bị kẹt",
+  "pg stuck peering incomplete lý do"
+ ],
+ "ceph pg scrub <pgid> / ceph pg deep-scrub <pgid>": [
+  "Chạy scrub hoặc deep-scrub cho một PG",
+  "scrub kiểm tra toàn vẹn"
+ ],
+ "ceph pg repair <pgid>": [
+  "Sửa PG inconsistent (xác định bản lỗi trước khi chạy)",
+  "inconsistent scrub error sửa pg repair"
+ ],
+ "ceph pg repeer <pgid>": [
+  "Ép PG peering lại",
+  "peering stuck"
+ ],
+ "ceph pg force-recovery <pgid>": [
+  "Ưu tiên recovery PG này trước",
+  "ưu tiên recovery"
+ ],
+ "ceph pg force-backfill <pgid>": [
+  "Ưu tiên backfill PG này trước",
+  "ưu tiên backfill"
+ ],
+ "ceph osd pg-upmap-items <pgid> <from> <to>": [
+  "Chuyển tay PG từ OSD này sang OSD khác",
+  "upmap chuyển pg cân bằng"
+ ],
+ "ceph osd rm-pg-upmap-items <pgid>": [
+  "Gỡ upmap thủ công của PG",
+  "upmap gỡ"
+ ],
+ "ceph config dump": [
+  "Toàn bộ cấu hình tập trung đã đặt",
+  "config cấu hình"
+ ],
+ "ceph config get <who> <option>": [
+  "Đọc một tùy chọn cấu hình",
+  "config get"
+ ],
+ "ceph config set <who> <option> <value>": [
+  "Đặt tùy chọn cấu hình",
+  "config set"
+ ],
+ "ceph config rm <who> <option>": [
+  "Đưa tùy chọn về mặc định",
+  "config reset"
+ ],
+ "ceph config set osd osd_max_backfills 1": [
+  "Giới hạn số backfill đồng thời để đỡ ảnh hưởng client",
+  "backfill chậm ảnh hưởng io throttle"
+ ],
+ "ceph config set osd osd_recovery_max_active 1": [
+  "Giới hạn số thao tác recovery đồng thời",
+  "recovery throttle"
+ ],
+ "ceph config set osd osd_recovery_sleep_ssd 0.1": [
+  "Làm chậm recovery trên SSD cho đỡ tải",
+  "recovery ssd throttle"
+ ],
+ "ceph config set osd osd_mclock_profile high_client_ops": [
+  "Ưu tiên IO của client hơn recovery (Quincy trở lên)",
+  "mclock ưu tiên client slow ops"
+ ],
+ "ceph config set osd osd_mclock_profile high_recovery_ops": [
+  "Ưu tiên recovery hơn client (Quincy trở lên)",
+  "mclock ưu tiên recovery nhanh"
+ ],
+ "ceph config set osd osd_scrub_begin_hour 22": [
+  "Giờ bắt đầu cửa sổ scrub",
+  "scrub giờ cao điểm lịch"
+ ],
+ "ceph config set osd osd_scrub_end_hour 6": [
+  "Giờ kết thúc cửa sổ scrub",
+  "scrub giờ lịch"
+ ],
+ "ceph daemon osd.<id> dump_ops_in_flight": [
+  "Các thao tác đang kẹt trên OSD (chạy trên host của OSD)",
+  "slow ops blocked requests kẹt"
+ ],
+ "journalctl -u ceph-osd@<osd-id> --since \"1 hour ago\"": [
+  "Log OSD trong 1 giờ gần nhất, tìm nguyên nhân rớt OSD",
+  "osd down flapping log crash oom"
+ ],
+ "ceph config get osd osd_heartbeat_grace": [
+  "Thời gian chờ heartbeat trước khi coi OSD là down",
+  "heartbeat flapping down"
+ ],
+ "ethtool -S <if>": [
+  "Thống kê lỗi card mạng trên host OSD",
+  "nic lỗi mạng drop crc flapping"
+ ],
+ "ceph pg ls undersized": [
+  "PG đang thiếu bản sao",
+  "undersized degraded"
+ ],
+ "radosgw-admin bucket limit check": [
+  "Bucket vượt giới hạn shard (nguyên nhân large omap)",
+  "large omap shard bucket index rgw"
+ ],
+ "rados -p <pool> listomapkeys <object>": [
+  "Đếm key omap của object nghi lớn",
+  "large omap object"
+ ],
+ "chronyc tracking": [
+  "Độ lệch NTP trên máy hiện tại",
+  "ntp chrony lệch giờ clock skew"
+ ],
+ "rbd status <pool>/<image>": [
+  "Ai đang mở image (watcher), để tìm client treo",
+  "rbd treo client lock watcher hang"
+ ],
+ "pveversion -v": [
+  "Xem phiên bản PVE và các gói liên quan",
+  "version phiên bản kernel gói nâng cấp kiểm tra"
+ ],
+ "hostnamectl": [
+  "Xem hostname và hệ điều hành",
+  "hostname tên máy os debian"
+ ],
+ "uname -r": [
+  "Xem kernel đang chạy",
+  "kernel phiên bản nhân boot"
+ ],
+ "uptime": [
+  "Thời gian máy chạy và mức tải",
+  "uptime load tải reboot lần cuối"
+ ],
+ "timedatectl": [
+  "Múi giờ và trạng thái đồng bộ giờ",
+  "giờ ntp lệch giờ timezone clock"
+ ],
+ "chronyc sources -v": [
+  "Xem các nguồn NTP đang dùng",
+  "ntp chrony nguồn giờ lệch giờ"
+ ],
+ "systemctl --failed": [
+  "Liệt kê service đang bị lỗi",
+  "service lỗi failed sau reboot không chạy"
+ ],
+ "systemctl status pve-cluster pvedaemon pveproxy pvestatd pve-firewall pvescheduler": [
+  "Trạng thái các service lõi của PVE",
+  "service pve gui treo pveproxy pvedaemon pvestatd"
+ ],
+ "pvenode config get": [
+  "Xem cấu hình của node",
+  "node config cấu hình"
+ ],
+ "pvenode startall": [
+  "Bật toàn bộ VM/CT trên node",
+  "khởi động tất cả sau bảo trì start all"
+ ],
+ "pvenode stopall": [
+  "Tắt toàn bộ VM/CT trên node",
+  "tắt tất cả trước bảo trì stop all"
+ ],
+ "pvenode migrateall <target-node>": [
+  "Di chuyển toàn bộ VM/CT sang node khác",
+  "bảo trì node migrate hết reboot"
+ ],
+ "pvenode cert info": [
+  "Xem thông tin chứng chỉ của node",
+  "chứng chỉ ssl cert hết hạn"
+ ],
+ "pvecm updatecerts --force": [
+  "Tạo lại chứng chỉ cho cluster",
+  "chứng chỉ lỗi ssh known_hosts node mới join cert"
+ ],
+ "apt update": [
+  "Cập nhật danh sách gói từ repo",
+  "apt repo cập nhật nâng cấp"
+ ],
+ "apt full-upgrade": [
+  "Nâng cấp toàn bộ gói (kể cả thêm/xóa gói phụ thuộc)",
+  "nâng cấp upgrade cập nhật hệ thống"
+ ],
+ "pve8to9 --full": [
+  "Công cụ kiểm tra trước khi nâng cấp PVE 8 lên 9",
+  "nâng cấp upgrade 8 9 kiểm tra trước"
+ ],
+ "proxmox-boot-tool status": [
+  "Xem cấu hình boot (ESP, kernel)",
+  "boot uefi esp lỗi boot grub systemd-boot"
+ ],
+ "proxmox-boot-tool kernel list": [
+  "Liệt kê các kernel đã cài",
+  "kernel danh sách phiên bản"
+ ],
+ "proxmox-boot-tool kernel pin <version>": [
+  "Ghim kernel mặc định khi boot",
+  "kernel pin ghim lỗi sau nâng cấp quay về kernel cũ"
+ ],
+ "qm list": [
+  "Liệt kê các VM trên node",
+  "danh sách vm máy ảo"
+ ],
+ "qm status <vmid> --verbose": [
+  "Trạng thái chi tiết của VM",
+  "vm trạng thái ram cpu disk io"
+ ],
+ "qm config <vmid>": [
+  "Xem cấu hình VM",
+  "cấu hình vm lock đĩa network"
+ ],
+ "qm pending <vmid>": [
+  "Xem thay đổi cấu hình đang chờ áp dụng",
+  "pending chờ reboot thay đổi chưa áp dụng"
+ ],
+ "qm showcmd <vmid> --pretty": [
+  "Xem dòng lệnh KVM sẽ chạy cho VM",
+  "kvm qemu command line gỡ lỗi không start"
+ ],
+ "qm start <vmid>": [
+  "Bật VM",
+  "start bật khởi động vm lỗi không start"
+ ],
+ "qm shutdown <vmid> --timeout 60": [
+  "Tắt VM êm (gửi ACPI), chờ tối đa 60 giây",
+  "tắt shutdown êm"
+ ],
+ "qm stop <vmid>": [
+  "Tắt cứng VM",
+  "stop tắt cứng vm treo kill"
+ ],
+ "qm reboot <vmid>": [
+  "Khởi động lại VM",
+  "reboot restart vm"
+ ],
+ "qm reset <vmid>": [
+  "Reset cứng VM",
+  "reset treo"
+ ],
+ "qm suspend <vmid> / qm resume <vmid>": [
+  "Tạm dừng và tiếp tục VM",
+  "suspend resume tạm dừng"
+ ],
+ "qm create <vmid> --name <n> --memory 4096 --cores 2 --net0 virtio,bridge=vmbr0": [
+  "Tạo VM mới",
+  "tạo vm mới create"
+ ],
+ "qm clone <vmid> <newid> --full": [
+  "Clone VM đầy đủ (full clone)",
+  "clone nhân bản sao chép vm"
+ ],
+ "qm template <vmid>": [
+  "Chuyển VM thành template",
+  "template mẫu"
+ ],
+ "qm destroy <vmid> --purge": [
+  "Xóa VM (nguy hiểm)",
+  "xóa vm destroy delete purge"
+ ],
+ "qm set <vmid> --memory 8192 --cores 4": [
+  "Đổi RAM và số CPU của VM",
+  "tăng ram cpu cấu hình resize"
+ ],
+ "qm set <vmid> --scsi1 <storage>:<size-GiB>": [
+  "Thêm ổ đĩa cho VM",
+  "thêm đĩa disk mới"
+ ],
+ "qm resize <vmid> scsi0 +10G": [
+  "Tăng dung lượng đĩa VM",
+  "mở rộng đĩa tăng disk resize hết dung lượng"
+ ],
+ "qm disk move <vmid> scsi0 <storage>": [
+  "Chuyển đĩa VM sang storage khác",
+  "di chuyển đĩa move disk storage đầy"
+ ],
+ "qm rescan": [
+  "Quét lại volume và sửa cấu hình",
+  "rescan đĩa mồ côi unused disk sửa config"
+ ],
+ "qm unlock <vmid>": [
+  "Mở khóa VM đang bị lock",
+  "lock locked backup snapshot không start"
+ ],
+ "qm snapshot <vmid> <name>": [
+  "Tạo snapshot VM",
+  "snapshot chụp trạng thái"
+ ],
+ "qm listsnapshot <vmid>": [
+  "Liệt kê snapshot của VM",
+  "snapshot danh sách"
+ ],
+ "qm rollback <vmid> <name>": [
+  "Quay về snapshot",
+  "rollback khôi phục snapshot"
+ ],
+ "qm delsnapshot <vmid> <name>": [
+  "Xóa snapshot",
+  "xóa snapshot giải phóng dung lượng thin đầy"
+ ],
+ "qm migrate <vmid> <node> --online": [
+  "Live migration VM sang node khác",
+  "migrate di chuyển vm live online"
+ ],
+ "qm migrate <vmid> <node> --online --with-local-disks": [
+  "Live migration kèm đĩa local",
+  "migrate đĩa local không shared storage"
+ ],
+ "qm agent <vmid> ping": [
+  "Kiểm tra guest agent có phản hồi",
+  "guest agent qemu-guest-agent backup freeze lỗi"
+ ],
+ "qm guest exec <vmid> -- <cmd>": [
+  "Chạy lệnh bên trong VM qua guest agent",
+  "chạy lệnh trong vm agent exec"
+ ],
+ "qm guest cmd <vmid> network-get-interfaces": [
+  "Lấy IP của VM qua guest agent",
+  "ip vm địa chỉ agent"
+ ],
+ "qm terminal <vmid>": [
+  "Mở console serial của VM",
+  "console serial terminal"
+ ],
+ "qm monitor <vmid>": [
+  "Mở QEMU monitor",
+  "qemu monitor gỡ lỗi"
+ ],
+ "qm sendkey <vmid> ctrl-alt-delete": [
+  "Gửi phím tắt tới VM",
+  "gửi phím ctrl alt delete"
+ ],
+ "qm cloudinit dump <vmid> user": [
+  "Xem user-data cloud-init được sinh ra",
+  "cloud-init cloudinit user-data"
+ ],
+ "qm set <vmid> --ciuser <u> --sshkeys <file> --ipconfig0 ip=dhcp": [
+  "Đặt thông số cloud-init (user, SSH key, IP)",
+  "cloud-init ssh key ip user"
+ ],
+ "pvesm add esxi <id> --server <host> --username <u> --password <p>": [
+  "Thêm nguồn import từ ESXi (PVE 8.2 trở lên)",
+  "esxi vmware import chuyển từ vmware"
+ ],
+ "qm importovf <vmid> <file.ovf> <storage>": [
+  "Import VM từ file OVF",
+  "import ovf vmware chuyển vm"
+ ],
+ "qm importdisk <vmid> <disk-file> <storage>": [
+  "Import file đĩa vào VM",
+  "import đĩa vmdk qcow2 raw"
+ ],
+ "qemu-img convert -f vmdk -O raw <src.vmdk> <dst.raw>": [
+  "Chuyển đổi đĩa VMware sang raw",
+  "convert vmdk raw chuyển đổi định dạng đĩa"
+ ],
+ "pct list": [
+  "Liệt kê container",
+  "container lxc danh sách ct"
+ ],
+ "pct status <ctid>": [
+  "Trạng thái container",
+  "container trạng thái"
+ ],
+ "pct config <ctid>": [
+  "Xem cấu hình container",
+  "container cấu hình lock"
+ ],
+ "pct start <ctid> / pct shutdown <ctid> / pct stop <ctid>": [
+  "Bật, tắt êm, tắt cứng container",
+  "bật tắt container start stop"
+ ],
+ "pct enter <ctid>": [
+  "Vào shell bên trong container",
+  "vào container shell console"
+ ],
+ "pct exec <ctid> -- <cmd>": [
+  "Chạy lệnh trong container",
+  "chạy lệnh container exec"
+ ],
+ "pct push <ctid> <src> <dst>": [
+  "Chép file vào container",
+  "copy file vào container"
+ ],
+ "pct pull <ctid> <src> <dst>": [
+  "Chép file ra khỏi container",
+  "copy file từ container"
+ ],
+ "pct create <ctid> <template> --storage <storage>": [
+  "Tạo container mới",
+  "tạo container create"
+ ],
+ "pct clone <ctid> <newid>": [
+  "Clone container",
+  "clone nhân bản container"
+ ],
+ "pct set <ctid> --memory 2048 --cores 2": [
+  "Đổi RAM và CPU của container",
+  "ram cpu container tài nguyên"
+ ],
+ "pct resize <ctid> rootfs +5G": [
+  "Tăng dung lượng đĩa gốc container",
+  "mở rộng disk container đầy"
+ ],
+ "pct unlock <ctid>": [
+  "Mở khóa container",
+  "lock container backup"
+ ],
+ "pct snapshot <ctid> <name> / pct rollback <ctid> <name>": [
+  "Tạo snapshot và quay về snapshot container",
+  "snapshot rollback container"
+ ],
+ "pct migrate <ctid> <node> --restart": [
+  "Di chuyển container sang node khác",
+  "migrate container"
+ ],
+ "pct destroy <ctid>": [
+  "Xóa container (nguy hiểm)",
+  "xóa container destroy"
+ ],
+ "pveam update": [
+  "Cập nhật danh sách template",
+  "template cập nhật"
+ ],
+ "pveam available": [
+  "Xem template có thể tải",
+  "template danh sách"
+ ],
+ "pveam download <storage> <template>": [
+  "Tải template về storage",
+  "tải template download"
+ ],
+ "pvesm status": [
+  "Xem tất cả storage và mức sử dụng",
+  "storage dung lượng đầy offline unknown dấu hỏi nfs treo"
+ ],
+ "pvesm list <storage>": [
+  "Liệt kê volume trong storage",
+  "volume danh sách đĩa trong storage"
+ ],
+ "cat /etc/pve/storage.cfg": [
+  "Xem định nghĩa các storage",
+  "storage config cấu hình"
+ ],
+ "pvesm add <type> <id> ...": [
+  "Thêm storage",
+  "thêm storage mới"
+ ],
+ "pvesm set <id> --content images,rootdir": [
+  "Đổi tùy chọn storage (loại nội dung)",
+  "content loại nội dung storage"
+ ],
+ "pvesm remove <id>": [
+  "Gỡ định nghĩa storage",
+  "xóa storage remove"
+ ],
+ "pvesm scan nfs <server>": [
+  "Dò các export NFS của server",
+  "nfs export dò tìm"
+ ],
+ "pvesm scan iscsi <portal>": [
+  "Dò các target iSCSI",
+  "iscsi target dò tìm"
+ ],
+ "pvesm path <volume-id>": [
+  "Xem đường dẫn thực của volume",
+  "đường dẫn volume path"
+ ],
+ "pvesm alloc <storage> <vmid> <name> <size>": [
+  "Tạo (cấp phát) volume mới",
+  "cấp phát volume tạo đĩa"
+ ],
+ "pvesm free <volume-id>": [
+  "Xóa volume (nguy hiểm)",
+  "xóa volume đĩa mồ côi free"
+ ],
+ "vzdump <vmid> --storage <storage> --mode snapshot --compress zstd": [
+  "Backup một VM hoặc container",
+  "backup sao lưu vzdump"
+ ],
+ "vzdump --all --storage <storage>": [
+  "Backup tất cả guest trên node",
+  "backup tất cả"
+ ],
+ "qmrestore <archive-or-volid> <vmid> --storage <storage>": [
+  "Restore VM từ backup",
+  "restore khôi phục vm"
+ ],
+ "pct restore <ctid> <archive-or-volid> --storage <storage>": [
+  "Restore container từ backup",
+  "restore khôi phục container"
+ ],
+ "pvesh get /cluster/backup": [
+  "Liệt kê các job backup",
+  "job backup lịch"
+ ],
+ "proxmox-backup-client list --repository <user@realm@host:datastore>": [
+  "Liệt kê nhóm backup trên PBS",
+  "pbs backup danh sách"
+ ],
+ "proxmox-backup-client snapshot list --repository <repo>": [
+  "Liệt kê snapshot backup trên PBS",
+  "pbs snapshot"
+ ],
+ "proxmox-backup-client backup <name>.pxar:<path> --repository <repo>": [
+  "Backup file/thư mục lên PBS",
+  "pbs backup file thư mục pxar"
+ ],
+ "proxmox-backup-client restore <snapshot> <archive> <target> --repository <repo>": [
+  "Restore file/thư mục từ PBS",
+  "pbs restore file"
+ ],
+ "proxmox-backup-manager datastore list": [
+  "Liệt kê datastore của PBS",
+  "pbs datastore"
+ ],
+ "proxmox-backup-manager garbage-collection start <datastore>": [
+  "Chạy dọn rác (GC) cho datastore",
+  "pbs gc dọn rác giải phóng dung lượng"
+ ],
+ "proxmox-backup-manager verify-job list": [
+  "Liệt kê job verify",
+  "pbs verify kiểm tra toàn vẹn"
+ ],
+ "proxmox-backup-manager prune-job list": [
+  "Liệt kê job prune",
+  "pbs prune giữ lại bản backup"
+ ],
+ "proxmox-backup-manager sync-job list": [
+  "Liệt kê job sync",
+  "pbs sync đồng bộ"
+ ],
+ "proxmox-backup-manager disk list": [
+  "Liệt kê đĩa trên máy PBS",
+  "pbs đĩa"
+ ],
+ "proxmox-backup-manager user list": [
+  "Liệt kê user PBS",
+  "pbs user"
+ ],
+ "ha-manager status": [
+  "Trạng thái CRM, LRM và từng tài nguyên HA",
+  "ha trạng thái fence error freeze"
+ ],
+ "ha-manager config": [
+  "Xem các tài nguyên HA đã cấu hình",
+  "ha cấu hình"
+ ],
+ "ha-manager add vm:<vmid> --state started": [
+  "Đưa VM vào HA",
+  "thêm ha vm"
+ ],
+ "ha-manager set vm:<vmid> --state disabled": [
+  "Đổi trạng thái HA của VM",
+  "ha disabled started error reset"
+ ],
+ "ha-manager remove vm:<vmid>": [
+  "Gỡ VM khỏi HA",
+  "gỡ ha remove"
+ ],
+ "ha-manager groupadd <group> --nodes node1:2,node2:1": [
+  "Tạo nhóm HA (PVE 8)",
+  "ha group nhóm ưu tiên node"
+ ],
+ "ha-manager migrate vm:<vmid> <node>": [
+  "Live migrate VM đang trong HA",
+  "ha migrate"
+ ],
+ "ha-manager relocate vm:<vmid> <node>": [
+  "Dừng, chuyển rồi bật lại VM HA",
+  "ha relocate"
+ ],
+ "ha-manager crm-command node-maintenance enable <node>": [
+  "Bật chế độ bảo trì node (PVE 8.2 trở lên)",
+  "bảo trì maintenance node ha"
+ ],
+ "ha-manager crm-command node-maintenance disable <node>": [
+  "Tắt chế độ bảo trì node",
+  "kết thúc bảo trì maintenance"
+ ],
+ "systemctl status pve-ha-crm pve-ha-lrm": [
+  "Trạng thái các daemon HA",
+  "ha crm lrm service"
+ ],
+ "pvesr list": [
+  "Liệt kê job replication",
+  "replication sao chép zfs job"
+ ],
+ "pvesr status": [
+  "Trạng thái replication",
+  "replication lỗi trạng thái"
+ ],
+ "pvesr create-local-job <vmid>-<n> <target-node> --schedule \"*/15\"": [
+  "Tạo job replication ZFS",
+  "tạo replication zfs lịch"
+ ],
+ "ip -br a": [
+  "Xem địa chỉ IP ngắn gọn",
+  "ip địa chỉ interface"
+ ],
+ "ip -d link show <if>": [
+  "Chi tiết interface, VLAN, bond",
+  "interface vlan bond chi tiết"
+ ],
+ "ip -s link show <if>": [
+  "Bộ đếm lỗi và gói của interface",
+  "lỗi mạng drop rớt gói error counter"
+ ],
+ "ip r": [
+  "Bảng định tuyến",
+  "route định tuyến gateway"
+ ],
+ "bridge link": [
+  "Các cổng của bridge",
+  "bridge cổng"
+ ],
+ "bridge vlan show": [
+  "Bảng VLAN trên bridge",
+  "vlan bridge"
+ ],
+ "cat /proc/net/bonding/bond0": [
+  "Trạng thái bond và LACP",
+  "bond lacp active-backup lỗi bond link down"
+ ],
+ "cat /etc/network/interfaces": [
+  "Xem cấu hình mạng",
+  "cấu hình mạng interfaces"
+ ],
+ "ifreload -a": [
+  "Áp dụng cấu hình mạng không cần reboot",
+  "áp dụng mạng reload ifupdown2"
+ ],
+ "ethtool <if>": [
+  "Tốc độ, duplex, trạng thái link",
+  "tốc độ link duplex nic"
+ ],
+ "ethtool -i <if>": [
+  "Driver và firmware của card mạng",
+  "driver firmware nic"
+ ],
+ "ethtool -k <if>": [
+  "Các tính năng offload của card mạng",
+  "offload tso gso"
+ ],
+ "ping -M do -s 8972 <ip>": [
+  "Kiểm tra MTU 9000 thông suốt đầu cuối",
+  "mtu jumbo ping lệch mtu mạng ceph"
+ ],
+ "iperf3 -s / iperf3 -c <ip> -P 4": [
+  "Đo băng thông giữa hai máy",
+  "băng thông bandwidth iperf mạng chậm"
+ ],
+ "ss -tulpn": [
+  "Các cổng đang lắng nghe",
+  "cổng port listen dịch vụ"
+ ],
+ "tcpdump -i <if> -nn host <ip>": [
+  "Bắt gói tin theo host",
+  "bắt gói tcpdump capture"
+ ],
+ "mtr <ip>": [
+  "Đường đi và tỉ lệ mất gói",
+  "đường đi mất gói traceroute"
+ ],
+ "lldpcli show neighbors": [
+  "Xem switch hàng xóm qua LLDP (nếu có lldpd)",
+  "lldp switch cổng"
+ ],
+ "ovs-vsctl show": [
+  "Cấu trúc Open vSwitch (nếu dùng)",
+  "ovs openvswitch"
+ ],
+ "tc -s qdisc show dev <if>": [
+  "Thống kê hàng đợi gói của interface",
+  "qdisc queue drop"
+ ],
+ "iptables -t mangle -S": [
+  "Quy tắc đánh dấu DSCP",
+  "dscp qos mangle"
+ ],
+ "nft list ruleset": [
+  "Xem toàn bộ quy tắc nftables",
+  "nftables firewall rule"
+ ],
+ "pve-firewall status": [
+  "Trạng thái firewall PVE",
+  "firewall tường lửa trạng thái chặn"
+ ],
+ "pve-firewall localnet": [
+  "Các mạng nội bộ được nhận diện",
+  "localnet mạng nội bộ"
+ ],
+ "pve-firewall compile": [
+  "Xem các rule sau khi biên dịch",
+  "rule firewall biên dịch"
+ ],
+ "cat /etc/pve/firewall/cluster.fw": [
+  "Xem rule firewall cấp cluster",
+  "firewall cluster rule"
+ ],
+ "pve-firewall restart": [
+  "Khởi động lại firewall",
+  "restart firewall"
+ ],
+ "lsblk -o NAME,SIZE,TYPE,MODEL,SERIAL,MOUNTPOINT": [
+  "Liệt kê thiết bị khối, model và serial",
+  "đĩa ổ cứng model serial lsblk"
+ ],
+ "blkid": [
+  "Xem UUID và kiểu filesystem",
+  "uuid filesystem blkid"
+ ],
+ "df -h": [
+  "Dung lượng các filesystem",
+  "đầy disk đầy ổ dung lượng root"
+ ],
+ "nvme list": [
+  "Liệt kê ổ NVMe",
+  "nvme ổ"
+ ],
+ "nvme smart-log /dev/nvme0": [
+  "Sức khỏe và độ mòn của NVMe",
+  "nvme smart mòn wear sức khỏe"
+ ],
+ "smartctl -a /dev/<dev>": [
+  "Xem dữ liệu SMART của đĩa",
+  "smart đĩa hỏng bad sector sức khỏe"
+ ],
+ "pvs / vgs / lvs": [
+  "Tổng quan LVM (PV, VG, LV)",
+  "lvm pv vg lv"
+ ],
+ "lvs -o +devices": [
+  "LV kèm thiết bị phía sau",
+  "lvm thiết bị"
+ ],
+ "zpool status": [
+  "Sức khỏe ZFS pool",
+  "zfs pool degraded lỗi"
+ ],
+ "zpool list": [
+  "Dung lượng ZFS pool",
+  "zfs pool dung lượng"
+ ],
+ "zfs list": [
+  "Liệt kê dataset ZFS",
+  "zfs dataset"
+ ],
+ "iostat -x 1": [
+  "Độ trễ và mức dùng của đĩa theo thời gian thực",
+  "io đĩa chậm latency util"
+ ],
+ "iotop -o": [
+  "Tiến trình đang dùng IO",
+  "io tiến trình nặng"
+ ],
+ "pveperf": [
+  "Benchmark cơ bản của host",
+  "benchmark hiệu năng host"
+ ],
+ "fio --name=t --filename=<file> --rw=randwrite --bs=4k --iodepth=32 --runtime=30 --time_based": [
+  "Benchmark đĩa bằng fio",
+  "benchmark fio đĩa iops"
+ ],
+ "wipefs -a /dev/<dev>": [
+  "Xóa chữ ký filesystem (nguy hiểm)",
+  "xóa đĩa wipe tái sử dụng đĩa"
+ ],
+ "sgdisk --zap-all /dev/<dev>": [
+  "Xóa bảng phân vùng (nguy hiểm)",
+  "xóa phân vùng zap gpt"
+ ],
+ "lscpu": [
+  "Thông tin CPU và topology",
+  "cpu model core"
+ ],
+ "numactl -H": [
+  "Bố cục NUMA",
+  "numa"
+ ],
+ "free -h": [
+  "Mức dùng RAM",
+  "ram bộ nhớ đầy ram thiếu ram"
+ ],
+ "dmidecode -t memory": [
+  "Danh sách thanh RAM (DIMM)",
+  "ram dimm phần cứng"
+ ],
+ "top / htop": [
+  "Xem tiến trình",
+  "tiến trình cpu cao treo"
+ ],
+ "vmstat 1": [
+  "Tóm tắt CPU, RAM, IO",
+  "cpu ram io tổng hợp"
+ ],
+ "sensors": [
+  "Nhiệt độ và quạt",
+  "nhiệt độ quạt nóng"
+ ],
+ "ipmitool sdr": [
+  "Đọc cảm biến phần cứng",
+  "ipmi cảm biến"
+ ],
+ "ipmitool sel list": [
+  "Nhật ký sự kiện phần cứng",
+  "ipmi log lỗi phần cứng sel"
+ ],
+ "ipmitool chassis status": [
+  "Trạng thái nguồn và khung máy",
+  "ipmi nguồn power"
+ ],
+ "ipmitool lan print": [
+  "Cấu hình mạng BMC",
+  "ipmi bmc idrac ip"
+ ],
+ "dmesg -T": [
+  "Thông điệp kernel kèm thời gian",
+  "dmesg lỗi kernel oom io error"
+ ],
+ "journalctl -k -b": [
+  "Log kernel của lần boot này",
+  "log kernel boot"
+ ],
+ "pveum user list": [
+  "Liệt kê user",
+  "user người dùng"
+ ],
+ "pveum user add <user>@pve --password <p>": [
+  "Tạo user",
+  "tạo user"
+ ],
+ "pveum passwd <user>@pve": [
+  "Đổi mật khẩu user",
+  "đổi mật khẩu password"
+ ],
+ "pveum role list": [
+  "Liệt kê role",
+  "role vai trò"
+ ],
+ "pveum acl list": [
+  "Liệt kê ACL (phân quyền)",
+  "acl phân quyền permission"
+ ],
+ "pveum acl modify /vms/<vmid> --users <user>@pve --roles PVEVMAdmin": [
+  "Cấp quyền cho user trên VM",
+  "cấp quyền phân quyền vm user"
+ ],
+ "pveum user token add <user>@pve <token-id> --privsep 1": [
+  "Tạo API token",
+  "api token"
+ ],
+ "pveum realm list": [
+  "Liệt kê realm xác thực",
+  "realm sso ldap xác thực"
+ ],
+ "pvenode task list": [
+  "Các tác vụ gần đây",
+  "task tác vụ lịch sử"
+ ],
+ "pvenode task log <upid>": [
+  "Xem log của một tác vụ",
+  "task log lỗi tác vụ"
+ ],
+ "pvenode task status <upid>": [
+  "Trạng thái một tác vụ",
+  "task trạng thái"
+ ],
+ "journalctl -u pvedaemon -f": [
+  "Theo dõi log daemon API",
+  "log pvedaemon api"
+ ],
+ "journalctl -u pveproxy -f": [
+  "Theo dõi log web proxy",
+  "log pveproxy gui web đăng nhập"
+ ],
+ "tail -f /var/log/syslog": [
+  "Theo dõi syslog",
+  "syslog log hệ thống"
+ ],
+ "pvesh get /cluster/status": [
+  "Trạng thái cluster qua API",
+  "cluster trạng thái api"
+ ],
+ "pvesh get /cluster/resources --type vm": [
+  "Tất cả VM trong cluster",
+  "vm toàn cluster api"
+ ],
+ "pvesh get /nodes/<node>/status": [
+  "Trạng thái node qua API",
+  "node trạng thái api"
+ ],
+ "pvesh create /nodes/<node>/qemu/<vmid>/status/start": [
+  "Bật VM qua API",
+  "api start vm"
+ ],
+ "pveceph install": [
+  "Cài gói Ceph",
+  "cài ceph"
+ ],
+ "pveceph init --network <cidr> --cluster-network <cidr>": [
+  "Khởi tạo cấu hình Ceph",
+  "khởi tạo ceph mạng public cluster"
+ ],
+ "pveceph mon create": [
+  "Tạo MON trên node này",
+  "tạo mon"
+ ],
+ "pveceph mon destroy <id>": [
+  "Xóa MON",
+  "xóa mon"
+ ],
+ "pveceph mgr create": [
+  "Tạo MGR",
+  "tạo mgr"
+ ],
+ "pveceph mgr destroy <id>": [
+  "Xóa MGR",
+  "xóa mgr"
+ ],
+ "pveceph osd create /dev/<dev>": [
+  "Tạo OSD từ đĩa",
+  "tạo osd thêm đĩa thay đĩa"
+ ],
+ "pveceph osd destroy <osd-id> --cleanup": [
+  "Xóa OSD (nguy hiểm)",
+  "xóa osd thay đĩa destroy"
+ ],
+ "pveceph pool ls": [
+  "Liệt kê pool",
+  "pool danh sách"
+ ],
+ "pveceph pool create <pool> --size 3 --min_size 2 --crush_rule <rule> --add_storages 1": [
+  "Tạo pool và storage",
+  "tạo pool"
+ ],
+ "pveceph pool set <pool> --target_size_ratio 0.9": [
+  "Đổi tùy chọn pool",
+  "pool target ratio"
+ ],
+ "pveceph pool destroy <pool>": [
+  "Xóa pool (nguy hiểm)",
+  "xóa pool"
+ ],
+ "pveceph mds create": [
+  "Tạo MDS",
+  "tạo mds cephfs"
+ ],
+ "pveceph fs create --name <fs> --add-storage": [
+  "Tạo CephFS",
+  "tạo cephfs"
+ ],
+ "pveceph start / pveceph stop": [
+  "Bật hoặc dừng dịch vụ Ceph trên node",
+  "start stop ceph service"
+ ],
+ "pveceph purge": [
+  "Xóa cấu hình Ceph khỏi node (nguy hiểm)",
+  "gỡ ceph purge"
+ ],
+ "ceph mgr stat": [
+  "MGR đang active và standby",
+  "mgr active standby"
+ ],
+ "ceph mgr services": [
+  "Địa chỉ các module (dashboard, prometheus)",
+  "mgr dashboard prometheus url"
+ ],
+ "ceph mgr fail": [
+  "Chuyển MGR active sang node khác",
+  "mgr treo failover"
+ ],
+ "ceph mgr module ls": [
+  "Module MGR đã bật và có sẵn",
+  "mgr module"
+ ],
+ "ceph mgr module enable prometheus": [
+  "Bật exporter prometheus",
+  "prometheus monitoring giám sát"
+ ],
+ "ceph mgr module disable <module>": [
+  "Tắt một module MGR",
+  "tắt module mgr"
+ ],
+ "ceph balancer status": [
+  "Trạng thái balancer",
+  "balancer cân bằng pg"
+ ],
+ "ceph balancer mode upmap": [
+  "Đặt chế độ upmap cho balancer",
+  "balancer upmap"
+ ],
+ "ceph balancer on / ceph balancer off": [
+  "Bật hoặc tắt balancer",
+  "bật tắt balancer"
+ ],
+ "ceph balancer eval": [
+  "Chấm điểm độ cân bằng hiện tại",
+  "balancer lệch dung lượng"
+ ],
+ "ceph iostat": [
+  "Tốc độ IO của cluster",
+  "io tốc độ throughput"
+ ],
+ "ceph progress": [
+  "Tiến độ recovery đang chạy",
+  "recovery tiến độ progress"
+ ],
+ "ceph-volume inventory": [
+  "Thiết bị có thể dùng làm OSD (chạy trên host OSD)",
+  "đĩa trống inventory thêm osd"
+ ],
+ "ceph-volume lvm list": [
+  "Ánh xạ OSD tới thiết bị (chạy trên host OSD)",
+  "osd đĩa lvm ánh xạ không lên"
+ ],
+ "ceph-volume lvm create --data /dev/<dev>": [
+  "Tạo OSD (chạy trên host OSD)",
+  "tạo osd đĩa mới"
+ ],
+ "ceph-volume lvm activate --all": [
+  "Kích hoạt lại các OSD sau reboot",
+  "osd không lên sau reboot activate"
+ ],
+ "ceph osd destroy <osd-id> --yes-i-really-mean-it": [
+  "Hủy OSD nhưng giữ ID (nguy hiểm)",
+  "thay đĩa giữ id osd destroy"
+ ],
+ "ceph osd purge <osd-id> --yes-i-really-mean-it": [
+  "Xóa hẳn OSD khỏi cluster (nguy hiểm)",
+  "xóa osd purge thay đĩa"
+ ],
+ "ceph-volume lvm zap /dev/<dev> --destroy": [
+  "Xóa sạch thiết bị (nguy hiểm)",
+  "xóa đĩa zap tái sử dụng"
+ ],
+ "systemctl status ceph-osd@<osd-id>": [
+  "Trạng thái daemon OSD",
+  "osd service trạng thái failed"
+ ],
+ "systemctl restart ceph-osd@<osd-id>": [
+  "Khởi động lại OSD",
+  "restart osd"
+ ],
+ "journalctl -u ceph-osd@<osd-id> -f": [
+  "Theo dõi log OSD",
+  "log osd crash"
+ ],
+ "ceph-bluestore-tool show-label --dev /dev/<dev>": [
+  "Đọc nhãn OSD trên thiết bị",
+  "bluestore label osd đĩa nhận diện"
+ ],
+ "ceph-bluestore-tool fsck --path /var/lib/ceph/osd/ceph-<id>": [
+  "Kiểm tra store của OSD (OSD phải dừng)",
+  "bluestore fsck kiểm tra hỏng"
+ ],
+ "ceph tell osd.<id> compact": [
+  "Nén RocksDB của OSD",
+  "compact rocksdb spillover chậm"
+ ],
+ "ceph osd crush set-device-class nvme osd.<id>": [
+  "Đặt device class cho OSD",
+  "device class ssd nvme hdd"
+ ],
+ "ceph osd crush rm-device-class osd.<id>": [
+  "Gỡ device class của OSD",
+  "device class gỡ"
+ ],
+ "ceph daemon osd.<id> dump_historic_ops": [
+  "Các thao tác chậm nhất gần đây (admin socket)",
+  "slow ops chậm thao tác lịch sử"
+ ],
+ "ceph daemon osd.<id> status": [
+  "Trạng thái OSD (admin socket)",
+  "osd trạng thái socket"
+ ],
+ "ceph daemon osd.<id> perf dump": [
+  "Bộ đếm hiệu năng nội bộ (admin socket)",
+  "perf counter hiệu năng"
+ ],
+ "ceph daemonperf osd.<id>": [
+  "Bộ đếm trực tiếp theo thời gian thực",
+  "perf realtime"
+ ],
+ "ceph daemon osd.<id> config show": [
+  "Cấu hình đang áp dụng của OSD (admin socket)",
+  "config osd hiệu lực"
+ ],
+ "ceph config show osd.<id>": [
+  "Cấu hình đang áp dụng, lấy từ MON",
+  "config osd hiệu lực"
+ ],
+ "ceph tell osd.<id> bench": [
+  "Benchmark ghi thô của OSD",
+  "benchmark osd iops đĩa chậm"
+ ],
+ "ceph osd crush tree": [
+  "Cây phân cấp CRUSH",
+  "crush cây host rack"
+ ],
+ "ceph osd crush class ls": [
+  "Các device class",
+  "device class ssd hdd"
+ ],
+ "ceph osd crush tunables show": [
+  "Profile tunables của CRUSH",
+  "tunables crush"
+ ],
+ "ceph osd crush rule ls": [
+  "Liệt kê rule CRUSH",
+  "crush rule"
+ ],
+ "ceph osd crush rule dump <rule>": [
+  "Chi tiết một rule CRUSH",
+  "crush rule chi tiết"
+ ],
+ "ceph osd crush rule create-replicated <rule> <root> <type> [<class>]": [
+  "Tạo rule replicated",
+  "tạo rule crush replicated device class"
+ ],
+ "ceph osd crush rule create-erasure <rule> <profile>": [
+  "Tạo rule erasure coding",
+  "erasure ec rule"
+ ],
+ "ceph osd crush rule rm <rule>": [
+  "Xóa rule (nguy hiểm)",
+  "xóa rule crush"
+ ],
+ "ceph osd crush add-bucket <name> <type>": [
+  "Tạo bucket CRUSH",
+  "thêm bucket host rack"
+ ],
+ "ceph osd crush move <name> <type>=<parent>": [
+  "Di chuyển bucket CRUSH",
+  "di chuyển bucket host rack"
+ ],
+ "ceph osd crush link <name> <type>=<parent>": [
+  "Thêm cha phụ cho bucket",
+  "link bucket"
+ ],
+ "ceph osd crush rename-bucket <old> <new>": [
+  "Đổi tên bucket",
+  "đổi tên bucket"
+ ],
+ "ceph osd crush remove <name>": [
+  "Xóa bucket hoặc item (nguy hiểm)",
+  "xóa bucket crush"
+ ],
+ "ceph osd getcrushmap -o crush.bin": [
+  "Xuất CRUSH map đã biên dịch",
+  "crush map export backup"
+ ],
+ "crushtool -d crush.bin -o crush.txt": [
+  "Giải mã CRUSH map ra text",
+  "crush decompile"
+ ],
+ "crushtool -c crush.txt -o crush.new": [
+  "Biên dịch CRUSH map",
+  "crush compile"
+ ],
+ "crushtool -i crush.bin --test --rule <n> --num-rep 3 --show-bad-mappings": [
+  "Kiểm tra mapping lỗi",
+  "crush test mapping"
+ ],
+ "crushtool -i crush.bin --test --rule <n> --num-rep 3 --show-utilization": [
+  "Mô phỏng phân bố dữ liệu",
+  "crush mô phỏng phân bố"
+ ],
+ "ceph osd setcrushmap -i crush.new": [
+  "Áp dụng CRUSH map mới (có thể gây rebalance)",
+  "áp dụng crush rebalance"
+ ],
+ "ceph osd pool ls detail": [
+  "Pool kèm các thiết lập",
+  "pool danh sách chi tiết size min_size"
+ ],
+ "ceph osd pool get <pool> all": [
+  "Toàn bộ thiết lập của pool",
+  "pool cấu hình"
+ ],
+ "ceph osd pool stats": [
+  "IO client và recovery theo pool",
+  "pool io recovery"
+ ],
+ "ceph osd pool create <pool> <pg_num>": [
+  "Tạo pool",
+  "tạo pool"
+ ],
+ "ceph osd pool application enable <pool> rbd": [
+  "Gắn nhãn ứng dụng cho pool",
+  "pool_app_not_enabled cảnh báo application"
+ ],
+ "ceph osd pool set <pool> size 3": [
+  "Số bản sao của pool",
+  "size replica bản sao"
+ ],
+ "ceph osd pool set <pool> min_size 2": [
+  "Số bản sao tối thiểu để cho phép IO",
+  "min_size pg inactive io treo"
+ ],
+ "ceph osd pool set <pool> crush_rule <rule>": [
+  "Đổi rule đặt dữ liệu của pool",
+  "crush rule pool"
+ ],
+ "ceph osd pool set <pool> pg_autoscale_mode on": [
+  "Bật tự động chỉnh số PG",
+  "autoscale pg too many"
+ ],
+ "ceph osd pool set <pool> target_size_ratio 0.9": [
+  "Tỉ lệ dung lượng dự kiến của pool",
+  "target size ratio autoscale"
+ ],
+ "ceph osd pool set <pool> nodelete true": [
+  "Chống xóa nhầm pool",
+  "bảo vệ pool nodelete"
+ ],
+ "ceph osd pool autoscale-status": [
+  "Xem autoscaler đề xuất PG",
+  "autoscale pg số pg"
+ ],
+ "ceph osd pool set-quota <pool> max_bytes <n>": [
+  "Đặt quota cho pool",
+  "quota pool giới hạn"
+ ],
+ "ceph osd pool get-quota <pool>": [
+  "Xem quota của pool",
+  "quota pool"
+ ],
+ "ceph osd pool rename <old> <new>": [
+  "Đổi tên pool",
+  "đổi tên pool"
+ ],
+ "ceph config set mon mon_allow_pool_delete true": [
+  "Cho phép xóa pool",
+  "cho phép xóa pool"
+ ],
+ "ceph osd pool delete <pool> <pool> --yes-i-really-really-mean-it": [
+  "Xóa pool (nguy hiểm)",
+  "xóa pool delete"
+ ],
+ "rados df": [
+  "Số object và dung lượng theo pool",
+  "dung lượng pool object"
+ ],
+ "rbd ls -l -p <pool>": [
+  "Liệt kê image kèm dung lượng",
+  "image đĩa vm rbd danh sách"
+ ],
+ "rbd info <pool>/<image>": [
+  "Chi tiết một image",
+  "image thông tin"
+ ],
+ "rbd du -p <pool>": [
+  "Dung lượng cấp phát và thực dùng",
+  "đầy thin provisioned dung lượng thực"
+ ],
+ "rbd lock ls <pool>/<image>": [
+  "Các lock của image",
+  "lock treo vm không start"
+ ],
+ "rbd snap ls <pool>/<image>": [
+  "Liệt kê snapshot của image",
+  "snapshot"
+ ],
+ "rbd snap create <pool>/<image>@<snap>": [
+  "Tạo snapshot",
+  "tạo snapshot"
+ ],
+ "rbd snap rollback <pool>/<image>@<snap>": [
+  "Quay về snapshot (nguy hiểm)",
+  "rollback snapshot"
+ ],
+ "rbd snap protect <pool>/<image>@<snap>": [
+  "Bảo vệ snapshot để clone",
+  "protect snapshot clone"
+ ],
+ "rbd snap rm <pool>/<image>@<snap>": [
+  "Xóa snapshot",
+  "xóa snapshot"
+ ],
+ "rbd clone <pool>/<image>@<snap> <pool>/<clone>": [
+  "Clone từ snapshot",
+  "clone"
+ ],
+ "rbd flatten <pool>/<clone>": [
+  "Tách clone khỏi image gốc",
+  "flatten clone"
+ ],
+ "rbd cp <src> <dst>": [
+  "Sao chép image",
+  "copy image"
+ ],
+ "rbd export <pool>/<image> <file>": [
+  "Xuất image ra file",
+  "export backup image"
+ ],
+ "rbd import <file> <pool>/<image>": [
+  "Nhập file vào image",
+  "import image"
+ ],
+ "rbd export-diff <pool>/<image> <file>": [
+  "Xuất phần thay đổi (incremental)",
+  "incremental diff"
+ ],
+ "rbd resize --size <MiB> <pool>/<image>": [
+  "Đổi kích thước image",
+  "resize mở rộng image"
+ ],
+ "rbd sparsify <pool>/<image>": [
+  "Thu hồi vùng toàn số 0",
+  "sparsify thu hồi dung lượng"
+ ],
+ "rbd trash ls -p <pool>": [
+  "Nội dung thùng rác của pool",
+  "trash thùng rác"
+ ],
+ "rbd trash mv <pool>/<image>": [
+  "Chuyển image vào thùng rác",
+  "trash xóa an toàn"
+ ],
+ "rbd trash restore -p <pool> <image-id>": [
+  "Khôi phục image từ thùng rác",
+  "khôi phục image đã xóa"
+ ],
+ "rbd trash purge -p <pool>": [
+  "Dọn sạch thùng rác (nguy hiểm)",
+  "dọn thùng rác"
+ ],
+ "rbd rm <pool>/<image>": [
+  "Xóa image (nguy hiểm)",
+  "xóa image đĩa vm"
+ ],
+ "rbd perf image iostat -p <pool>": [
+  "Tốc độ IO theo từng image",
+  "io image vm nặng tìm vm ồn"
+ ],
+ "rbd bench --io-type write --io-size 4K --io-threads 16 <pool>/<image>": [
+  "Benchmark image",
+  "benchmark rbd"
+ ],
+ "rbd map <pool>/<image> / rbd unmap <dev>": [
+  "Map image vào kernel (khi gỡ lỗi)",
+  "map unmap kernel gỡ lỗi"
+ ],
+ "systemctl status ceph-radosgw@rgw.<name>": [
+  "Trạng thái daemon RGW",
+  "rgw service s3 503 treo"
+ ],
+ "radosgw-admin user list": [
+  "Liệt kê user S3",
+  "user s3 danh sách"
+ ],
+ "radosgw-admin user info --uid=<uid>": [
+  "Chi tiết user và key",
+  "user key suspended quota 403"
+ ],
+ "radosgw-admin user create --uid=<uid> --display-name=<name>": [
+  "Tạo user S3",
+  "tạo user s3"
+ ],
+ "radosgw-admin user modify --uid=<uid> --max-buckets=<n>": [
+  "Sửa thông số user",
+  "sửa user max bucket"
+ ],
+ "radosgw-admin user suspend --uid=<uid> / radosgw-admin user enable --uid=<uid>": [
+  "Khóa hoặc mở lại user",
+  "suspend khóa user 403"
+ ],
+ "radosgw-admin user rm --uid=<uid> --purge-data": [
+  "Xóa user và dữ liệu (nguy hiểm)",
+  "xóa user purge"
+ ],
+ "radosgw-admin key create --uid=<uid> --key-type=s3 --gen-access-key --gen-secret": [
+  "Tạo key S3 mới",
+  "key access secret tạo key"
+ ],
+ "radosgw-admin key rm --uid=<uid> --access-key=<key>": [
+  "Xóa key",
+  "xóa key"
+ ],
+ "radosgw-admin subuser create --uid=<uid> --subuser=<uid>:<sub> --access=full": [
+  "Tạo subuser",
+  "subuser"
+ ],
+ "radosgw-admin quota set --quota-scope=user --uid=<uid> --max-size=<bytes> --max-objects=<n>": [
+  "Đặt quota cho user",
+  "quota user vượt quota 403"
+ ],
+ "radosgw-admin quota set --quota-scope=bucket --uid=<uid> --max-size=<bytes>": [
+  "Đặt quota cho bucket",
+  "quota bucket"
+ ],
+ "radosgw-admin quota enable --quota-scope=user --uid=<uid>": [
+  "Bật quota",
+  "bật quota"
+ ],
+ "radosgw-admin bucket list": [
+  "Liệt kê bucket",
+  "bucket danh sách"
+ ],
+ "radosgw-admin bucket list --uid=<uid>": [
+  "Bucket của một user",
+  "bucket user"
+ ],
+ "radosgw-admin bucket stats --bucket=<bucket>": [
+  "Dung lượng, số object, số shard của bucket",
+  "bucket dung lượng quota shard"
+ ],
+ "radosgw-admin bucket check --bucket=<bucket>": [
+  "Kiểm tra index của bucket",
+  "bucket index kiểm tra"
+ ],
+ "radosgw-admin bucket rm --bucket=<bucket> --purge-objects": [
+  "Xóa bucket (nguy hiểm)",
+  "xóa bucket"
+ ],
+ "radosgw-admin reshard list": [
+  "Các reshard đang chờ",
+  "reshard hàng đợi"
+ ],
+ "radosgw-admin reshard status --bucket=<bucket>": [
+  "Trạng thái reshard của bucket",
+  "reshard trạng thái"
+ ],
+ "radosgw-admin bucket reshard --bucket=<bucket> --num-shards=<n>": [
+  "Reshard index của bucket",
+  "reshard large omap shard"
+ ],
+ "radosgw-admin usage show --uid=<uid>": [
+  "Xem log sử dụng",
+  "usage băng thông thống kê"
+ ],
+ "radosgw-admin lc list": [
+  "Trạng thái lifecycle",
+  "lifecycle vòng đời xóa tự động"
+ ],
+ "radosgw-admin lc process": [
+  "Chạy lifecycle ngay",
+  "lifecycle chạy ngay"
+ ],
+ "radosgw-admin gc list --include-all": [
+  "Rác đang chờ dọn",
+  "gc rác dung lượng không giảm"
+ ],
+ "radosgw-admin gc process": [
+  "Chạy dọn rác ngay",
+  "gc dọn rác giải phóng dung lượng"
+ ],
+ "radosgw-admin zone get": [
+  "Cấu hình zone",
+  "zone multisite"
+ ],
+ "radosgw-admin zonegroup get": [
+  "Cấu hình zonegroup",
+  "zonegroup multisite"
+ ],
+ "radosgw-admin realm list": [
+  "Liệt kê realm",
+  "realm multisite"
+ ],
+ "radosgw-admin period get": [
+  "Period hiện tại",
+  "period multisite"
+ ],
+ "radosgw-admin sync status": [
+  "Trạng thái đồng bộ multisite",
+  "sync multisite đồng bộ chậm"
+ ],
+ "rados -p <index-pool> listomapkeys <object>": [
+  "Các key trong object index (kiểm tra large omap)",
+  "large omap index bucket"
+ ],
+ "ceph fs ls": [
+  "Liệt kê CephFS",
+  "cephfs danh sách"
+ ],
+ "ceph fs status": [
+  "Rank, client và dung lượng của CephFS",
+  "cephfs mds rank client"
+ ],
+ "ceph mds stat": [
+  "Trạng thái MDS",
+  "mds trạng thái"
+ ],
+ "ceph fs get <fs>": [
+  "Bản đồ filesystem",
+  "cephfs map"
+ ],
+ "ceph fs new <fs> <metadata-pool> <data-pool>": [
+  "Tạo filesystem",
+  "tạo cephfs"
+ ],
+ "ceph fs subvolume ls <fs>": [
+  "Liệt kê subvolume",
+  "subvolume"
+ ],
+ "ceph mds fail <name-or-rank>": [
+  "Ép MDS failover",
+  "mds failover treo"
+ ],
+ "ceph fs rm <fs> --yes-i-really-mean-it": [
+  "Xóa filesystem (nguy hiểm)",
+  "xóa cephfs"
+ ],
+ "ceph auth ls": [
+  "Toàn bộ key và quyền",
+  "auth key quyền cephx"
+ ],
+ "ceph auth get client.<name>": [
+  "Một key và quyền của nó",
+  "auth key client"
+ ],
+ "ceph auth print-key client.<name>": [
+  "In ra secret của key",
+  "secret key"
+ ],
+ "ceph auth get-or-create client.<name> mon 'allow r' osd 'allow rwx pool=<pool>'": [
+  "Tạo key cho client",
+  "tạo key client cephx"
+ ],
+ "ceph auth caps client.<name> mon 'allow r' osd 'allow rw pool=<pool>'": [
+  "Đổi quyền của key",
+  "đổi quyền caps cephx"
+ ],
+ "ceph auth del client.<name>": [
+  "Xóa key (nguy hiểm)",
+  "xóa key"
+ ],
+ "rados bench -p <pool> 30 write --no-cleanup": [
+  "Benchmark ghi",
+  "benchmark ghi hiệu năng"
+ ],
+ "rados bench -p <pool> 30 seq": [
+  "Benchmark đọc tuần tự",
+  "benchmark đọc"
+ ],
+ "rados bench -p <pool> 30 rand": [
+  "Benchmark đọc ngẫu nhiên",
+  "benchmark đọc ngẫu nhiên"
+ ],
+ "rados -p <pool> cleanup": [
+  "Xóa object benchmark",
+  "dọn benchmark"
+ ],
+ "rados lspools": [
+  "Liệt kê pool",
+  "pool danh sách"
+ ],
+ "rados -p <pool> ls": [
+  "Liệt kê object (pool lớn sẽ chậm)",
+  "object danh sách"
+ ],
+ "rados -p <pool> stat <object>": [
+  "Kích thước và thời gian của object",
+  "object stat"
+ ],
+ "rados -p <pool> get <object> <file>": [
+  "Đọc object ra file",
+  "đọc object"
+ ],
+ "rados -p <pool> put <object> <file>": [
+  "Ghi file vào object",
+  "ghi object"
+ ],
+ "rados -p <pool> rm <object>": [
+  "Xóa object (nguy hiểm)",
+  "xóa object"
+ ],
+ "rados -p <pool> listomapvals <object>": [
+  "Key và giá trị omap",
+  "omap large omap"
+ ],
+ "ceph osd require-osd-release <release>": [
+  "Chốt phiên bản OSD sau nâng cấp",
+  "nâng cấp upgrade require-osd-release cảnh báo"
+ ],
+ "ceph osd set-require-min-compat-client <release>": [
+  "Phiên bản client tối thiểu (cần cho upmap)",
+  "compat client upmap balancer"
+ ],
+ "ceph features": [
+  "Mức tính năng của các client đang kết nối",
+  "client feature phiên bản cũ"
+ ],
+ "ceph osd set noout": [
+  "Tránh rebalance khi restart lần lượt",
+  "noout bảo trì nâng cấp"
+ ],
+ "ceph osd unset noout": [
+  "Trả về hoạt động bình thường",
+  "gỡ noout xong bảo trì"
+ ]
 }

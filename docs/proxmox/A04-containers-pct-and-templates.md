@@ -7,92 +7,111 @@
 ## Inspect
 
 ```bash
-# List containers
+# Liệt kê container | List containers
+# từ khóa: container lxc danh sách ct
 pct list
 
-# Status
+# Trạng thái container | Status
+# từ khóa: container trạng thái
 pct status <ctid>
 
-# Config
+# Xem cấu hình container | Config
+# từ khóa: container cấu hình lock
 pct config <ctid>
 ```
 
 ## Power
 
 ```bash
-# Power control
+# Bật, tắt êm, tắt cứng container | Power control
+# từ khóa: bật tắt container start stop
 pct start <ctid> / pct shutdown <ctid> / pct stop <ctid>
 ```
 
 ## Access
 
 ```bash
-# Shell inside container
+# Vào shell bên trong container | Shell inside container
+# từ khóa: vào container shell console
 pct enter <ctid>
 
-# Run command
+# Chạy lệnh trong container | Run command
+# từ khóa: chạy lệnh container exec
 pct exec <ctid> -- <cmd>
 
-# Copy file in
+# Chép file vào container | Copy file in
+# từ khóa: copy file vào container
 pct push <ctid> <src> <dst>
 
-# Copy file out
+# Chép file ra khỏi container | Copy file out
+# từ khóa: copy file từ container
 pct pull <ctid> <src> <dst>
 ```
 
 ## Create
 
 ```bash
-# Create container
+# Tạo container mới | Create container
+# từ khóa: tạo container create
 pct create <ctid> <template> --storage <storage>
 
-# Clone
+# Clone container | Clone
+# từ khóa: clone nhân bản container
 pct clone <ctid> <newid>
 ```
 
 ## Config
 
 ```bash
-# Change resources
+# Đổi RAM và CPU của container | Change resources
+# từ khóa: ram cpu container tài nguyên
 pct set <ctid> --memory 2048 --cores 2
 
-# Grow root disk
+# Tăng dung lượng đĩa gốc container | Grow root disk
+# từ khóa: mở rộng disk container đầy
 pct resize <ctid> rootfs +5G
 
-# Remove lock
+# Mở khóa container | Remove lock
+# từ khóa: lock container backup
 pct unlock <ctid>
 ```
 
 ## Snapshot
 
 ```bash
-# Snapshot and roll back
+# Tạo snapshot và quay về snapshot container | Snapshot and roll back
+# từ khóa: snapshot rollback container
 pct snapshot <ctid> <name> / pct rollback <ctid> <name>
 ```
 
 ## Migration
 
 ```bash
-# Migrate container
+# Di chuyển container sang node khác | Migrate container
+# từ khóa: migrate container
 pct migrate <ctid> <node> --restart
 ```
 
 ## Delete
 
 ```bash
-# ⚠ NGUY HIỂM: Delete (destructive)
+# ⚠ NGUY HIỂM: Xóa container (nguy hiểm) | Delete (destructive)
+# từ khóa: xóa container destroy
 pct destroy <ctid>
 ```
 
 ## Templates
 
 ```bash
-# Refresh template list
+# Cập nhật danh sách template | Refresh template list
+# từ khóa: template cập nhật
 pveam update
 
-# Available templates
+# Xem template có thể tải | Available templates
+# từ khóa: template danh sách
 pveam available
 
-# Download template
+# Tải template về storage | Download template
+# từ khóa: tải template download
 pveam download <storage> <template>
 ```

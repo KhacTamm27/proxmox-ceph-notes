@@ -7,126 +7,151 @@
 ## List
 
 ```bash
-# Images with size
+# Liệt kê image kèm dung lượng | Images with size
+# từ khóa: image đĩa vm rbd danh sách
 rbd ls -l -p <pool>
 ```
 
 ## Info
 
 ```bash
-# Image details
+# Chi tiết một image | Image details
+# từ khóa: image thông tin
 rbd info <pool>/<image>
 
-# Provisioned vs used
+# Dung lượng cấp phát và thực dùng | Provisioned vs used
+# từ khóa: đầy thin provisioned dung lượng thực
 rbd du -p <pool>
 
 # Ai đang mở image (watcher), để tìm client treo | Watchers (who has it open)
 # từ khóa: rbd treo client lock watcher hang
 rbd status <pool>/<image>
 
-# Image locks
+# Các lock của image | Image locks
+# từ khóa: lock treo vm không start
 rbd lock ls <pool>/<image>
 ```
 
 ## Snapshot
 
 ```bash
-# List snapshots
+# Liệt kê snapshot của image | List snapshots
+# từ khóa: snapshot
 rbd snap ls <pool>/<image>
 
-# Create snapshot
+# Tạo snapshot | Create snapshot
+# từ khóa: tạo snapshot
 rbd snap create <pool>/<image>@<snap>
 
-# ⚠ NGUY HIỂM: Roll back (destructive)
+# ⚠ NGUY HIỂM: Quay về snapshot (nguy hiểm) | Roll back (destructive)
+# từ khóa: rollback snapshot
 rbd snap rollback <pool>/<image>@<snap>
 
-# Protect for cloning
+# Bảo vệ snapshot để clone | Protect for cloning
+# từ khóa: protect snapshot clone
 rbd snap protect <pool>/<image>@<snap>
 
-# Delete snapshot
+# Xóa snapshot | Delete snapshot
+# từ khóa: xóa snapshot
 rbd snap rm <pool>/<image>@<snap>
 ```
 
 ## Clone
 
 ```bash
-# Clone from snapshot
+# Clone từ snapshot | Clone from snapshot
+# từ khóa: clone
 rbd clone <pool>/<image>@<snap> <pool>/<clone>
 
-# Detach clone from parent
+# Tách clone khỏi image gốc | Detach clone from parent
+# từ khóa: flatten clone
 rbd flatten <pool>/<clone>
 ```
 
 ## Copy
 
 ```bash
-# Copy image
+# Sao chép image | Copy image
+# từ khóa: copy image
 rbd cp <src> <dst>
 
-# Export image
+# Xuất image ra file | Export image
+# từ khóa: export backup image
 rbd export <pool>/<image> <file>
 
-# Import image
+# Nhập file vào image | Import image
+# từ khóa: import image
 rbd import <file> <pool>/<image>
 
-# Incremental export
+# Xuất phần thay đổi (incremental) | Incremental export
+# từ khóa: incremental diff
 rbd export-diff <pool>/<image> <file>
 ```
 
 ## Resize
 
 ```bash
-# Resize image
+# Đổi kích thước image | Resize image
+# từ khóa: resize mở rộng image
 rbd resize --size <MiB> <pool>/<image>
 ```
 
 ## Space
 
 ```bash
-# Reclaim zeroed space
+# Thu hồi vùng toàn số 0 | Reclaim zeroed space
+# từ khóa: sparsify thu hồi dung lượng
 rbd sparsify <pool>/<image>
 ```
 
 ## Trash
 
 ```bash
-# Trash contents
+# Nội dung thùng rác của pool | Trash contents
+# từ khóa: trash thùng rác
 rbd trash ls -p <pool>
 
-# Move to trash
+# Chuyển image vào thùng rác | Move to trash
+# từ khóa: trash xóa an toàn
 rbd trash mv <pool>/<image>
 
-# Restore from trash
+# Khôi phục image từ thùng rác | Restore from trash
+# từ khóa: khôi phục image đã xóa
 rbd trash restore -p <pool> <image-id>
 
-# ⚠ NGUY HIỂM: Empty trash (destructive)
+# ⚠ NGUY HIỂM: Dọn sạch thùng rác (nguy hiểm) | Empty trash (destructive)
+# từ khóa: dọn thùng rác
 rbd trash purge -p <pool>
 ```
 
 ## Delete
 
 ```bash
-# ⚠ NGUY HIỂM: Delete image (destructive)
+# ⚠ NGUY HIỂM: Xóa image (nguy hiểm) | Delete image (destructive)
+# từ khóa: xóa image đĩa vm
 rbd rm <pool>/<image>
 ```
 
 ## Perf
 
 ```bash
-# Per-image IO rates
+# Tốc độ IO theo từng image | Per-image IO rates
+# từ khóa: io image vm nặng tìm vm ồn
 rbd perf image iostat -p <pool>
 ```
 
 ## Bench
 
 ```bash
-# Image benchmark
+# Benchmark image | Image benchmark
+# từ khóa: benchmark rbd
 rbd bench --io-type write --io-size 4K --io-threads 16 <pool>/<image>
 ```
 
 ## Mapping
 
 ```bash
-# Kernel map (troubleshooting)
+# Map image vào kernel (khi gỡ lỗi) | Kernel map (troubleshooting)
+# từ khóa: map unmap kernel gỡ lỗi
 rbd map <pool>/<image> / rbd unmap <dev>
 ```

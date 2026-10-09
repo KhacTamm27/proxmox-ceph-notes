@@ -7,62 +7,75 @@
 ## CPU
 
 ```bash
-# CPU model and topology
+# Thông tin CPU và topology | CPU model and topology
+# từ khóa: cpu model core
 lscpu
 
-# NUMA layout
+# Bố cục NUMA | NUMA layout
+# từ khóa: numa
 numactl -H
 ```
 
 ## Memory
 
 ```bash
-# RAM usage
+# Mức dùng RAM | RAM usage
+# từ khóa: ram bộ nhớ đầy ram thiếu ram
 free -h
 
-# DIMM inventory
+# Danh sách thanh RAM (DIMM) | DIMM inventory
+# từ khóa: ram dimm phần cứng
 dmidecode -t memory
 ```
 
 ## Load
 
 ```bash
-# Process view
+# Xem tiến trình | Process view
+# từ khóa: tiến trình cpu cao treo
 top / htop
 
-# CPU, memory, IO summary
+# Tóm tắt CPU, RAM, IO | CPU, memory, IO summary
+# từ khóa: cpu ram io tổng hợp
 vmstat 1
 ```
 
 ## Sensors
 
 ```bash
-# Temperatures and fans
+# Nhiệt độ và quạt | Temperatures and fans
+# từ khóa: nhiệt độ quạt nóng
 sensors
 ```
 
 ## BMC
 
 ```bash
-# Sensor readings
+# Đọc cảm biến phần cứng | Sensor readings
+# từ khóa: ipmi cảm biến
 ipmitool sdr
 
-# Hardware event log
+# Nhật ký sự kiện phần cứng | Hardware event log
+# từ khóa: ipmi log lỗi phần cứng sel
 ipmitool sel list
 
-# Power and chassis state
+# Trạng thái nguồn và khung máy | Power and chassis state
+# từ khóa: ipmi nguồn power
 ipmitool chassis status
 
-# BMC network config
+# Cấu hình mạng BMC | BMC network config
+# từ khóa: ipmi bmc idrac ip
 ipmitool lan print
 ```
 
 ## Kernel log
 
 ```bash
-# Kernel messages with time
+# Thông điệp kernel kèm thời gian | Kernel messages with time
+# từ khóa: dmesg lỗi kernel oom io error
 dmesg -T
 
-# Kernel log this boot
+# Log kernel của lần boot này | Kernel log this boot
+# từ khóa: log kernel boot
 journalctl -k -b
 ```

@@ -50,12 +50,15 @@ unknown = [c for c in vi if c not in all_cmds]
 if unknown:
     print("CẢNH BÁO: vi.json có lệnh không khớp commands.json:", *unknown, sep="\n  ")
 
-for folder in ("proxmox", "ceph", "cases", "runbooks"):
+for folder in ("proxmox", "ceph", "cases", "runbooks", "scripts", "diagrams"):
     p = ROOT / "docs" / folder
     shutil.rmtree(p, ignore_errors=True)
     p.mkdir(parents=True)
 for sc in ("ceph", "pve"):
     (ROOT / "docs/cases" / sc).mkdir(parents=True, exist_ok=True)
+scr_list = json.loads((ROOT / "data/scripts.json").read_text(encoding="utf-8"))
+for sc_ in scr_list:
+    sc_["code"] = (ROOT / "tools" / sc_["file"]).read_text(encoding="utf-8")
 SCOPE_LABEL = {"ceph": "Ceph", "pve": "Proxmox cluster"}
 
 # ---- từng file .md ----
@@ -86,11 +89,21 @@ for side, branches in data.items():
         (ROOT / "docs" / slugs[b["id"]]).write_text("\n".join(out).rstrip() + "\n", encoding="utf-8")
 
 # ---- case study / runbook .md ----
+# ---- nạp file cấu hình (configs/) và sơ đồ (data/diagrams/) mà các bước tham chiếu ----
+for c in cases:
+    for st in c["steps"]:
+        for f in st.get("files", []):
+            f["code"] = (ROOT / "configs" / f["src"]).read_text(encoding="utf-8")
+    for g in c.get("diagrams", []):
+        g["svg"] = (ROOT / "data/diagrams" / g["src"]).read_text(encoding="utf-8")
+        shutil.copy(ROOT / "data/diagrams" / g["src"], ROOT / "docs/diagrams" / g["src"])
+
 for c in cases:
     rb = c.get("kind") == "runbook"
     if rb:
         o = [f"# {c['title']}", "", "[← Mục lục](../../README.md) · Runbook", "",
              f"**Mục tiêu:** {c['goal']}", "", f"**Điều kiện trước khi làm:** {c['prereq']}", "", "## Các bước", ""]
+        o[8:8] = [x for g in c.get("diagrams", []) for x in (f"![{g['caption']}](../diagrams/{g['src']})", "")]
     else:
         o = [f"# {c['title']}", "", f"[← Mục lục](../../../README.md) · Case study {SCOPE_LABEL[c['scope']]}", "",
              f"**Triệu chứng:** {c['symptoms']}", "", f"**Nguyên nhân hay gặp:** {c['causes']}", "",
@@ -99,12 +112,24 @@ for c in cases:
         o += [f"{i}. {st['t']}", ""]
         if st["cmds"]:
             o += ["```bash"] + st["cmds"] + ["```", ""]
+        for f in st.get("files", []):
+            o += [f"**`{f['path']}`**", "", f"```{f.get('lang', '')}", f["code"].rstrip("\n"), "```", ""]
     o += ["## Lưu ý", "", c["notes"], ""]
     if c.get("refs"):
         o += ["## Nguồn tham khảo", ""] + [f"- [{r['t']}]({r['u']})" for r in c["refs"]] + [""]
     o += [f"<!-- từ khóa: {c['tags']} -->"]
     dest = ROOT / "docs/runbooks" / f"{c['id']}.md" if rb else ROOT / "docs/cases" / c["scope"] / f"{c['id']}.md"
     dest.write_text("\n".join(o) + "\n", encoding="utf-8")
+
+# ---- script .md ----
+for sc_ in scr_list:
+    o = [f"# {sc_['title']}", "", "[← Mục lục](../../README.md) · Script tiện ích", "",
+         f"**Mục đích:** {sc_['goal']}", "", "## Cách dùng", "", "```bash"]
+    o += [f"{u['c']}    # {u['d']}" for u in sc_["usage"]]
+    o += ["```", "", f"File gốc: [`tools/{sc_['file']}`](../../tools/{sc_['file']})", "",
+          "## Lưu ý", "", sc_["notes"], "", "## Mã nguồn", "", "```bash", sc_["code"].rstrip("\n"), "```", "",
+          f"<!-- từ khóa: {sc_['tags']} -->"]
+    (ROOT / "docs/scripts" / f"{sc_['id']}.md").write_text("\n".join(o) + "\n", encoding="utf-8")
 
 # ---- README ----
 total = sum(count(b) for br in data.values() for b in br)
@@ -132,6 +157,10 @@ for c in cases:
     if c.get("kind") == "runbook":
         r.append(f"| [{c['title']}](docs/runbooks/{c['id']}.md) | {c['goal'].replace('|', '/')} |")
 r.append("")
+r += ["## Script tiện ích", "", "| Script | Mục đích |", "|---|---|"]
+for sc_ in scr_list:
+    r.append(f"| [{sc_['title']}](docs/scripts/{sc_['id']}.md) | {sc_['goal'].replace('|', '/')} |")
+r.append("")
 for side, branches in data.items():
     folder, label = SIDES[side]
     r += [f"## {label}", "", "| ID | Nhóm | Lệnh | Gồm |", "|---|---|---:|---|"]
@@ -142,7 +171,8 @@ for side, branches in data.items():
 r += ["## Cập nhật tài liệu", "",
       "- `data/commands.json`: nhóm → nhóm con → `{c: lệnh, p: mô tả, d: nguy hiểm?}`.",
       "- `data/vi.json`: mô tả tiếng Việt và từ khóa, khóa là đúng chuỗi lệnh trong commands.json: `\"lệnh\": [\"mô tả\", \"từ khóa\"]`.",
-      "- `data/cases.json`: các case study (triệu chứng, nguyên nhân, các bước, lưu ý).", "",
+      "- `data/cases.json`: các case study (triệu chứng, nguyên nhân, các bước, lưu ý).",
+      "- `data/scripts.json` và thư mục `tools/`: script tiện ích (siêu dữ liệu trong JSON, mã nguồn là file `.sh` trong `tools/`).", "",
       "Sau khi sửa, chạy:", "",
       "```bash", f"python3 scripts/build.py --repo {args.repo or '<user>/<repo>'}", "```", "",
       "Lệnh trên sinh lại README này, toàn bộ `docs/**/*.md` và `docs/index.html`.", ""]
@@ -153,9 +183,10 @@ tpl = (ROOT / "scripts/template.html").read_text(encoding="utf-8")
 html = (tpl.replace("/*__DATA__*/null", json.dumps(data, ensure_ascii=False))
            .replace("/*__REPO__*/", args.repo)
            .replace("/*__SLUGS__*/{}", json.dumps(slugs))
-           .replace("/*__CASES__*/[]", json.dumps(cases, ensure_ascii=False)))
+           .replace("/*__CASES__*/[]", json.dumps(cases, ensure_ascii=False).replace("</", "<\\/"))
+           .replace("/*__SCRIPTS__*/[]", json.dumps(scr_list, ensure_ascii=False).replace("</", "<\\/")))
 (ROOT / "docs/index.html").write_text(html, encoding="utf-8")
 nrb = sum(c.get("kind") == "runbook" for c in cases)
 nce = sum(c["scope"] == "ceph" and c.get("kind") != "runbook" for c in cases)
 npv = sum(c["scope"] == "pve" and c.get("kind") != "runbook" for c in cases)
-print(f"ok: {len(slugs)} file .md, {nce + npv} case ({nce} Ceph, {npv} Proxmox), {nrb} runbook, {total} lệnh, Việt hóa {covered}/{total}")
+print(f"ok: {len(slugs)} file .md, {nce + npv} case ({nce} Ceph, {npv} Proxmox), {nrb} runbook, {len(scr_list)} script, {total} lệnh, Việt hóa {covered}/{total}")

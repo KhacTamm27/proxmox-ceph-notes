@@ -7,43 +7,51 @@
 ## Status
 
 ```bash
-# List filesystems
+# Liệt kê CephFS | List filesystems
+# từ khóa: cephfs danh sách
 ceph fs ls
 
-# Ranks, clients, usage
+# Rank, client và dung lượng của CephFS | Ranks, clients, usage
+# từ khóa: cephfs mds rank client
 ceph fs status
 
-# MDS states
+# Trạng thái MDS | MDS states
+# từ khóa: mds trạng thái
 ceph mds stat
 
-# Filesystem map
+# Bản đồ filesystem | Filesystem map
+# từ khóa: cephfs map
 ceph fs get <fs>
 ```
 
 ## Create
 
 ```bash
-# Create filesystem
+# Tạo filesystem | Create filesystem
+# từ khóa: tạo cephfs
 ceph fs new <fs> <metadata-pool> <data-pool>
 ```
 
 ## Subvolume
 
 ```bash
-# List subvolumes
+# Liệt kê subvolume | List subvolumes
+# từ khóa: subvolume
 ceph fs subvolume ls <fs>
 ```
 
 ## Failover
 
 ```bash
-# Fail an MDS
+# Ép MDS failover | Fail an MDS
+# từ khóa: mds failover treo
 ceph mds fail <name-or-rank>
 ```
 
 ## Delete
 
 ```bash
-# ⚠ NGUY HIỂM: Delete filesystem (destructive)
+# ⚠ NGUY HIỂM: Xóa filesystem (nguy hiểm) | Delete filesystem (destructive)
+# từ khóa: xóa cephfs
 ceph fs rm <fs> --yes-i-really-mean-it
 ```

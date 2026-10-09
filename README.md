@@ -2,8 +2,6 @@
 
 Tài liệu cá nhân: 493 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệnh phá hủy hoặc ảnh hưởng dịch vụ, đọc kỹ trước khi chạy.
 
-**Mindmap tương tác (lọc lệnh, mở thẳng từng mục):** https://KhacTamm27.github.io/proxmox-ceph-notes/
-
 ## Cách tìm nhanh
 
 - Biết tên nhóm: bấm vào mục lục bên dưới, hoặc mở mindmap kèm `#B13` (ví dụ `.../#B13` mở thẳng RGW).
@@ -65,6 +63,7 @@ Tài liệu cá nhân: 493 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 | [LUN iSCSI mới hoặc Volume Group không hiện trên một số node (Shared LVM)](docs/cases/pve/lun-not-visible.md) | Sau khi thêm LUN hoặc mở rộng VG, một số node không thấy thiết bị hoặc không thấy VG, pvesm status báo storage lỗi. |
 | [Storage NFS offline hoặc không thêm được vào Proxmox](docs/cases/pve/nfs-storage-offline.md) | Storage NFS hiện dấu hỏi hoặc offline, không thêm được vào Datacenter > Storage, lệnh pvesm status chậm hoặc treo. |
 | [PBS S3: ENOENT hoặc Permission denied với cache, không thấy backup](docs/cases/pve/pbs-s3-permission.md) | Tạo hoặc mount datastore S3 báo ENOENT hoặc Permission denied, backup lỗi, hoặc PBS mới không thấy bản backup cũ. |
+| [Console VM qua proxy không kết nối (màn hình đen, 401, 403, 404, 502, WebSocket đứt)](docs/cases/pve/console-proxy-fail.md) | Bấm Remote Console trên portal chỉ thấy màn hình đen, báo không kết nối, hoặc F12 > Network thấy vncproxy hoặc vncwebsocket lỗi (401, 403, 404, 502, không lên 101). |
 
 ## Runbook (quy trình thao tác từng bước)
 
@@ -76,6 +75,15 @@ Tài liệu cá nhân: 493 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 | [Nâng cấp một node Proxmox VE từ 5.4 lên 8.x (qua 6, 7, 8) kèm ZFS](docs/runbooks/rb-pve5-to-8-single.md) | Nâng một node đơn Proxmox rất cũ (5.4, Debian stretch) lên 8.x theo chuỗi 5 lên 6 lên 7 lên 8, rồi import lại các zpool dữ liệu. |
 | [SAN iSCSI + Shared LVM cho cluster Proxmox, và mở rộng dung lượng online (pvmove)](docs/runbooks/rb-san-iscsi-shared-lvm.md) | Cho 3 node Proxmox cùng đăng nhập một LUN iSCSI và dùng chung một Volume Group (Shared LVM) để chia volume cho VM; sau đó mở rộng dung lượng không mất dữ liệu, không downtime. |
 | [NAS NFS làm storage dùng chung cho cluster Proxmox](docs/runbooks/rb-nas-nfs-storage.md) | Cho 3 node Proxmox mount chung một thư mục xuất từ NFS server, chứa trực tiếp file .qcow2 hoặc .raw của VM. Dễ triển khai, phù hợp lab hoặc tải vừa phải. |
+| [Cấu hình Nginx proxy console cho VM Proxmox (noVNC qua portal)](docs/runbooks/rb-console-proxy-nginx.md) | Cho kỹ thuật hoặc khách hàng thao tác console VM ngay trên portal hoặc trang quản lý dịch vụ mà không phải mở thẳng giao diện Proxmox. Portal gửi URL kèm tiền tố tới Nginx proxy, Nginx bỏ tiền tố, rewrite đường dẫn API rồi chuyển xuống đúng node Proxmox (cổng 8006); mỗi node ứng với một cổng riêng trên proxy. |
+| [Gỡ lỗi console: lấy ticket qua API, áp cookie, mở URL chuẩn rồi kiểm tra bằng F12](docs/runbooks/rb-console-ticket-debug.md) | Kiểm tra từng chặng của đường console (Proxmox, proxy, trình duyệt) mà không cần portal: tự lấy ticket đăng nhập, áp vào trình duyệt, mở URL chuẩn qua proxy và dùng DevTools (F12) để thấy chặng nào lỗi. |
+
+## Script tiện ích
+
+| Script | Mục đích |
+|---|---|
+| [Liệt kê cổng mạng vật lý đang UP (1Gb / 10Gb) trên mọi node cluster](docs/scripts/list-up-ports.md) | Kiểm tra nhanh card mạng vật lý nào đang UP và đạt tốc độ nào trên từng node của cluster (đọc danh sách node và IP từ /etc/pve/.members), để phát hiện cổng rớt tốc độ, đứt cáp hoặc cắm nhầm cổng. |
+| [Menu Stop / Start / Status HA (pve-ha-lrm, pve-ha-crm) trên toàn cluster](docs/scripts/ha-menu.md) | Tắt hoặc bật HA đồng loạt trên mọi node online đúng thứ tự khi bảo trì production (stop LRM trước rồi CRM; start CRM trước, chờ bầu master, rồi LRM) thay vì gõ tay từng node. Tương ứng bước tắt HA trong runbook bảo trì production. |
 
 ## Proxmox host
 
@@ -124,11 +132,12 @@ Tài liệu cá nhân: 493 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 - `data/commands.json`: nhóm → nhóm con → `{c: lệnh, p: mô tả, d: nguy hiểm?}`.
 - `data/vi.json`: mô tả tiếng Việt và từ khóa, khóa là đúng chuỗi lệnh trong commands.json: `"lệnh": ["mô tả", "từ khóa"]`.
 - `data/cases.json`: các case study (triệu chứng, nguyên nhân, các bước, lưu ý).
+- `data/scripts.json` và thư mục `tools/`: script tiện ích (siêu dữ liệu trong JSON, mã nguồn là file `.sh` trong `tools/`).
 
 Sau khi sửa, chạy:
 
 ```bash
-python3 scripts/build.py --repo KhacTamm27/proxmox-ceph-notes
+python3 scripts/build.py --repo <user>/<repo>
 ```
 
 Lệnh trên sinh lại README này, toàn bộ `docs/**/*.md` và `docs/index.html`.

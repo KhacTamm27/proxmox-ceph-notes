@@ -7,43 +7,51 @@
 ## Users
 
 ```bash
-# List users
+# Liệt kê user | List users
+# từ khóa: user người dùng
 pveum user list
 
-# Create user
+# Tạo user | Create user
+# từ khóa: tạo user
 pveum user add <user>@pve --password <p>
 
-# Change password
+# Đổi mật khẩu user | Change password
+# từ khóa: đổi mật khẩu password
 pveum passwd <user>@pve
 ```
 
 ## Roles
 
 ```bash
-# List roles
+# Liệt kê role | List roles
+# từ khóa: role vai trò
 pveum role list
 ```
 
 ## Permissions
 
 ```bash
-# List ACLs
+# Liệt kê ACL (phân quyền) | List ACLs
+# từ khóa: acl phân quyền permission
 pveum acl list
 
-# Grant permission
+# Cấp quyền cho user trên VM | Grant permission
+# từ khóa: cấp quyền phân quyền vm user
 pveum acl modify /vms/<vmid> --users <user>@pve --roles PVEVMAdmin
 ```
 
 ## Tokens
 
 ```bash
-# API token
+# Tạo API token | API token
+# từ khóa: api token
 pveum user token add <user>@pve <token-id> --privsep 1
 ```
 
 ## Realms
 
 ```bash
-# Auth realms
+# Liệt kê realm xác thực | Auth realms
+# từ khóa: realm sso ldap xác thực
 pveum realm list
 ```

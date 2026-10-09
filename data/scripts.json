@@ -1,0 +1,42 @@
+[
+ {
+  "id": "list-up-ports",
+  "file": "list_up_ports.sh",
+  "title": "Liệt kê cổng mạng vật lý đang UP (1Gb / 10Gb) trên mọi node cluster",
+  "tags": "script mạng nic card mạng port cổng up link tốc độ speed 10gb 1gb 25gb ssh cluster kiểm tra cáp sfp rớt tốc độ đứt cáp ethtool",
+  "goal": "Kiểm tra nhanh card mạng vật lý nào đang UP và đạt tốc độ nào trên từng node của cluster (đọc danh sách node và IP từ /etc/pve/.members), để phát hiện cổng rớt tốc độ, đứt cáp hoặc cắm nhầm cổng.",
+  "usage": [
+   {
+    "c": "./list_up_ports.sh",
+    "d": "Liệt kê cổng UP ở 10Gb và 1Gb (mặc định)"
+   },
+   {
+    "c": "SPEEDS=\"10000\" ./list_up_ports.sh",
+    "d": "Chỉ cổng 10Gb"
+   },
+   {
+    "c": "SPEEDS=\"1000 10000 25000\" ./list_up_ports.sh",
+    "d": "Thêm các mức tốc độ khác (đơn vị Mb/s)"
+   },
+   {
+    "c": "SSH_USER=root SSH_PORT=22 ./list_up_ports.sh",
+    "d": "Đổi user hoặc cổng SSH"
+   }
+  ],
+  "notes": "Chạy trên một node trong cluster; cần SSH bằng key (không mật khẩu) từ node này tới các node còn lại, cluster Proxmox thường đã có sẵn. Chỉ xét cổng vật lý đang UP (có /sys/class/net/TÊN_CỔNG/device) nên bridge, bond, VLAN ảo không hiện. Node offline hoặc SSH lỗi được ghi rõ trong bảng, node không có cổng khớp hiện (none). Card 10Gb mà chỉ báo 1Gb thường do cáp, SFP hoặc cổng switch. Script bật StrictHostKeyChecking=no và UserKnownHostsFile=/dev/null: tiện trong mạng nội bộ nhưng bỏ qua kiểm tra host key. Thiếu python3 trên node chạy thì script dừng."
+ },
+ {
+  "id": "ha-menu",
+  "file": "ha-menu.sh",
+  "title": "Menu Stop / Start / Status HA (pve-ha-lrm, pve-ha-crm) trên toàn cluster",
+  "tags": "script ha stop start status lrm crm pve-ha-lrm pve-ha-crm bảo trì maintenance tắt ha bật ha menu cluster fence domino quorum ssh",
+  "goal": "Tắt hoặc bật HA đồng loạt trên mọi node online đúng thứ tự khi bảo trì production (stop LRM trước rồi CRM; start CRM trước, chờ bầu master, rồi LRM) thay vì gõ tay từng node. Tương ứng bước tắt HA trong runbook bảo trì production.",
+  "usage": [
+   {
+    "c": "./ha-menu.sh",
+    "d": "Mở menu: 1 Stop HA, 2 Start HA, 3 Xem trạng thái, 0 Thoát"
+   }
+  ],
+  "notes": "Chạy từ MỘT node trong cluster, cần SSH key root giữa các node. Chỉ tác động tới node đang online theo /etc/pve/.members, nên node offline lúc tắt sẽ không được xử lý và cần kiểm tra lại khi nó online. Script cảnh báo khi cluster không có quorum và hỏi xác nhận trước khi chạy. Trong lúc HA tắt, VM HA sẽ không tự phục hồi nếu node chết, nên chỉ tắt trong khung bảo trì, xong thì chọn 2 để bật lại rồi xem ha-manager status. Các lệnh ssh dùng StrictHostKeyChecking=no."
+ }
+]

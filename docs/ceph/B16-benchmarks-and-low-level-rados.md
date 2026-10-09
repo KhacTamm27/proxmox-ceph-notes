@@ -7,38 +7,48 @@
 ## Bench
 
 ```bash
-# Write benchmark
+# Benchmark ghi | Write benchmark
+# từ khóa: benchmark ghi hiệu năng
 rados bench -p <pool> 30 write --no-cleanup
 
-# Sequential read benchmark
+# Benchmark đọc tuần tự | Sequential read benchmark
+# từ khóa: benchmark đọc
 rados bench -p <pool> 30 seq
 
-# Random read benchmark
+# Benchmark đọc ngẫu nhiên | Random read benchmark
+# từ khóa: benchmark đọc ngẫu nhiên
 rados bench -p <pool> 30 rand
 
-# Remove benchmark objects
+# Xóa object benchmark | Remove benchmark objects
+# từ khóa: dọn benchmark
 rados -p <pool> cleanup
 ```
 
 ## Objects
 
 ```bash
-# List pools
+# Liệt kê pool | List pools
+# từ khóa: pool danh sách
 rados lspools
 
-# List objects (large pools: slow)
+# Liệt kê object (pool lớn sẽ chậm) | List objects (large pools: slow)
+# từ khóa: object danh sách
 rados -p <pool> ls
 
-# Object size and mtime
+# Kích thước và thời gian của object | Object size and mtime
+# từ khóa: object stat
 rados -p <pool> stat <object>
 
-# Read object
+# Đọc object ra file | Read object
+# từ khóa: đọc object
 rados -p <pool> get <object> <file>
 
-# Write object
+# Ghi file vào object | Write object
+# từ khóa: ghi object
 rados -p <pool> put <object> <file>
 
-# ⚠ NGUY HIỂM: Delete object (destructive)
+# ⚠ NGUY HIỂM: Xóa object (nguy hiểm) | Delete object (destructive)
+# từ khóa: xóa object
 rados -p <pool> rm <object>
 ```
 
@@ -49,6 +59,7 @@ rados -p <pool> rm <object>
 # từ khóa: large omap object
 rados -p <pool> listomapkeys <object>
 
-# Omap key and values
+# Key và giá trị omap | Omap key and values
+# từ khóa: omap large omap
 rados -p <pool> listomapvals <object>
 ```
