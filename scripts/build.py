@@ -22,6 +22,7 @@ args = ap.parse_args()
 data = json.loads((ROOT / "data/commands.json").read_text(encoding="utf-8"))
 vi = json.loads((ROOT / "data/vi.json").read_text(encoding="utf-8"))
 cases = json.loads((ROOT / "data/cases.json").read_text(encoding="utf-8"))
+triage = json.loads((ROOT / "data/triage.json").read_text(encoding="utf-8"))
 SIDES = {"left": ("proxmox", "Proxmox host"), "right": ("ceph", "Ceph")}
 
 
@@ -156,10 +157,13 @@ if args.repo:
     user, name = args.repo.split("/")
     r += [f"**Mindmap tương tác (lọc lệnh, mở thẳng từng mục):** https://{user}.github.io/{name}/", ""]
 r += ["## Cách tìm nhanh", "",
-      "- Biết tên nhóm: bấm vào mục lục bên dưới, hoặc mở mindmap kèm `#B13` (ví dụ `.../#B13` mở thẳng RGW).",
-      "- Biết từ khóa: mở mindmap, nhấn `/` rồi gõ. Link `.../?q=scrub` mở sẵn kết quả lọc.",
+      "- Mới bắt đầu: mở mindmap, chọn lối đi theo nhu cầu (tìm lệnh, sửa lỗi Proxmox/Ceph, cấu hình network); mở case để đọc triệu chứng, nguyên nhân, các bước và lưu ý.",
+      "- Tìm nội dung: gõ từ khóa tiếng Việt hoặc tiếng Anh vào ô tìm kiếm; truy vấn như `storage bị chậm` hoặc `VM crash` có thể hiện quy trình chẩn đoán ban đầu, lệnh đọc trạng thái và cách hiểu dấu hiệu. Trang không chạy lệnh hay truy cập cluster.",
+      "- Nhấn `/` để focus tìm kiếm, Enter để tới kết quả, Esc để xóa.",
+      "- Tra cứu nhóm lệnh: mở nhóm theo chủ đề; bấm lệnh để copy. Các nhóm Proxmox và Ceph có nhãn màu riêng.",
+      "- Mở nhanh qua URL: thêm `#B13` để tới nhóm lệnh (ví dụ RGW), hoặc `?q=scrub` để mở sẵn kết quả tìm kiếm.",
       "- Trên GitHub: nhấn `t` để tìm file theo tên, nhấn `/` để tìm trong repo (gõ `crush`, `radosgw-admin user`).",
-      "- Trong một file .md: nút Outline (góc phải trên) nhảy giữa các mục con, mỗi khối lệnh có nút copy.", ""]
+      "- Lệnh có ⚠ hoặc hiển thị cảnh báo cần được đọc kỹ trước khi chạy trên cluster thật.", ""]
 for sc in ("ceph", "pve"):
     r += [f"## Case study {SCOPE_LABEL[sc]} (lỗi và cách xử lý)", "", "| Sự cố | Triệu chứng |", "|---|---|"]
     for c in cases:
@@ -186,6 +190,7 @@ r += ["## Cập nhật tài liệu", "",
       "- `data/commands.json`: nhóm → nhóm con → `{c: lệnh, p: mô tả, d: nguy hiểm?}`.",
       "- `data/vi.json`: mô tả tiếng Việt và từ khóa, khóa là đúng chuỗi lệnh trong commands.json: `\"lệnh\": [\"mô tả\", \"từ khóa\"]`.",
       "- `data/cases.json`: các case study (triệu chứng, nguyên nhân, các bước, lưu ý).",
+      "- `data/triage.json`: hướng dẫn chẩn đoán ban đầu theo mô tả tự nhiên (ví dụ VM crash, storage chậm), gồm lệnh chỉ đọc, dấu hiệu cần xem và case liên quan.",
       "- `data/scripts.json` và thư mục `tools/`: script tiện ích (siêu dữ liệu trong JSON, mã nguồn `.sh` hoặc `.py` trong `tools/`).", "",
       "Sau khi sửa, chạy:", "",
       "```bash", f"python3 scripts/build.py --repo {args.repo or '<user>/<repo>'}", "```", "",
@@ -198,6 +203,7 @@ html = (tpl.replace("/*__DATA__*/null", json.dumps(data, ensure_ascii=False))
            .replace("/*__REPO__*/", args.repo)
            .replace("/*__SLUGS__*/{}", json.dumps(slugs))
            .replace("/*__CASES__*/[]", json.dumps(cases, ensure_ascii=False).replace("</", "<\\/"))
+           .replace("/*__TRIAGE__*/[]", json.dumps(triage, ensure_ascii=False).replace("</", "<\\/"))
            .replace("/*__SCRIPTS__*/[]", json.dumps(scr_list, ensure_ascii=False).replace("</", "<\\/")))
 (ROOT / "docs/index.html").write_text(html, encoding="utf-8")
 nrb = sum(c.get("kind") == "runbook" for c in cases)

@@ -1,0 +1,194 @@
+[
+  {
+    "id": "vm-unexpected-stop",
+    "title": "VM crash / tự tắt / reboot bất thường",
+    "scope": "pve",
+    "aliases": "vm crash crashed qemu guest stopped unexpected shutdown reboot vm bi tat tu tat crash vm chet treo mat dien kernel panic oom vm không chạy",
+    "summary": "Thu thập thời điểm và trạng thái trước, sau đó đối chiếu log Proxmox, kernel, quorum và storage. Đây là quy trình đọc/kiểm tra; GUI không kết nối hoặc chạy lệnh trên cluster của bạn.",
+    "steps": [
+      {
+        "title": "1. Ghi nhận VM, node và thời điểm lỗi",
+        "why": "Ghi lại VMID, node đang chạy, thời điểm VM dừng và trạng thái hiện tại. Trong GUI Proxmox, mở VM → Task History và mở task lỗi để xem log chi tiết.",
+        "commands": [
+          "qm status <vmid> --verbose",
+          "qm config <vmid>"
+        ],
+        "signals": [
+          {
+            "match": "VM status is stopped nhưng không có task stop/reboot chủ động",
+            "meaning": "Chuyển sang kiểm tra kernel/QEMU và task log quanh đúng thời điểm; chưa đủ dữ kiện để quy lỗi cho guest hoặc host."
+          },
+          {
+            "match": "Có lock, thiếu disk hoặc cấu hình trỏ tới thiết bị không còn tồn tại",
+            "meaning": "Đối chiếu task log và cấu hình thiết bị; không tự xóa lock khi chưa xác định task/backup còn chạy."
+          }
+        ]
+      },
+      {
+        "title": "2. Tìm OOM, lỗi kernel, QEMU hoặc thiết bị I/O",
+        "why": "Chạy trên node chứa VM. Giới hạn thời gian để đối chiếu với thời điểm sự cố, không chỉ dựa vào log mới nhất.",
+        "commands": [
+          "journalctl -k -b --since \"1 hour ago\" | grep -Ei 'oom|killed process|qemu|I/O error|nvme|reset|watchdog'",
+          "journalctl -u pvedaemon --since \"1 hour ago\""
+        ],
+        "signals": [
+          {
+            "match": "Out of memory / Killed process / qemu bị kill",
+            "meaning": "Có dấu hiệu memory pressure ở host; kiểm tra RAM/ballooning và những VM cùng node trước khi đổi cấu hình."
+          },
+          {
+            "match": "I/O error, timeout, reset hoặc thiết bị block lỗi",
+            "meaning": "Ưu tiên điều tra storage/backend và đường I/O của VM; xem hướng dẫn Storage chậm hoặc case storage tương ứng."
+          },
+          {
+            "match": "Không thấy dấu hiệu host-side",
+            "meaning": "Kiểm tra log hệ điều hành bên trong guest và task log của VM; guest kernel panic/application crash có thể không xuất hiện trong journal của host."
+          }
+        ]
+      },
+      {
+        "title": "3. Loại trừ cluster hoặc storage không khả dụng",
+        "why": "Chỉ đọc trạng thái; xác nhận cluster còn quorum và storage chứa disk của VM có online hay không.",
+        "commands": [
+          "pvecm status",
+          "pvesm status"
+        ],
+        "signals": [
+          {
+            "match": "No quorum / expected votes không đủ",
+            "meaning": "Đi theo case Cluster Proxmox mất quorum; không ép quorum nếu chưa cô lập các node còn lại."
+          },
+          {
+            "match": "Storage inactive, unknown, hoặc pvesm status treo",
+            "meaning": "Tìm đúng backend từ qm config và xử lý storage/network trước; storage từ xa bị treo có thể ảnh hưởng nhiều VM."
+          }
+        ]
+      }
+    ],
+    "related_cases": [
+      "vm-wont-start",
+      "vm-locked",
+      "pve-quorum-lost",
+      "pvestatd-unknown",
+      "nfs-storage-offline",
+      "rbd-hang"
+    ],
+    "safety": "Đây là bước chẩn đoán ban đầu, không chứng minh nguyên nhân duy nhất. Chưa restart hàng loạt, xóa lock, thay đổi storage hoặc ép quorum trước khi giữ lại task log và xác nhận dữ liệu."
+  },
+  {
+    "id": "storage-slow",
+    "title": "Storage chậm / VM I/O latency cao",
+    "scope": "mixed",
+    "aliases": "storage slow latency high iops chậm chậm chạp lag disk io vm slow pvesm nfs ceph rbd iscsi datastore storage bị chậm storage chậm storgae",
+    "summary": "Bắt đầu bằng các phép đo chỉ đọc, xác định chậm ở node, thiết bị local hay backend dùng chung; sau đó chọn nhánh Ceph, NFS hoặc iSCSI theo loại storage.",
+    "steps": [
+      {
+        "title": "1. Xác định phạm vi và lấy baseline trên node Proxmox",
+        "why": "Ghi lại node, VMID, storage ID và thời gian bị chậm. Chạy đồng thời lúc có triệu chứng nếu có thể; lệnh iostat cần gói sysstat, nếu chưa cài thì bỏ qua lệnh này.",
+        "commands": [
+          "timeout 20 pvesm status",
+          "iostat -x 1 5",
+          "qm config <vmid>"
+        ],
+        "signals": [
+          {
+            "match": "Chỉ một VM bị chậm, các VM khác trên cùng node/storage bình thường",
+            "meaning": "So cấu hình disk, tác vụ backup/snapshot và guest; chưa kết luận backend storage lỗi."
+          },
+          {
+            "match": "Nhiều VM hoặc nhiều node cùng storage bị chậm",
+            "meaning": "Ưu tiên kiểm tra backend storage dùng chung, mạng và trạng thái cluster."
+          },
+          {
+            "match": "await cao hoặc %util duy trì cao trên cùng thiết bị",
+            "meaning": "Thiết bị đang bận hoặc có độ trễ; đối chiếu loại backend, queue và log lỗi, không chỉ nhìn một mẫu iostat."
+          }
+        ]
+      },
+      {
+        "title": "2. Kiểm tra storage và sức khỏe cluster",
+        "why": "Trước hết xác định storage ID trỏ tới backend nào. Chỉ chạy các bước Ceph/NFS/iSCSI bên dưới nếu chúng khớp loại storage của VM.",
+        "commands": [
+          "cat /etc/pve/storage.cfg"
+        ],
+        "signals": [
+          {
+            "match": "Loại storage là Ceph RBD, NFS, iSCSI/LVM hoặc local",
+            "meaning": "Chạy đúng nhánh backend bên dưới; tránh chạy lệnh Ceph trên storage không dùng Ceph."
+          }
+        ]
+      },
+      {
+        "title": "3. Nếu backend là Ceph/RBD",
+        "when": "Chỉ chạy khi storage trong cấu hình Proxmox là Ceph RBD.",
+        "why": "Đọc trạng thái health và latency OSD; đây là lệnh chỉ đọc, chưa chạy benchmark hay sửa trạng thái.",
+        "commands": [
+          "ceph -s",
+          "ceph health detail",
+          "ceph osd perf"
+        ],
+        "signals": [
+          {
+            "match": "Ceph có slow ops, recovery/backfill hoặc HEALTH_WARN/ERR",
+            "meaning": "Đối chiếu cảnh báo cụ thể với các case Ceph; recovery có thể cạnh tranh tài nguyên nhưng không mặc định là nguyên nhân duy nhất."
+          },
+          {
+            "match": "Một vài OSD có commit_latency hoặc apply_latency cao rõ rệt",
+            "meaning": "Khoanh vùng OSD rồi xem case latency OSD, thiết bị, BlueFS/DB và mạng trước khi cân nhắc thay đổi."
+          },
+          {
+            "match": "Ceph khỏe và OSD latency tương tự nhau",
+            "meaning": "Tiếp tục so sánh node, device, mạng và thời điểm workload; không kết luận Ceph là nguyên nhân chỉ vì VM đang dùng RBD."
+          }
+        ]
+      },
+      {
+        "title": "4. Nếu backend là NFS",
+        "when": "Chỉ chạy khi storage là NFS; các lệnh không cần thiết với RBD hoặc local storage.",
+        "why": "Đối chiếu mount ở host với log kernel quanh thời điểm chậm. Không unmount cưỡng bức khi VM còn I/O.",
+        "commands": [
+          "findmnt -t nfs,nfs4",
+          "journalctl -k --since \"1 hour ago\" | grep -Ei 'nfs|rpc|timeout|blocked|I/O error'"
+        ],
+        "signals": [
+          {
+            "match": "NFS mount không có/không phản hồi hoặc kernel log báo timeout/RPC",
+            "meaning": "Đối chiếu export, NFS server, firewall và mạng; xem case Storage NFS offline."
+          },
+          {
+            "match": "Không có log NFS và mount đang hoạt động",
+            "meaning": "Kiểm tra tải/latency phía NFS server và network path tại cùng thời điểm; một lần đọc findmnt không chứng minh I/O nhanh."
+          }
+        ]
+      },
+      {
+        "title": "5. Nếu backend là iSCSI hoặc multipath",
+        "when": "Chỉ chạy khi storage dùng iSCSI/LVM trên LUN hoặc multipath.",
+        "why": "Xác nhận session và thiết bị block mà node đang thấy. Nếu lệnh không có trên node, bỏ qua và kiểm tra theo runbook SAN/iSCSI.",
+        "commands": [
+          "iscsiadm -m session",
+          "lsblk"
+        ],
+        "signals": [
+          {
+            "match": "Session iSCSI mất hoặc thiết bị LUN không xuất hiện",
+            "meaning": "Kiểm tra target, fabric/network và đường multipath; không rescan, logout/login hoặc thay đổi LUN trước khi kiểm tra tác động lên VM."
+          },
+          {
+            "match": "Session và LUN đều hiện diện",
+            "meaning": "Đối chiếu lỗi/latency phía target và thiết bị; so kết quả trên node khác chỉ khi thao tác đọc an toàn."
+          }
+        ]
+      }
+    ],
+    "related_cases": [
+      "slow-ops",
+      "osd-latency-consumer-ssd",
+      "bluefs-spillover",
+      "pvestatd-unknown",
+      "nfs-storage-offline",
+      "rbd-hang"
+    ],
+    "safety": "Chẩn đoán chỉ đọc, nhưng iostat lấy mẫu trong vài giây. Chưa chạy benchmark, compact, restart service, remount/umount hay thay đổi cấu hình khi chưa khoanh vùng backend và xác nhận ảnh hưởng workload."
+  }
+]
