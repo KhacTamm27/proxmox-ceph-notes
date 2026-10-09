@@ -2,6 +2,8 @@
 
 Tài liệu cá nhân: 499 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệnh phá hủy hoặc ảnh hưởng dịch vụ, đọc kỹ trước khi chạy.
 
+**Mindmap tương tác (lọc lệnh, mở thẳng từng mục):** https://KhacTamm27.github.io/proxmox-ceph-notes/
+
 ## Cách tìm nhanh
 
 - Mới bắt đầu: mở mindmap, chọn lối đi theo nhu cầu (tìm lệnh, sửa lỗi Proxmox/Ceph, cấu hình network); mở case để đọc triệu chứng, nguyên nhân, các bước và lưu ý.
@@ -71,6 +73,7 @@ Tài liệu cá nhân: 499 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 | [Storage NFS offline hoặc không thêm được vào Proxmox](docs/cases/pve/nfs-storage-offline.md) | Storage NFS hiện dấu hỏi hoặc offline, không thêm được vào Datacenter > Storage, lệnh pvesm status chậm hoặc treo. |
 | [PBS S3: ENOENT hoặc Permission denied với cache, không thấy backup](docs/cases/pve/pbs-s3-permission.md) | Tạo hoặc mount datastore S3 báo ENOENT hoặc Permission denied, backup lỗi, hoặc PBS mới không thấy bản backup cũ. |
 | [Console VM qua proxy không kết nối (màn hình đen, 401, 403, 404, 502, WebSocket đứt)](docs/cases/pve/console-proxy-fail.md) | Bấm Remote Console trên portal chỉ thấy màn hình đen, báo không kết nối, hoặc F12 > Network thấy vncproxy hoặc vncwebsocket lỗi (401, 403, 404, 502, không lên 101). |
+| [PVE host hỏng đĩa boot, không có backup cấu hình: kiểm kê và dựng lại node](docs/cases/pve/pve-host-rebuild-no-config-backup.md) | Node Proxmox không khởi động do hỏng ổ boot, không có bản backup cấu hình node; VM hoặc dịch vụ Ceph trên node cần được khôi phục. |
 
 ## Runbook (quy trình thao tác từng bước)
 
@@ -84,6 +87,17 @@ Tài liệu cá nhân: 499 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 | [NAS NFS làm storage dùng chung cho cluster Proxmox](docs/runbooks/rb-nas-nfs-storage.md) | Cho 3 node Proxmox mount chung một thư mục xuất từ NFS server, chứa trực tiếp file .qcow2 hoặc .raw của VM. Dễ triển khai, phù hợp lab hoặc tải vừa phải. |
 | [Cấu hình Nginx proxy console cho VM Proxmox (noVNC qua portal)](docs/runbooks/rb-console-proxy-nginx.md) | Cho kỹ thuật hoặc khách hàng thao tác console VM ngay trên portal hoặc trang quản lý dịch vụ mà không phải mở thẳng giao diện Proxmox. Portal gửi URL kèm tiền tố tới Nginx proxy, Nginx bỏ tiền tố, rewrite đường dẫn API rồi chuyển xuống đúng node Proxmox (cổng 8006); mỗi node ứng với một cổng riêng trên proxy. |
 | [Gỡ lỗi console: lấy ticket qua API, áp cookie, mở URL chuẩn rồi kiểm tra bằng F12](docs/runbooks/rb-console-ticket-debug.md) | Kiểm tra từng chặng của đường console (Proxmox, proxy, trình duyệt) mà không cần portal: tự lấy ticket đăng nhập, áp vào trình duyệt, mở URL chuẩn qua proxy và dùng DevTools (F12) để thấy chặng nào lỗi. |
+| [ZFS: chọn RAID/vdev và tạo pool cho Proxmox](docs/runbooks/rb-zfs-vdev-layout.md) | Chọn bố cục ZFS phù hợp workload VM/CT, tạo pool mới an toàn và thêm pool làm storage trong Proxmox VE. |
+| [ZFS RAIDZ: mở rộng vdev bằng cách gắn thêm disk](docs/runbooks/rb-zfs-raidz-expansion.md) | Mở rộng một RAIDZ vdev hiện có bằng tính năng RAIDZ expansion của OpenZFS khi hệ thống và pool hỗ trợ. |
+| [ZFS: thêm hoặc gỡ L2ARC cache và hot spare](docs/runbooks/rb-zfs-cache-spare.md) | Quản lý thiết bị cache đọc L2ARC hoặc hot spare cho ZFS pool mà không nhầm với disk dữ liệu, SLOG hay backup. |
+| [Proxmox boot ZFS mirror: kiểm tra trước khi thay disk rpool](docs/runbooks/rb-zfs-rpool-replace.md) | Thu thập thông tin và chuẩn bị an toàn cho việc thay disk trong rpool mirror của Proxmox VE. |
+| [Proxmox ZFS replication: cấu hình và kiểm thử khôi phục VM](docs/runbooks/rb-pve-zfs-replication.md) | Cấu hình replication ZFS định kỳ giữa các node trong cùng cluster PVE và kiểm thử khả năng khôi phục mà không tạo VM trùng hoặc gây split-brain. |
+| [P2V Linux/Ubuntu: chuyển disk vật lý thành VM trên Proxmox](docs/runbooks/rb-p2v-linux.md) | Tạo bản disk image nhất quán của máy Linux vật lý, import vào Proxmox VE và xác nhận VM mới boot/hoạt động trước khi dừng máy nguồn. |
+| [P2V Windows: Disk2vhd, import VHDX và cài driver Proxmox](docs/runbooks/rb-p2v-windows.md) | Chuyển một máy Windows vật lý sang VM Proxmox bằng VHD/VHDX, giữ máy nguồn và kiểm thử bản sao trước khi cutover. |
+| [V2V Hyper-V sang Proxmox bằng StarWind V2V Converter](docs/runbooks/rb-v2v-hyperv.md) | Chuyển VM từ Hyper-V sang Proxmox, giữ nguyên bản nguồn và kiểm thử VM đích trước khi chuyển dịch vụ. |
+| [V2V VMware ESXi sang Proxmox bằng StarWind V2V Converter](docs/runbooks/rb-v2v-esxi.md) | Chuyển VM từ ESXi sang Proxmox bằng converter, kiểm thử trong môi trường cô lập và giữ nguyên nguồn để rollback. |
+| [Di chuyển VM giữa hai cluster Proxmox bằng remote migration](docs/runbooks/rb-pve-cross-cluster-migrate.md) | Di chuyển VM giữa hai cluster PVE độc lập bằng remote migration, kiểm soát quyền API, mapping network/storage và cutover. |
+| [Xóa node Proxmox khỏi cluster an toàn (VM, HA và Ceph)](docs/runbooks/rb-pve-remove-node.md) | Gỡ một node PVE khỏi cluster sau khi đã xử lý workload, HA và mọi dịch vụ Ceph gắn với node đó. |
 
 ## Script tiện ích
 
@@ -147,7 +161,7 @@ Tài liệu cá nhân: 499 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 Sau khi sửa, chạy:
 
 ```bash
-python3 scripts/build.py --repo <user>/<repo>
+python3 scripts/build.py --repo KhacTamm27/proxmox-ceph-notes
 ```
 
 Lệnh trên sinh lại README này, toàn bộ `docs/**/*.md` và `docs/index.html`.

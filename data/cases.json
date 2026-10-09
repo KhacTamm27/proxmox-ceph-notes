@@ -2256,9 +2256,9 @@
   "kind": "runbook",
   "scope": "pve",
   "title": "PBS: tạo Datastore S3 với local cache ZFS và backup từ PVE",
-  "tags": "runbook pbs proxmox backup server s3 datastore local cache zfs endpoint path style bucket backup dedup",
+  "tags": "runbook pbs proxmox backup server s3 datastore local cache zfs endpoint path style bucket backup dedup restore adopt migration longvan long vân",
   "goal": "Dùng một bucket S3 (nhà cung cấp S3-compatible) làm datastore của PBS 4.x, có vùng đệm local cache trên ZFS, rồi thêm vào PVE và backup thử.",
-  "prereq": "PBS 4.x đã cài. Có Access Key và Secret Key của nhà cung cấp S3. Có một SSD hoặc mảng ZFS làm cache. Datastore S3 hiện ghi là tech preview.",
+  "prereq": "PBS 4.x đã cài. Có thông tin xác thực S3 được lưu an toàn (không đưa key vào command/log/tài liệu). Có một SSD hoặc mảng ZFS làm cache. Datastore S3 hiện là tech preview.",
   "steps": [
    {
     "t": "Tạo cache ZFS với điểm mount riêng, không lồng trong datastore local khác (tránh lỗi nested datastore), cấp quyền cho user backup",
@@ -2269,11 +2269,11 @@
     ]
    },
    {
-    "t": "Trên PBS Web GUI: Configuration, S3 Endpoints, Add. Điền ID, Endpoint (<s3-endpoint>), Access Key, Secret Key, tích Path Style (bắt buộc), Fingerprint (<fingerprint>)",
+    "t": "Trên PBS Web GUI: Configuration, S3 Endpoints, Add. Điền ID, Endpoint (<s3-endpoint>), Access Key và Secret Key an toàn; chọn Path Style theo yêu cầu của nhà cung cấp (một số S3-compatible endpoint bắt buộc bật), nhập Fingerprint nếu được yêu cầu",
     "cmds": []
    },
    {
-    "t": "Datastore, Add Datastore: Name, Type = S3 (tech preview), Local Cache = /s3-cache, S3 Endpoint ID, Bucket = <bucket>. Mục Advanced tích Overwrite in-use marker (cho phép datastore này giành quyền kiểm soát bucket đang bị đánh dấu in-use, xem runbook khôi phục khi PBS hỏng)",
+    "t": "Datastore, Add Datastore: Name, Type = S3 (tech preview), Local Cache = /s3-cache, S3 Endpoint ID, Bucket = <bucket>. Với bucket mới, để Overwrite in-use marker tắt. Chỉ bật khi nhận lại bucket cũ theo runbook khôi phục PBS và đã tắt hẳn PBS cũ.",
     "cmds": []
    },
    {
@@ -2287,7 +2287,7 @@
     "cmds": []
    }
   ],
-  "notes": "Dung lượng trên S3 thường nhỏ hơn nhiều so với đĩa VM (ví dụ VM đĩa 50GB chỉ khoảng 2.4GB) nhờ deduplication, nén, và bỏ qua vùng trống. Nếu bật Encryption thì phải lưu file key mã hóa (.json) hoặc mật khẩu ở nơi an toàn: mất key là mất dữ liệu vĩnh viễn dù S3 còn nguyên. Thư mục cache phải thuộc user backup, nếu gặp ENOENT hoặc Permission denied thì chạy chown -R backup:backup <đường dẫn cache>."
+  "notes": "Dung lượng trên S3 phụ thuộc dữ liệu thực tế, deduplication, nén và vùng trống; không lấy một ví dụ dung lượng làm cam kết. Nếu bật Encryption thì phải lưu file key mã hóa (.json) hoặc mật khẩu ở nơi an toàn: mất key là mất dữ liệu vĩnh viễn dù S3 còn nguyên. Thư mục cache phải thuộc user backup; chỉ khi đường dẫn cache đã được kiểm tra đúng mới cân nhắc chown -R backup:backup <đường dẫn cache>. Không ghi Access Key, Secret Key, endpoint riêng tư hoặc fingerprint của môi trường thật vào tài liệu công khai. Nhận lại bucket cũ xem [case phục hồi PBS S3](../cases/pve/pbs-s3-recovery.md)."
  },
  {
   "id": "rb-pve5-to-8-single",
@@ -2839,5 +2839,581 @@
    }
   ],
   "notes": "Các bước kiểm tra chi tiết từng chặng (lấy ticket, đặt cookie, URL chuẩn, đọc F12) nằm trong runbook gỡ lỗi console. Cấu hình proxy chuẩn nằm trong runbook Nginx proxy console."
+ },
+ {
+  "id": "pve-host-rebuild-no-config-backup",
+  "scope": "pve",
+  "kind": "case",
+  "title": "PVE host hỏng đĩa boot, không có backup cấu hình: kiểm kê và dựng lại node",
+  "tags": "proxmox pve host node hỏng disk boot cài lại reinstall không có backup config mất cấu hình network ceph osd mon mgr mds rebuild cluster",
+  "symptoms": "Node Proxmox không khởi động do hỏng ổ boot, không có bản backup cấu hình node; VM hoặc dịch vụ Ceph trên node cần được khôi phục.",
+  "causes": "Cài lại hệ điều hành làm mất cấu hình cục bộ của node. Trạng thái VM và dữ liệu Ceph có thể vẫn còn trên storage hoặc các ổ dữ liệu, nhưng phải kiểm kê trước khi gỡ node hay khởi tạo lại ổ.",
+  "steps": [
+   {
+    "t": "Xác nhận node hỏng thực sự đã tắt, cluster còn quorum và ghi lại trạng thái Ceph/storage",
+    "cmds": [
+     "pvecm status",
+     "pvecm nodes",
+     "ceph -s",
+     "ceph osd tree",
+     "pvesm status"
+    ]
+   },
+   {
+    "t": "Kiểm kê VM/CT, vị trí disk và dịch vụ từng chạy trên node; không chuyển hoặc sửa file cấu hình hàng loạt",
+    "cmds": [
+     "pvesh get /cluster/resources --type vm",
+     "ha-manager status",
+     "ceph mon dump",
+     "ceph mgr dump",
+     "ceph fs status"
+    ]
+   },
+   {
+    "t": "Trước khi cài lại: xác định chính xác ổ boot và các ổ dữ liệu cần giữ; ghi lại hostname, IP/VLAN, bridge/OVS, PVE/Ceph version và WWN/serial",
+    "cmds": [
+     "lsblk -o NAME,SIZE,SERIAL,WWN,FSTYPE,MOUNTPOINTS",
+     "pveversion -v"
+    ]
+   },
+   {
+    "t": "Nếu cần xóa node khỏi cluster hoặc dựng node thay thế, làm theo runbook xóa node và xử lý Ceph trước; chỉ cài lại đúng phiên bản tương thích, cấu hình network rồi mới join",
+    "cmds": []
+   },
+   {
+    "t": "Sau khi join, đối chiếu lại membership, Ceph, storage, VM/CT và chứng chỉ trước khi đưa workload trở lại",
+    "cmds": [
+     "pvecm status",
+     "ceph -s",
+     "ceph osd tree",
+     "pvesm status",
+     "pvesh get /cluster/resources --type vm"
+    ]
+   }
+  ],
+  "notes": "Không chạy `pvecm delnode`, xóa `/etc/pve/nodes`, format/zap ổ dữ liệu hoặc copy bằng `mv` các file `*.conf` trước khi biết rõ node nào đang sở hữu VM, trạng thái Ceph và loại storage. Không coi lệnh `pvecm delnode` là thao tác dọn OSD/MON/MGR/MDS. Khi thiếu bản backup cấu hình, dựng lại thông tin network và version từ các node còn sống, switch/IPAM và hồ sơ vận hành; không đưa keyring, chứng chỉ riêng, endpoint hoặc credential vào kho tài liệu. Nếu dữ liệu Ceph trên ổ cũ cần giữ, dừng và dùng quy trình recovery Ceph phù hợp thay vì tạo OSD mới lên ổ đó. Xem thêm [runbook xóa node PVE](../../runbooks/rb-pve-remove-node.md)."
+ },
+ {
+  "id": "rb-zfs-vdev-layout",
+  "kind": "runbook",
+  "scope": "pve",
+  "title": "ZFS: chọn RAID/vdev và tạo pool cho Proxmox",
+  "tags": "zfs raid vdev mirror raidz raidz1 raidz2 raidz3 raid10 draid chọn topology dung lượng dự phòng tạo pool zpool create storage proxmox",
+  "goal": "Chọn bố cục ZFS phù hợp workload VM/CT, tạo pool mới an toàn và thêm pool làm storage trong Proxmox VE.",
+  "prereq": "Đây là thao tác tạo pool mới, sẽ khởi tạo các disk đã chọn. Có backup độc lập nếu disk từng chứa dữ liệu. Ghi lại model, dung lượng, serial/WWN, sector size và workload; ưu tiên disk cùng dung lượng, loại và độ bền.",
+  "steps": [
+   {
+    "t": "Kiểm kê ổ đĩa và xác nhận pool hiện tại; đối chiếu serial/WWN, không dựa vào tên /dev/sdX",
+    "cmds": [
+     "lsblk -o NAME,SIZE,SERIAL,WWN,MODEL,FSTYPE,MOUNTPOINTS",
+     "ls -l /dev/disk/by-id/",
+     "zpool status -v"
+    ]
+   },
+   {
+    "t": "Chọn topology trước khi tạo. Với VM/CT, mirror vdev thường cho IOPS tốt; RAIDZ đổi lấy hiệu quả dung lượng nhưng có thể tăng write amplification cho ZVOL",
+    "cmds": []
+   },
+   {
+    "t": "Ví dụ tạo pool mirror mới bằng ID ổ ổn định; thay toàn bộ placeholder và xác nhận đúng hai ổ trống trước khi chạy",
+    "cmds": [
+     "zpool create -o ashift=12 <pool-name> mirror /dev/disk/by-id/<disk-a> /dev/disk/by-id/<disk-b>"
+    ]
+   },
+   {
+    "t": "Xác minh trạng thái pool, sau đó thêm vào Datacenter > Storage > Add > ZFS và chọn đúng pool/content",
+    "cmds": [
+     "zpool status -v <pool-name>",
+     "zfs list"
+    ]
+   }
+  ],
+  "notes": "Bảng ước lượng (N là số disk trong một vdev; dung lượng thực tế còn phụ thuộc parity, metadata, ashift, compression và mức sử dụng):\n\n| Bố cục | Số disk tối thiểu | Khả năng chịu lỗi | Dung lượng thô khả dụng gần đúng |\n|---|---:|---|---:|\n| Single | 1 | Không có dự phòng | Gần 1 disk, không có parity |\n| Mirror | 2 | Có thể hỏng nhiều disk nếu mỗi mirror còn ít nhất một disk tốt | Gần bằng dung lượng một disk trong từng mirror vdev |\n| RAIDZ1 | 3 | 1 disk trong mỗi vdev | N - 1 disk |\n| RAIDZ2 | 4 | 2 disk trong mỗi vdev | N - 2 disk |\n| RAIDZ3 | 5 | 3 disk trong mỗi vdev | N - 3 disk |\n| RAID10 kiểu ZFS | 4 | Ít nhất một disk mỗi cặp mirror; số disk hỏng chịu được tùy cặp | Gần 50% tổng dung lượng disk |\n\nMirror vdevs thường phù hợp hơn cho workload VM ngẫu nhiên; không có một mức hiệu suất cố định áp dụng cho mọi ổ và mọi workload. RAIDZ parity không phải backup. Topology pool khó đổi sau khi tạo; không thêm một disk lẻ như mirror/RAIDZ mới nếu chưa hiểu rằng mỗi top-level vdev bổ sung ảnh hưởng tới khả năng chịu lỗi của cả pool. `ashift` không thể đổi tại chỗ sau khi tạo. Không dùng `-f` để bỏ qua cảnh báo disk đang có dữ liệu. dRAID và các cấu hình nâng cao cần sizing/kiểm tra riêng, không suy ra cấu hình từ bảng đơn giản này.",
+  "refs": [
+   {
+    "t": "Proxmox VE Wiki: ZFS on Linux (space, redundancy và workload VM)",
+    "u": "https://pve.proxmox.com/wiki/ZFS_on_Linux"
+   }
+  ]
+ },
+ {
+  "id": "rb-zfs-raidz-expansion",
+  "kind": "runbook",
+  "scope": "pve",
+  "title": "ZFS RAIDZ: mở rộng vdev bằng cách gắn thêm disk",
+  "tags": "zfs raidz expansion raidz_expansion zpool attach thêm disk tăng dung lượng pool raidz1 raidz2 proxmox openzfs 2.3",
+  "goal": "Mở rộng một RAIDZ vdev hiện có bằng tính năng RAIDZ expansion của OpenZFS khi hệ thống và pool hỗ trợ.",
+  "prereq": "Cần OpenZFS 2.3 trở lên và feature raidz_expansion khả dụng trên pool; xác nhận chính xác phiên bản module đang chạy trên node. Có backup kiểm chứng được, cửa sổ bảo trì phù hợp và disk mới có dung lượng ít nhất bằng disk nhỏ nhất trong vdev.",
+  "steps": [
+   {
+    "t": "Xác nhận pool khỏe, đúng vdev RAIDZ cần mở rộng và ghi lại serial/WWN của disk mới",
+    "cmds": [
+     "zfs version",
+     "zpool status -v <pool-name>",
+     "zpool get feature@raidz_expansion <pool-name>",
+     "ls -l /dev/disk/by-id/"
+    ]
+   },
+   {
+    "t": "Nếu feature chưa bật nhưng được hỗ trợ, bật feature trên đúng pool. Nếu feature không tồn tại hoặc pool degraded, dừng và xử lý điều kiện đó trước",
+    "cmds": [
+     "zpool set feature@raidz_expansion=enabled <pool-name>"
+    ]
+   },
+   {
+    "t": "Gắn disk mới vào đúng RAIDZ vdev; xác nhận lại từng placeholder trước khi chạy vì thao tác bắt đầu tái bố trí dữ liệu",
+    "cmds": [
+     "zpool attach <pool-name> <raidz-vdev-name> /dev/disk/by-id/<new-disk-id>"
+    ]
+   },
+   {
+    "t": "Theo dõi tiến trình expansion và kiểm tra pool sau khi hoàn tất",
+    "cmds": [
+     "zpool status -v <pool-name>",
+     "zpool list <pool-name>"
+    ]
+   }
+  ],
+  "notes": "Không nhầm thao tác này với thêm một top-level vdev bằng `zpool add`. Expansion đọc và ghi lại dữ liệu của RAIDZ vdev nên có thể chạy lâu, tạo tải I/O và kết thúc bằng scrub. RAIDZ1/2/3 vẫn chịu lỗi lần lượt 1/2/3 disk như trước; expansion không tăng mức parity và không thể thu nhỏ/rollback theo cách thông thường. Không dùng disk nhỏ hơn disk nhỏ nhất hiện có. Nếu `zpool get feature@raidz_expansion` báo không nhận biết feature, không thử chạy `zpool attach` như một phép thay disk mirror.",
+  "refs": [
+   {
+    "t": "OpenZFS zpool-attach: RAIDZ expansion requirements and behavior",
+    "u": "https://openzfs.github.io/openzfs-docs/man/master/8/zpool-attach.8.html"
+   }
+  ]
+ },
+ {
+  "id": "rb-zfs-cache-spare",
+  "kind": "runbook",
+  "scope": "pve",
+  "title": "ZFS: thêm hoặc gỡ L2ARC cache và hot spare",
+  "tags": "zfs l2arc cache spare hot spare zpool add remove disk dự phòng tăng tốc cache autoreplace",
+  "goal": "Quản lý thiết bị cache đọc L2ARC hoặc hot spare cho ZFS pool mà không nhầm với disk dữ liệu, SLOG hay backup.",
+  "prereq": "Pool phải khỏe, có backup phù hợp và đã xác định chính xác thiết bị theo serial/WWN. Thiết bị spare nên đủ lớn để thay disk cần bảo vệ. Xác nhận loại vdev và cách bỏ thiết bị theo phiên bản OpenZFS trước khi thao tác.",
+  "steps": [
+   {
+    "t": "Kiểm tra pool, thiết bị đang tham gia và đường dẫn ổn định",
+    "cmds": [
+     "zpool status -P <pool-name>",
+     "ls -l /dev/disk/by-id/"
+    ]
+   },
+   {
+    "t": "Thêm thiết bị L2ARC cache đọc hoặc hot spare vào đúng pool. Chọn đúng một lệnh phù hợp với vai trò; không chạy cả hai nếu chỉ triển khai một thiết bị",
+    "cmds": [
+     "zpool add <pool-name> cache /dev/disk/by-id/<cache-disk-id>",
+     "zpool add <pool-name> spare /dev/disk/by-id/<spare-disk-id>"
+    ]
+   },
+   {
+    "t": "Xác minh vai trò thiết bị trong pool",
+    "cmds": [
+     "zpool status -P <pool-name>"
+    ]
+   },
+   {
+    "t": "Khi gỡ, chỉ chọn đúng device đang hiển thị dưới cache/spares; không chọn leaf device của data vdev",
+    "cmds": [
+     "zpool remove <pool-name> /dev/disk/by-id/<exact-cache-or-spare-id>",
+     "zpool status -P <pool-name>"
+    ]
+   }
+  ],
+  "notes": "L2ARC là read cache, không phải write cache, metadata repair hay nơi lưu dữ liệu bền vững; cache device lỗi thường không làm mất dữ liệu pool. SLOG (separate intent log) là vai trò khác và không nên gọi chung là cache. Hot spare chỉ là thiết bị dự phòng; pool vẫn cần redundancy phù hợp và spare không thay thế backup. Có thể cấu hình autoreplace riêng, nhưng không bắt buộc chỉ để đăng ký hot spare: `autoreplace` điều khiển nhận diện thiết bị thay cùng vị trí, không phải lệnh thêm spare. Nếu spare đang được dùng để thay disk lỗi, không gỡ spare cho đến khi replacement/resilver hoàn tất và `zpool status` xác nhận trạng thái an toàn. Không dùng `/dev/sdX` làm danh tính ổ; không gỡ device nào nếu `zpool status -P` không xác nhận rõ đó là cache hoặc spare.",
+  "refs": [
+   {
+    "t": "OpenZFS zpoolconcepts: cache and spare devices",
+    "u": "https://openzfs.github.io/openzfs-docs/man/master/7/zpoolconcepts.7.html"
+   }
+  ]
+ },
+ {
+  "id": "rb-zfs-rpool-replace",
+  "kind": "runbook",
+  "scope": "pve",
+  "title": "Proxmox boot ZFS mirror: kiểm tra trước khi thay disk rpool",
+  "tags": "zfs rpool root boot disk mirror thay disk lỗi replace bootloader efi grub proxmox-boot-tool disk boot zpool replace",
+  "goal": "Thu thập thông tin và chuẩn bị an toàn cho việc thay disk trong rpool mirror của Proxmox VE.",
+  "prereq": "Cần xác định node, PVE version, trạng thái rpool, boot mode (UEFI/Legacy), bootloader (proxmox-boot-tool/GRUB), partition layout và chính xác disk cũ/mới. Tài liệu PDF nguồn chỉ có phần giới thiệu và ảnh không trích được lệnh thay thế; vì vậy runbook này cố ý dừng trước các lệnh ghi/xóa.",
+  "steps": [
+   {
+    "t": "Ghi lại phiên bản và tình trạng rpool, gồm đường dẫn thiết bị đầy đủ",
+    "cmds": [
+     "pveversion -v",
+     "zpool status -P -v rpool"
+    ]
+   },
+   {
+    "t": "Đối chiếu tên, dung lượng, serial/WWN, phân vùng và filesystem của tất cả ổ; xác nhận ổ mới không chứa dữ liệu cần giữ",
+    "cmds": [
+     "lsblk -o NAME,SIZE,SERIAL,WWN,PARTUUID,FSTYPE,MOUNTPOINTS"
+    ]
+   },
+   {
+    "t": "Nếu hệ thống dùng proxmox-boot-tool, ghi nhận trạng thái EFI; nếu không nhận diện rõ bootloader hoặc mirror đang degraded nặng, dừng và chuyển sang quy trình chính thức phù hợp",
+    "cmds": [
+     "proxmox-boot-tool status"
+    ]
+   },
+   {
+    "t": "Chỉ sau khi xác định đúng layout và đã có backup: thực hiện quy trình replace theo tài liệu PVE hiện hành cho đúng boot mode, rồi theo dõi resilver và thử boot từ disk thay thế trong cửa sổ bảo trì",
+    "cmds": [
+     "zpool status -P -v rpool"
+    ]
+   }
+  ],
+  "notes": "Không chạy `zpool replace`, `sgdisk`, `wipefs`, `proxmox-boot-tool format/init` hoặc `grub-install` theo một lệnh mẫu chung khi chưa đối chiếu phân vùng, sector/WWN và boot mode; chọn nhầm disk có thể phá hủy rpool hoặc làm node không boot. Sau replace phải xác minh cả resilver lẫn khả năng boot độc lập từ ổ còn lại. Do PDF gốc không có các bước thay ổ dạng văn bản, không suy diễn một chuỗi lệnh destructive từ ảnh thiếu.",
+  "refs": [
+   {
+    "t": "Proxmox VE Admin Guide",
+    "u": "https://pve.proxmox.com/pve-docs/pve-admin-guide.html"
+   },
+   {
+    "t": "OpenZFS zpool-replace manual",
+    "u": "https://openzfs.github.io/openzfs-docs/man/master/8/zpool-replace.8.html"
+   }
+  ]
+ },
+ {
+  "id": "rb-pve-zfs-replication",
+  "kind": "runbook",
+  "scope": "pve",
+  "title": "Proxmox ZFS replication: cấu hình và kiểm thử khôi phục VM",
+  "tags": "proxmox pve zfs replication replicate pvesr sao chép VM node đích target schedule RPO failover recovery",
+  "goal": "Cấu hình replication ZFS định kỳ giữa các node trong cùng cluster PVE và kiểm thử khả năng khôi phục mà không tạo VM trùng hoặc gây split-brain.",
+  "prereq": "Các node đã join cùng cluster và có quorum. Mỗi node có ZFS pool khỏe; storage ID phải được khai báo nhất quán, storage đích khả dụng và đủ dung lượng. Có backup riêng: replication không thay thế backup và không sao chép trạng thái RAM của VM.",
+  "steps": [
+   {
+    "t": "Kiểm tra cluster, ZFS pool và storage trên node nguồn/đích",
+    "cmds": [
+     "pvecm status",
+     "zpool status -v",
+     "pvesm status"
+    ]
+   },
+   {
+    "t": "Trên Datacenter > Replication > Add, chọn VM nguồn, node đích và schedule; bảo đảm mọi disk cần bảo vệ nằm trên storage hỗ trợ replication",
+    "cmds": []
+   },
+   {
+    "t": "Chạy đồng bộ đầu tiên, kiểm tra job status/log và xác nhận volume đã có trên storage node đích",
+    "cmds": [
+     "pvesr status",
+     "zpool status -v"
+    ]
+   },
+   {
+    "t": "Diễn tập khôi phục trong cửa sổ bảo trì: xác nhận VM nguồn đã tắt/fenced trước, rồi start VM ở node đích theo quy trình vận hành; kiểm tra OS, ứng dụng, network và độ mới dữ liệu",
+    "cmds": [
+     "pvesr status",
+     "qm status <vmid>"
+    ]
+   }
+  ],
+  "notes": "Không tạo VM thứ hai với VMID khác rồi đổi VMID thủ công sau replication. Proxmox quản lý cấu hình và volume replica theo job; sửa tay hoặc khởi chạy đồng thời hai bản VM có thể làm hỏng dữ liệu. Schedule 5 phút chỉ đặt giới hạn mục tiêu RPO theo lịch, không bảo đảm bản sao luôn mới đúng 5 phút; lần chạy lỗi hoặc kéo dài sẽ làm RPO tăng. Replication đơn thuần không tự bật VM khi node lỗi trừ khi đã cấu hình HA theo cách phù hợp. Không start bản replica khi chưa chắc node nguồn đã tắt/fenced.",
+  "refs": [
+   {
+    "t": "Proxmox VE pvesr manual",
+    "u": "https://pve.proxmox.com/pve-docs/pvesr.1.html"
+   }
+  ]
+ },
+ {
+  "id": "rb-p2v-linux",
+  "kind": "runbook",
+  "scope": "pve",
+  "title": "P2V Linux/Ubuntu: chuyển disk vật lý thành VM trên Proxmox",
+  "tags": "p2v linux ubuntu physical to virtual chuyển máy vật lý sang vm dd raw ssh qm importdisk boot uefi bios migration",
+  "goal": "Tạo bản disk image nhất quán của máy Linux vật lý, import vào Proxmox VE và xác nhận VM mới boot/hoạt động trước khi dừng máy nguồn.",
+  "prereq": "Có backup đã thử khôi phục, VMID/storage đích và dung lượng tối thiểu bằng kích thước disk nguồn. Ưu tiên shutdown máy nguồn hoặc boot rescue để disk không bị ghi trong lúc copy; dừng/quiesce ứng dụng theo quy trình riêng.",
+  "steps": [
+   {
+    "t": "Trên máy nguồn, xác định đúng whole-disk theo model/serial/WWN và bảo đảm filesystem không còn được ghi",
+    "cmds": [
+     "lsblk -o NAME,SIZE,SERIAL,WWN,FSTYPE,MOUNTPOINTS"
+    ]
+   },
+   {
+    "t": "Copy raw image qua SSH vào đường dẫn có đủ dung lượng trên node PVE; dùng đường dẫn by-id đã xác nhận, không dùng ví dụ /dev/sda một cách máy móc",
+    "cmds": [
+     "dd if=/dev/disk/by-id/<source-disk-id> bs=16M status=progress | ssh root@<pve-node> \"cat > <destination-path>/<vmid>-disk.raw\""
+    ]
+   },
+   {
+    "t": "Tạo VM với BIOS/UEFI, CPU, RAM và NIC phù hợp nguồn; import raw disk vào storage đích",
+    "cmds": [
+     "qm create <vmid> --name <vm-name> --memory <MiB> --cores <count> --net0 virtio,bridge=<bridge>",
+     "qm importdisk <vmid> <destination-path>/<vmid>-disk.raw <target-storage>"
+    ]
+   },
+   {
+    "t": "Trong Hardware của VM, gắn Unused Disk vào bus phù hợp, đặt thứ tự boot rồi thử khởi động trong network/VLAN cô lập",
+    "cmds": [
+     "qm config <vmid>",
+     "qm status <vmid>"
+    ]
+   }
+  ],
+  "notes": "Lệnh `dd` đọc toàn bộ disk nên file raw có thể bằng dung lượng toàn ổ, kể cả vùng trống. Không chạy trên disk đang ghi nếu cần dữ liệu nhất quán (nhất là database); `dd` qua SSH bị ngắt thường để lại file dở dang và không tự resume. Kiểm tra destination path không trùng file cần giữ, quyền truy cập và dung lượng trước khi copy. Sau import, Proxmox có thể hiển thị disk là `Unused Disk`; gắn disk qua GUI hoặc theo đúng cấu hình VM đang dùng, không đoán volume ID. Giữ máy nguồn lại đến khi xác minh boot, dữ liệu, dịch vụ và network.",
+  "refs": [
+   {
+    "t": "Proxmox VE qm manual (create/import disk)",
+    "u": "https://pve.proxmox.com/pve-docs/qm.1.html"
+   }
+  ]
+ },
+ {
+  "id": "rb-p2v-windows",
+  "kind": "runbook",
+  "scope": "pve",
+  "title": "P2V Windows: Disk2vhd, import VHDX và cài driver Proxmox",
+  "tags": "p2v windows physical server pc disk2vhd vhdx vhd importdisk virtio driver sata uefi efi bcd chuyển máy vật lý",
+  "goal": "Chuyển một máy Windows vật lý sang VM Proxmox bằng VHD/VHDX, giữ máy nguồn và kiểm thử bản sao trước khi cutover.",
+  "prereq": "Backup máy nguồn và ứng dụng đã kiểm tra. Kiểm kê dung lượng, partition/volume hệ thống và dữ liệu; biết BIOS Legacy hay UEFI. Suspend/decrypt BitLocker theo chính sách và giữ recovery key ngoại tuyến an toàn. Có đủ dung lượng tạm cho image.",
+  "steps": [
+   {
+    "t": "Trên Windows nguồn, dùng Disk2vhd từ Microsoft Sysinternals; chọn đủ các volume cần boot (bao gồm EFI/System Reserved và volume phục hồi cần thiết), xác nhận VSS thành công",
+    "cmds": []
+   },
+   {
+    "t": "Copy file VHD/VHDX sang node PVE và tạo VM với firmware khớp máy nguồn; UEFI cần cấu hình OVMF và EFI disk",
+    "cmds": [
+     "qm create <vmid> --name <vm-name> --memory <MiB> --cores <count> --net0 e1000,bridge=<bridge>"
+    ]
+   },
+   {
+    "t": "Import disk vào storage đích; gắn disk import được vào SATA tạm thời để Windows boot bằng driver có sẵn",
+    "cmds": [
+     "qm importdisk <vmid> <path-to-image.vhdx> <target-storage>",
+     "qm config <vmid>"
+    ]
+   },
+   {
+    "t": "Boot trong network cô lập, cài VirtIO drivers và QEMU Guest Agent; chỉ sau khi driver controller đã được cài và kiểm tra mới chuyển disk/NIC sang VirtIO",
+    "cmds": [
+     "qm status <vmid>"
+    ]
+   },
+   {
+    "t": "Kiểm tra boot, dữ liệu, dịch vụ và network; chỉ cutover sau khi có phương án quay lại máy nguồn",
+    "cmds": []
+   }
+  ],
+  "notes": "Không đổi firmware Legacy/UEFI hoặc chuyển SATA sang VirtIO ngay trước lần boot đầu. Lỗi boot/BCD không có một chuỗi `bootrec` áp dụng cho mọi máy; trước tiên xác nhận đúng disk, EFI/System Reserved partition và firmware rồi dùng Windows Recovery phù hợp. VSS giúp tạo snapshot filesystem nhưng không bảo đảm nhất quán ứng dụng cho mọi database; quiesce dịch vụ hoặc dùng backup application-consistent khi cần. Không xóa/ghi đè máy nguồn sau khi export cho tới khi VM mới được nghiệm thu.",
+  "refs": [
+   {
+    "t": "Microsoft Sysinternals Disk2vhd",
+    "u": "https://learn.microsoft.com/en-us/sysinternals/downloads/disk2vhd"
+   },
+   {
+    "t": "Proxmox VE qm manual",
+    "u": "https://pve.proxmox.com/pve-docs/qm.1.html"
+   }
+  ]
+ },
+ {
+  "id": "rb-v2v-hyperv",
+  "kind": "runbook",
+  "scope": "pve",
+  "title": "V2V Hyper-V sang Proxmox bằng StarWind V2V Converter",
+  "tags": "v2v hyper-v hyperv microsoft starwind converter proxmox pve vhdx gen2 uefi ovmf virtio migrate vm",
+  "goal": "Chuyển VM từ Hyper-V sang Proxmox, giữ nguyên bản nguồn và kiểm thử VM đích trước khi chuyển dịch vụ.",
+  "prereq": "Xác nhận phiên bản StarWind V2V và PVE tương thích; có backup độc lập, dung lượng đích và cửa sổ cutover. Kiểm kê Generation 1/2, BIOS/UEFI, disk/checkpoint và ứng dụng. Dùng credential an toàn, không ghi password/token vào tài liệu hoặc log.",
+  "steps": [
+   {
+    "t": "Kiểm tra backup và checkpoint của VM nguồn; thống nhất với chủ ứng dụng cách quiesce/shutdown để có bản chuyển đổi nhất quán",
+    "cmds": []
+   },
+   {
+    "t": "Trong StarWind V2V chọn Hyper-V làm nguồn, xác thực host, chọn đúng VM và chọn Proxmox VE làm đích",
+    "cmds": []
+   },
+   {
+    "t": "Đặt VMID/name/storage đích và định dạng được storage hỗ trợ; với ZFS chọn Raw/ZVOL, không ép qcow2",
+    "cmds": [
+     "pvesm status"
+    ]
+   },
+   {
+    "t": "Convert, đọc log tới trạng thái hoàn tất rồi cấu hình firmware tương ứng; VM Generation 2 thường cần OVMF và EFI disk",
+    "cmds": []
+   },
+   {
+    "t": "Boot target trên network cô lập, cài VirtIO drivers/Guest Agent và kiểm tra ứng dụng; chỉ cutover sau khi tắt VM nguồn để tránh hai bản cùng chạy",
+    "cmds": [
+     "qm config <vmid>",
+     "qm status <vmid>"
+    ]
+   }
+  ],
+  "notes": "Không giả định conversion trực tiếp khi VM đang bật là application-consistent hoặc không có data loss. Giữ Hyper-V VM và checkpoint/source disk đến khi nghiệm thu. Nếu cần đổi Windows từ controller SATA sang SCSI/VirtIO, cài và kiểm tra driver trước, rồi đổi trong maintenance window. Không xóa checkpoint/snapshot nguồn hoặc gỡ Hyper-V VM như bước xử lý lỗi mặc định; đánh giá backup và trạng thái merge trước.",
+  "refs": [
+   {
+    "t": "Proxmox VE qm manual",
+    "u": "https://pve.proxmox.com/pve-docs/qm.1.html"
+   }
+  ]
+ },
+ {
+  "id": "rb-v2v-esxi",
+  "kind": "runbook",
+  "scope": "pve",
+  "title": "V2V VMware ESXi sang Proxmox bằng StarWind V2V Converter",
+  "tags": "v2v vmware esxi vmfs vsan starwind converter proxmox pve vmdk zfs raw ovmf migration",
+  "goal": "Chuyển VM từ ESXi sang Proxmox bằng converter, kiểm thử trong môi trường cô lập và giữ nguyên nguồn để rollback.",
+  "prereq": "Xác minh tương thích của đúng phiên bản StarWind V2V với phiên bản PVE hiện tại trên tài liệu nhà cung cấp; không dựa vào ghi chú tương thích PVE 9.x đã cũ. Có backup, kiểm kê snapshot/disk/firmware và dung lượng ZFS đích đủ cho image cùng headroom vận hành.",
+  "steps": [
+   {
+    "t": "Kiểm tra backup, disk/VMDK, snapshot và trạng thái VM nguồn; lên lịch quiesce/shutdown ứng dụng khi cần tính nhất quán",
+    "cmds": []
+   },
+   {
+    "t": "Trong StarWind V2V chọn ESXi làm nguồn, xác thực host và VM, rồi chọn node/storage Proxmox đích",
+    "cmds": []
+   },
+   {
+    "t": "Với đích ZFS, chọn định dạng Raw/ZVOL; không dùng qcow2 nếu backend không hỗ trợ. Xác nhận dung lượng trước khi bắt đầu",
+    "cmds": [
+     "pvesm status",
+     "zpool list"
+    ]
+   },
+   {
+    "t": "Theo dõi converter log đến khi hoàn tất; đối chiếu số lượng disk và cấu hình firmware của VM mới",
+    "cmds": [
+     "qm config <vmid>"
+    ]
+   },
+   {
+    "t": "Boot target trên network cô lập; với Windows dùng SATA tạm để boot nếu thiếu driver, cài VirtIO rồi mới chuyển SCSI/NIC. Giữ VM ESXi nguyên trạng đến khi cutover được duyệt",
+    "cmds": [
+     "qm status <vmid>"
+    ]
+   }
+  ],
+  "notes": "Online conversion có thể tạo snapshot nhưng không đảm bảo nhất quán ứng dụng hoặc bắt kịp mọi ghi mới; chọn thời điểm cutover và shutdown nguồn theo yêu cầu dữ liệu. Không xóa snapshot ESXi theo phỏng đoán khi conversion lỗi; trước hết đọc log và xác minh backup/trạng thái chain. Tốc độ phụ thuộc converter, nguồn, mạng và storage đích; thông lượng 10Gb không bảo đảm converter dùng hết băng thông. Chỉ gỡ VMware Tools sau khi guest boot và quản trị ổn định trên PVE.",
+  "refs": [
+   {
+    "t": "StarWind V2V Converter (tài liệu sản phẩm)",
+    "u": "https://www.starwindsoftware.com/starwind-v2v-converter"
+   },
+   {
+    "t": "Proxmox VE qm manual",
+    "u": "https://pve.proxmox.com/pve-docs/qm.1.html"
+   }
+  ]
+ },
+ {
+  "id": "rb-pve-cross-cluster-migrate",
+  "kind": "runbook",
+  "scope": "pve",
+  "title": "Di chuyển VM giữa hai cluster Proxmox bằng remote migration",
+  "tags": "proxmox pve remote-migrate remote migration live migrate di chuyển vm giữa 2 cluster cross cluster api token fingerprint linked clone target storage bridge",
+  "goal": "Di chuyển VM giữa hai cluster PVE độc lập bằng remote migration, kiểm soát quyền API, mapping network/storage và cutover.",
+  "prereq": "Xác nhận phiên bản PVE hai đầu hỗ trợ remote migration và mọi điều kiện của qm manual; có backup restore-point, quyền quản trị phù hợp, route/port cần thiết, mapping bridge/VLAN/storage và cửa sổ cutover. API token chỉ cấp quyền tối thiểu ở cluster đích; lưu secret ngoài shell history, ticket, chat và repo.",
+  "steps": [
+   {
+    "t": "Kiểm kê VM, toàn bộ disk/snapshot/clone dependency, HA, bridge/VLAN và storage đích; kiểm tra cluster đích có đủ tài nguyên",
+    "cmds": [
+     "qm config <source-vmid>",
+     "pvesm status",
+     "ha-manager status"
+    ]
+   },
+   {
+    "t": "Tạo và kiểm tra API token ở đích theo quyền tối thiểu; lấy fingerprint chứng chỉ đích qua kênh tin cậy và xác minh lại ngoài băng",
+    "cmds": [
+     "pvenode cert info"
+    ]
+   },
+   {
+    "t": "Gỡ VM khỏi HA hoặc tạm dừng chính sách tự động theo change plan; chọn target VMID, bridge map, storage map và chế độ online/offline",
+    "cmds": []
+   },
+   {
+    "t": "Chạy qm remote-migrate theo cú pháp của đúng phiên bản PVE; truyền endpoint/token/fingerprint an toàn, không lưu lệnh chứa secret vào shell history hoặc tài liệu",
+    "cmds": [
+     "qm remote-migrate <source-vmid> <target-vmid> '<destination-endpoint>' --target-bridge <bridge-map> --target-storage <storage-id> --online"
+    ]
+   },
+   {
+    "t": "Theo dõi task ở cả hai cluster; sau khi hoàn tất xác nhận VM đích, disk, boot, network, backup job và HA trước khi xóa VM nguồn theo change plan",
+    "cmds": [
+     "qm status <target-vmid>",
+     "qm config <target-vmid>",
+     "pvesm status"
+    ]
+   }
+  ],
+  "notes": "Cú pháp chi tiết của `<destination-endpoint>` thay đổi theo CLI/version; xem qm manual trên đúng node trước khi chạy. `--online` không có nghĩa là application-consistent. Linked clone hoặc disk còn phụ thuộc base image có thể không được hỗ trợ trong một số version; không xóa base/unused disk để thử, hãy chuyển thành full clone theo quy trình được hỗ trợ và kiểm tra lại. Không dùng chung datastore/pool/LUN cho hai cluster ghi đồng thời; xem case storage dùng chung giữa hai cluster. Giữ nguồn và backup cho tới khi nghiệm thu; không chạy hai VM cùng identity/IP đồng thời.",
+  "refs": [
+   {
+    "t": "Proxmox VE qm manual (remote-migrate)",
+    "u": "https://pve.proxmox.com/pve-docs/qm.1.html"
+   },
+   {
+    "t": "Proxmox VE Admin Guide",
+    "u": "https://pve.proxmox.com/pve-docs/pve-admin-guide.html"
+   }
+  ]
+ },
+ {
+  "id": "rb-pve-remove-node",
+  "kind": "runbook",
+  "scope": "pve",
+  "title": "Xóa node Proxmox khỏi cluster an toàn (VM, HA và Ceph)",
+  "tags": "proxmox pve remove node xóa node pvecm delnode cluster ceph osd mon mgr mds migrate workload",
+  "goal": "Gỡ một node PVE khỏi cluster sau khi đã xử lý workload, HA và mọi dịch vụ Ceph gắn với node đó.",
+  "prereq": "Có quorum ổn định, backup mới và change plan được duyệt. Phân biệt node đang hoạt động với node đã chết; cách gỡ Ceph OSD/MON/MGR/MDS phụ thuộc vai trò và tình trạng dữ liệu. Không dùng checklist này để xóa node chỉ nhằm xử lý lỗi tạm thời.",
+  "steps": [
+   {
+    "t": "Kiểm tra membership/quorum, workload, HA, Ceph và storage trước khi thay đổi",
+    "cmds": [
+     "pvecm status",
+     "pvecm nodes",
+     "pvesh get /cluster/resources --type vm",
+     "ha-manager status",
+     "ceph -s",
+     "ceph osd tree",
+     "ceph mon dump",
+     "ceph mgr dump",
+     "ceph fs status"
+    ]
+   },
+   {
+    "t": "Migrate/backup toàn bộ VM/CT và gỡ chúng khỏi HA/backup/monitoring theo kế hoạch; xác nhận target chạy ổn trước khi tiếp tục",
+    "cmds": []
+   },
+   {
+    "t": "Nếu node có OSD, MON, MGR hoặc MDS, gỡ từng service bằng quy trình Ceph chính thức phù hợp; xác nhận cluster còn HEALTH_OK/đủ replica/quorum theo thiết kế",
+    "cmds": [
+     "ceph -s",
+     "ceph osd tree",
+     "ceph fs status"
+    ]
+   },
+   {
+    "t": "Shutdown node cần xóa; từ node còn lại chạy delnode sau khi xác nhận đúng hostname và dịch vụ đã được xử lý",
+    "cmds": [
+     "pvecm delnode <node-name>"
+    ]
+   },
+   {
+    "t": "Xác minh membership và storage sau khi gỡ; chỉ dọn cấu hình node ma còn sót theo case ghost-node-rejoin khi membership đã xác nhận node không còn",
+    "cmds": [
+     "pvecm status",
+     "pvecm nodes",
+     "ceph -s",
+     "pvesm status"
+    ]
+   }
+  ],
+  "notes": "`pvecm delnode` chỉ sửa membership PVE; nó không tự migrate VM, remove OSD/MON/MGR/MDS, xóa dữ liệu Ceph hay thu hồi quyền truy cập shared storage. Không chạy `rm -rf /etc/pve/nodes/...` như bước mặc định. Nếu node mất liên lạc nhưng có thể vẫn ghi dữ liệu, fence/power-off xác nhận trước mọi thao tác có nguy cơ khởi chạy VM ở nơi khác. Khi thay node hoặc join lại cùng tên, xem [case PVE host hỏng](../cases/pve/pve-host-rebuild-no-config-backup.md) và [case node ma sau khi gỡ](../cases/pve/ghost-node-rejoin.md).",
+  "refs": [
+   {
+    "t": "Proxmox VE Admin Guide",
+    "u": "https://pve.proxmox.com/pve-docs/pve-admin-guide.html"
+   }
+  ]
  }
 ]
