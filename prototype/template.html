@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; img-src data:; base-uri 'none'; form-action 'none'">
+<title>Trợ lý kiểm tra Proxmox + Ceph — Phase 2</title>
+<style>
+:root{color-scheme:light;--bg:#f3f6fa;--panel:#fff;--ink:#17243a;--muted:#5d6b7d;--line:#d8e0ea;--blue:#175cd3;--blue-soft:#eff6ff;--green:#087443;--amber:#8a4b00;--shadow:0 14px 34px rgba(20,42,74,.08)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:#10243d;color:#fff;padding:24px max(20px,calc((100% - 1100px)/2))}
+header h1{margin:3px 0 5px;font-size:clamp(23px,4vw,32px)}
+header p{margin:0;color:#ced9e8}
+.kicker{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#93c5fd;font-weight:750}
+main{max-width:1100px;margin:22px auto;padding:0 18px 48px}
+.phase,.panel,.result,.conversation{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.phase{padding:16px 18px;margin-bottom:16px;border-left:5px solid #d97706}
+.phase strong{color:var(--amber)}
+.phase p{margin:4px 0 0;color:var(--muted)}
+.panel{padding:20px;margin-bottom:16px}
+h2{font-size:19px;margin:0 0 10px}
+.sub{margin:0 0 16px;color:var(--muted)}
+.progress{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:16px}
+.progress-item{display:flex;align-items:center;gap:8px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;color:var(--muted);font-size:13px}
+.progress-item[aria-current=step]{border-color:#7aa7ed;background:var(--blue-soft);color:#174ea6;font-weight:750}
+.progress-num{display:grid;place-items:center;width:25px;height:25px;flex:none;border-radius:50%;background:#e7edf5;font-size:12px;font-weight:800}
+.progress-item[aria-current=step] .progress-num{background:var(--blue);color:#fff}
+.scope-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0 19px}
+.scope-card{min-height:116px;text-align:left;padding:13px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
+.scope-card:hover,.scope-card[aria-pressed=true]{border-color:#6b9ce6;background:var(--blue-soft)}
+.scope-icon{display:block;font-size:20px;margin-bottom:5px}
+.scope-title{display:block;font-weight:800}
+.scope-meta{display:block;margin-top:5px;color:var(--muted);font-size:12px}
+.offline-tag{display:inline-block;margin-top:7px;padding:2px 7px;border-radius:99px;background:#eef2f6;color:#4b5c70;font-size:10px;font-weight:750;text-transform:uppercase;letter-spacing:.04em}
+.form-section{padding-top:16px;border-top:1px solid var(--line)}
+.formgrid{display:grid;grid-template-columns:190px 1fr;gap:12px}
+label{display:block;font-size:13px;font-weight:700;margin-bottom:5px}
+select,input,textarea{width:100%;border:1px solid #b8c5d5;border-radius:9px;padding:10px 11px;background:#fff;color:var(--ink);font:inherit}
+textarea{min-height:76px;resize:vertical}
+input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
+button{font:inherit;cursor:pointer}
+.primary,.secondary,.chip,.copy{border-radius:9px;font-weight:700}
+.primary{margin-top:13px;padding:10px 15px;border:0;background:var(--blue);color:#fff}
+.secondary,.copy{padding:7px 10px;border:1px solid #a9bbd0;background:#fff;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.chip{padding:6px 10px;border:1px solid var(--line);background:#f8fafc;color:#30435d;font-size:13px}
+.safety{margin:13px 0 0;padding:10px 12px;border-radius:9px;background:#fff7e6;color:#714000;font-size:13px}
+.results{display:grid;gap:14px}
+.conversation{overflow:hidden}
+.bubble{padding:14px 17px}
+.bubble+.bubble{border-top:1px solid var(--line)}
+.bubble-user{background:#f1f6ff}
+.bubble-label{display:block;margin-bottom:4px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.bubble-user .bubble-label{color:#174ea6}
+.bubble-text{margin:0;font-weight:650}
+.bubble-assistant{background:#fff}
+.reply-content{display:grid;gap:12px}
+.reply-content .result{box-shadow:none}
+.result{padding:18px}
+.result h3{margin:0 0 6px;font-size:18px}
+.snapshot-json{max-height:420px;overflow:auto;padding:13px;border-radius:9px;background:#101b2b;color:#e6edf7;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}
+.snapshot-time{font-size:13px;font-weight:700}
+button:disabled{opacity:.65;cursor:wait}
+.muted{color:var(--muted)}
+.guide-summary{margin:0 0 13px}
+.step{border-top:1px solid var(--line);padding:14px 0}
+.step h4{margin:0 0 5px}
+.step p{margin:5px 0;color:var(--muted)}
+.when{display:inline-block;margin:2px 0 6px;padding:3px 8px;border-radius:99px;background:#fff2cc;color:#714000;font-size:12px}
+.cmd{margin:9px 0;padding:10px;border-radius:9px;background:#101b2b;color:#f2f6fb;overflow-wrap:anywhere}
+.cmd code{white-space:pre-wrap;word-break:break-word;font:13px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}
+.copy{display:block;margin-top:7px;color:#173b78}
+.signals{padding-left:20px;margin:8px 0}
+.signals li{margin:7px 0}
+.safety-text{padding:10px 12px;border-left:4px solid #d97706;background:#fff7e6}
+.links{display:flex;flex-wrap:wrap;gap:8px}
+.links a{display:inline-block;padding:7px 10px;border:1px solid #c5d5e8;border-radius:8px;color:#174ea6;text-decoration:none}
+.links a:hover{text-decoration:underline}
+.note{min-height:64px;margin-top:7px}
+.empty{padding:18px;border:1px dashed #9fb0c5;border-radius:10px;color:var(--muted)}
+.local-only{font-size:12px;color:var(--muted);margin-top:9px}
+footer{padding:12px 0 4px;color:var(--muted);font-size:12px}
+@media(max-width:760px){.scope-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:540px){.formgrid{grid-template-columns:1fr}.panel{padding:15px}header{padding:20px}.progress{grid-template-columns:1fr}.progress-item{padding:7px 10px}.scope-card{min-height:104px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="kicker">Proxmox + Ceph · Bản thử nghiệm nội bộ</div>
+  <h1>Trợ lý kiểm tra sự cố</h1>
+  <p>Chọn hướng kiểm tra, xem lệnh và đối chiếu kết quả với tài liệu đã duyệt.</p>
+</header>
+<main>
+  <section class="phase" aria-label="Giới hạn giai đoạn">
+    <strong>Phase 2 thử nghiệm · Backend chỉ đọc, chỉ kết nối khi anh bấm nút</strong>
+    <p>Trình duyệt chỉ gửi phạm vi kiểm tra tới backend cùng nguồn. API token ở backend; không gửi mô tả sự cố, không chạy lệnh và không lưu kết quả. Web hiện dùng HTTP trong VPN: VPN chỉ mã hóa tới điểm kết thúc tunnel, nên chỉ dùng trên mạng nội bộ được tin cậy; không nhập thông tin bí mật. Cần HTTPS trước khi mở rộng hoặc dùng lâu dài.</p>
+  </section>
+  <nav class="progress" aria-label="Các bước kiểm tra">
+    <div class="progress-item" data-step="1" aria-current="step"><span class="progress-num">1</span><span>Chọn phạm vi</span></div>
+    <div class="progress-item" data-step="2"><span class="progress-num">2</span><span>Mô tả sự cố</span></div>
+    <div class="progress-item" data-step="3"><span class="progress-num">3</span><span>Xem đề xuất</span></div>
+  </nav>
+  <section class="panel" aria-labelledby="start-title">
+    <h2 id="start-title">1. Chọn phạm vi cần kiểm tra</h2>
+    <p class="sub">Các thẻ chỉ mở bộ tài liệu tương ứng; đây không phải trạng thái live của cluster.</p>
+    <div class="scope-grid" id="scope-cards" aria-label="Phạm vi tra cứu"></div>
+    <div class="form-section">
+      <h2>2. Mô tả vấn đề</h2>
+      <p class="sub">Có thể dùng từ khóa tiếng Việt hoặc tiếng Anh. Chưa cần nhập output cluster ở bước này.</p>
+      <div class="formgrid">
+        <div>
+          <label for="scope">Phạm vi tài liệu</label>
+          <select id="scope">
+            <option value="all">Tất cả</option>
+            <option value="pve">Proxmox host / VM / cluster</option>
+            <option value="ceph">Ceph</option>
+            <option value="storage">Storage</option>
+          </select>
+        </div>
+        <div>
+          <label for="issue">Triệu chứng đang gặp</label>
+          <input id="issue" type="search" autocomplete="off" placeholder="Ví dụ: VM không start, storage chậm, OSD latency cao">
+        </div>
+      </div>
+      <div class="chips" id="examples" aria-label="Ví dụ tìm nhanh"></div>
+      <button class="primary" id="analyze" type="button">3. Tìm hướng kiểm tra</button>
+      <p class="safety">Lệnh chỉ được hiển thị để người vận hành xem xét và tự chạy trên node phù hợp. Không chạy lệnh nếu chưa hiểu tác động. Không nhập token, password, keyring, IP/hostname nhạy cảm hoặc output chưa ẩn danh.</p>
+    </div>
+  </section>
+  <section class="results" id="results" aria-live="polite"></section>
+  <footer>Kết quả chỉ hiện trong tab hiện tại, không lưu ở local/session storage. Backend không gọi Proxmox cho tới khi người vận hành bấm nút thu thập.</footer>
+</main>
+<script>
+const TRIAGE=/*__TRIAGE__*/[];
+const CASES=/*__CASES__*/[];
+const examples=[
+  {q:"VM crash",scope:"pve"},
+  {q:"VM không start",scope:"pve"},
+  {q:"Storage chậm / I/O latency",scope:"storage"},
+  {q:"OSD latency cao",scope:"ceph"},
+  {q:"Cluster mất quorum",scope:"pve"},
+  {q:"Node Proxmox hỏng",scope:"pve"}
+];
+const scopes=[
+  {scope:"pve",query:"Node Proxmox hỏng",icon:"▣",title:"Host",meta:"Node, quorum, dịch vụ"},
+  {scope:"pve",query:"VM crash",icon:"▤",title:"VM / CT",meta:"Start, crash, lock, I/O"},
+  {scope:"ceph",query:"OSD latency cao",icon:"◈",title:"Ceph",meta:"Health, OSD, PG, MON"},
+  {scope:"storage",query:"Storage chậm / I/O latency",icon:"▥",title:"Storage",meta:"Latency, dung lượng, backend"}
+];
+const $=s=>document.querySelector(s);
+function norm(s){
+  return String(s||"").toLocaleLowerCase("vi").normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"").replace(/đ/g,"d")
+    .replace(/[^a-z0-9]+/g," ").trim();
+}
+function terms(s){return norm(s).split(/\s+/).filter(x=>x.length>1)}
+function el(tag,cls,text){
+  const node=document.createElement(tag);
+  if(cls)node.className=cls;
+  if(text!==undefined)node.textContent=text;
+  return node;
+}
+function docPath(item){
+  return item.kind==="runbook"
+    ? "../docs/runbooks/"+item.id+".md"
+    : "../docs/cases/"+(item.scope==="ceph"?"ceph":"pve")+"/"+item.id+".md";
+}
+function matchingGuides(query,scope){
+  const ts=terms(query);
+  if(!ts.length)return [];
+  return TRIAGE.map(item=>{
+    const hay=terms(item.title+" "+item.aliases);
+    const score=ts.filter(t=>hay.some(w=>w===t||(t.length>=4&&w.startsWith(t)))).length;
+    const scopeMatch=scope==="all"||scope==="storage"||item.scope===scope||item.scope==="mixed";
+    return {item,score,scopeMatch};
+  }).filter(x=>x.scopeMatch&&x.score>=Math.min(2,ts.length))
+    .sort((a,b)=>b.score-a.score);
+}
+function matchingCases(query,scope){
+  const ts=terms(query);
+  if(!ts.length)return [];
+  return CASES.map(item=>{
+    const title=norm(item.title),symptoms=norm(item.symptoms),other=norm([item.tags,item.causes,item.goal,item.prereq].filter(Boolean).join(" "));
+    const score=ts.reduce((sum,t)=>sum+(title.includes(t)?4:symptoms.includes(t)?2:other.includes(t)?1:0),0);
+    const scopeMatch=scope==="all"||scope==="storage"||item.scope===scope||item.scope==="mixed";
+    return {item,score,scopeMatch};
+  }).filter(x=>x.scopeMatch&&x.score>=Math.min(2,ts.length))
+    .sort((a,b)=>b.score-a.score).slice(0,8);
+}
+async function copyText(button,text){
+  try{
+    await navigator.clipboard.writeText(text);
+    button.textContent="Đã copy lệnh";
+  }catch{
+    button.textContent="Không copy được — chọn và copy lệnh thủ công";
+  }
+  setTimeout(()=>button.textContent="Copy lệnh để tự xem/chạy",2200);
+}
+function renderGuide(hit){
+  const item=hit.item,card=el("article","result");
+  card.append(el("h3",null,"Hướng kiểm tra: "+item.title));
+  card.append(el("p","guide-summary muted",item.summary));
+  item.steps.forEach(step=>{
+    const box=el("section","step");
+    box.append(el("h4",null,step.title));
+    if(step.when)box.append(el("span","when",step.when));
+    if(step.why)box.append(el("p",null,step.why));
+    (step.commands||[]).forEach(command=>{
+      const cmd=el("div","cmd"),code=el("code",null,command);
+      const button=el("button","copy","Copy lệnh để tự xem/chạy");
+      button.type="button";
+      button.addEventListener("click",()=>copyText(button,command));
+      cmd.append(code,button);box.append(cmd);
+    });
+    if((step.signals||[]).length){
+      const list=el("ul","signals");
+      step.signals.forEach(signal=>{
+        const li=el("li");
+        li.append(el("strong",null,signal.match+" → "),document.createTextNode(signal.meaning));
+        list.append(li);
+      });
+      box.append(list);
+    }
+    const label=el("label",null,"Ghi chú kết quả đã ẩn danh (không lưu)");
+    const note=el("textarea","note");
+    note.placeholder="Tự ghi nhận tại tab này; không nhập secret hoặc thông tin nhạy cảm.";
+    label.append(note);box.append(label);card.append(box);
+  });
+  card.append(el("p","safety-text",item.safety));
+  const related=CASES.filter(c=>(item.related_cases||[]).includes(c.id));
+  if(related.length){
+    card.append(el("h4",null,"Tài liệu liên quan"));
+    const links=el("div","links");
+    related.forEach(c=>{
+      const a=el("a",null,c.title);a.href=docPath(c);a.target="_blank";a.rel="noopener noreferrer";links.append(a);
+    });
+    card.append(links);
+  }
+  return card;
+}
+function render(){
+  const query=$("#issue").value.trim(),scope=$("#scope").value,root=$("#results");
+  root.replaceChildren();
+  setProgress(query?3:$("#scope").value==="all"?1:2);
+  if(!query)return;
+  const guides=matchingGuides(query,scope),cases=matchingCases(query,scope);
+  const conversation=el("article","conversation");
+  const userBubble=el("div","bubble bubble-user");
+  userBubble.append(el("span","bubble-label","Yêu cầu kiểm tra · "+scopeLabel(scope)),el("p","bubble-text",query));
+  const assistantBubble=el("div","bubble bubble-assistant");
+  assistantBubble.append(el("span","bubble-label","Trợ lý tài liệu · chưa kiểm tra cluster"));
+  const content=el("div","reply-content");
+  content.append(renderSnapshotPanel(scope));
+  if(guides.length)guides.forEach(hit=>content.append(renderGuide(hit)));
+  if(cases.length){
+    const box=el("article","result");
+    box.append(el("h3",null,"Case / runbook có thể liên quan"));
+    const links=el("div","links");
+    cases.forEach(({item})=>{
+      const a=el("a",null,(item.kind==="runbook"?"Runbook: ":"")+item.title);
+      a.href=docPath(item);a.target="_blank";a.rel="noopener noreferrer";links.append(a);
+    });
+    box.append(links);content.append(box);
+  }
+  if(!guides.length&&!cases.length){
+    content.append(el("div","empty","Chưa tìm thấy hướng dẫn đã duyệt phù hợp. Thử từ khóa khác hoặc chọn phạm vi “Tất cả”. Ứng dụng không lấy dữ liệu từ cluster để tự suy đoán."));
+  }
+  assistantBubble.append(content);conversation.append(userBubble,assistantBubble);root.append(conversation);
+}
+function renderSnapshotPanel(scope){
+  const panel=el("section","result");
+  panel.append(el("h3",null,"Trạng thái cluster (chỉ đọc)"));
+  panel.append(el("p","muted","Chưa có dữ liệu live. Bấm nút để backend nội bộ lấy snapshot qua các API GET được cho phép. Chỉ gửi phạm vi; câu mô tả sự cố không gửi tới backend."));
+  const button=el("button","primary","Thu thập trạng thái live (chỉ đọc)");
+  button.type="button";
+  const output=el("div","snapshot-output");
+  button.addEventListener("click",async()=>{
+    button.disabled=true;
+    button.textContent="Đang yêu cầu snapshot…";
+    output.replaceChildren();
+    try{
+      const controller=new AbortController();
+      const timer=setTimeout(()=>controller.abort(),25000);
+      let response;
+      try{
+        response=await fetch("../api/diagnose",{
+          method:"POST",
+          credentials:"same-origin",
+          cache:"no-store",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({scope}),
+          signal:controller.signal
+        });
+      }finally{clearTimeout(timer)}
+      const payload=await response.json().catch(()=>({error:"Backend trả về phản hồi không đọc được."}));
+      if(!response.ok)throw new Error(payload.error||"Yêu cầu kiểm tra thất bại.");
+      output.append(el("p","snapshot-time","Thời điểm: "+payload.collected_at));
+      const pre=el("pre","snapshot-json",JSON.stringify(payload.sources,null,2));
+      output.append(pre);
+      if(payload.errors&&payload.errors.length){
+        const errors=el("ul","signals");
+        payload.errors.forEach(error=>errors.append(el("li",null,error.source+": "+error.message)));
+        output.append(el("p","safety-text","Một số nguồn không lấy được; dữ liệu bên dưới là một phần."),errors);
+      }
+      output.append(el("p","muted","Đây là snapshot trạng thái, chưa phải kết luận nguyên nhân. Đối chiếu dấu hiệu với hướng dẫn và runbook bên trên."));
+    }catch(error){
+      const message=error.name==="AbortError"
+        ?"Quá thời gian chờ backend. Kiểm tra dịch vụ/API; chưa có dữ liệu cluster được hiển thị."
+        :error.message||"Không kết nối được backend chẩn đoán.";
+      output.append(el("p","safety-text",message));
+    }finally{
+      button.disabled=false;
+      button.textContent="Thu thập lại trạng thái (chỉ đọc)";
+    }
+  });
+  panel.append(button,output);
+  return panel;
+}
+function scopeLabel(scope){
+  return scope==="pve"?"Proxmox host / VM / cluster":scope==="ceph"?"Ceph":scope==="storage"?"Storage":"Tất cả";
+}
+function setProgress(current){
+  document.querySelectorAll(".progress-item").forEach(item=>{
+    const n=Number(item.dataset.step);
+    if(n===current)item.setAttribute("aria-current","step");
+    else item.removeAttribute("aria-current");
+  });
+}
+scopes.forEach((scope,index)=>{
+  const button=el("button","scope-card"),icon=el("span","scope-icon",scope.icon);
+  button.type="button";button.dataset.scope=scope.scope;button.dataset.query=scope.query;
+  button.setAttribute("aria-pressed","false");
+  button.append(icon,el("span","scope-title",scope.title),el("span","scope-meta",scope.meta),el("span","offline-tag","Tra cứu cục bộ"));
+  button.addEventListener("click",()=>{
+    document.querySelectorAll(".scope-card").forEach(card=>card.setAttribute("aria-pressed",String(card===button)));
+    $("#scope").value=scope.scope;$("#issue").value=scope.query;setProgress(2);rootScrollToForm();
+  });
+  $("#scope-cards").append(button);
+});
+function rootScrollToForm(){document.querySelector(".form-section").scrollIntoView({block:"nearest",behavior:"smooth"})}
+examples.forEach(example=>{
+  const button=el("button","chip",example.q);button.type="button";
+  button.addEventListener("click",()=>{$("#issue").value=example.q;$("#scope").value=example.scope;setProgress(2);render()});
+  $("#examples").append(button);
+});
+$("#analyze").addEventListener("click",render);
+$("#issue").addEventListener("input",()=>setProgress(2));
+$("#issue").addEventListener("keydown",event=>{if(event.key==="Enter")render()});
+$("#scope").addEventListener("change",()=>{setProgress(2);document.querySelectorAll(".scope-card").forEach(card=>card.setAttribute("aria-pressed","false"));if($("#issue").value.trim())render()});
+</script>
+</body>
+</html>

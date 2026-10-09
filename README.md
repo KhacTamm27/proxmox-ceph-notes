@@ -7,7 +7,8 @@ Tài liệu cá nhân: 499 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 ## Cách tìm nhanh
 
 - Mới bắt đầu: mở mindmap, chọn lối đi theo nhu cầu (tìm lệnh, sửa lỗi Proxmox/Ceph, cấu hình network); mở case để đọc triệu chứng, nguyên nhân, các bước và lưu ý.
-- Tìm nội dung: gõ từ khóa tiếng Việt hoặc tiếng Anh vào ô tìm kiếm; truy vấn như `storage bị chậm` hoặc `VM crash` có thể hiện quy trình chẩn đoán ban đầu, lệnh đọc trạng thái và cách hiểu dấu hiệu. Trang không chạy lệnh hay truy cập cluster.
+- Tìm nội dung: gõ từ khóa tiếng Việt hoặc tiếng Anh vào ô tìm kiếm; truy vấn như `storage bị chậm` hoặc `VM crash` có thể hiện quy trình chẩn đoán ban đầu, lệnh đọc trạng thái và cách hiểu dấu hiệu. Mindmap tài liệu là trang tĩnh, không kết nối cluster.
+- Prototype chẩn đoán nội bộ: `prototype/` có thể yêu cầu backend riêng lấy snapshot PVE chỉ đọc khi người vận hành bấm nút. Cần VPN, xác thực, token giới hạn và triển khai theo `prototype/DEPLOYMENT.md`; không nhúng token vào trình duyệt.
 - Nhấn `/` để focus tìm kiếm, Enter để tới kết quả, Esc để xóa.
 - Tra cứu nhóm lệnh: mở nhóm theo chủ đề; bấm lệnh để copy. Các nhóm Proxmox và Ceph có nhãn màu riêng.
 - Mở nhanh qua URL: thêm `#B13` để tới nhóm lệnh (ví dụ RGW), hoặc `?q=scrub` để mở sẵn kết quả tìm kiếm.
@@ -164,4 +165,4 @@ Sau khi sửa, chạy:
 python3 scripts/build.py --repo KhacTamm27/proxmox-ceph-notes
 ```
 
-Lệnh trên sinh lại README này, toàn bộ `docs/**/*.md` và `docs/index.html`.
+Lệnh trên sinh lại README này, toàn bộ `docs/**/*.md`, `docs/index.html` và `prototype/index.html`.

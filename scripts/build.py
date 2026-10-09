@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sinh README.md, docs/**/*.md và docs/index.html từ data/commands.json.
+"""Sinh README.md, docs/**/*.md, docs/index.html và prototype/index.html từ data/*.json.
 
 Chạy:  python3 scripts/build.py --repo <user>/<repo>
 Sửa lệnh CHỈ trong data/commands.json rồi chạy lại, đừng sửa tay file sinh ra.
@@ -158,7 +158,8 @@ if args.repo:
     r += [f"**Mindmap tương tác (lọc lệnh, mở thẳng từng mục):** https://{user}.github.io/{name}/", ""]
 r += ["## Cách tìm nhanh", "",
       "- Mới bắt đầu: mở mindmap, chọn lối đi theo nhu cầu (tìm lệnh, sửa lỗi Proxmox/Ceph, cấu hình network); mở case để đọc triệu chứng, nguyên nhân, các bước và lưu ý.",
-      "- Tìm nội dung: gõ từ khóa tiếng Việt hoặc tiếng Anh vào ô tìm kiếm; truy vấn như `storage bị chậm` hoặc `VM crash` có thể hiện quy trình chẩn đoán ban đầu, lệnh đọc trạng thái và cách hiểu dấu hiệu. Trang không chạy lệnh hay truy cập cluster.",
+      "- Tìm nội dung: gõ từ khóa tiếng Việt hoặc tiếng Anh vào ô tìm kiếm; truy vấn như `storage bị chậm` hoặc `VM crash` có thể hiện quy trình chẩn đoán ban đầu, lệnh đọc trạng thái và cách hiểu dấu hiệu. Mindmap tài liệu là trang tĩnh, không kết nối cluster.",
+      "- Prototype chẩn đoán nội bộ: `prototype/` có thể yêu cầu backend riêng lấy snapshot PVE chỉ đọc khi người vận hành bấm nút. Cần VPN, xác thực, token giới hạn và triển khai theo `prototype/DEPLOYMENT.md`; không nhúng token vào trình duyệt.",
       "- Nhấn `/` để focus tìm kiếm, Enter để tới kết quả, Esc để xóa.",
       "- Tra cứu nhóm lệnh: mở nhóm theo chủ đề; bấm lệnh để copy. Các nhóm Proxmox và Ceph có nhãn màu riêng.",
       "- Mở nhanh qua URL: thêm `#B13` để tới nhóm lệnh (ví dụ RGW), hoặc `?q=scrub` để mở sẵn kết quả tìm kiếm.",
@@ -194,7 +195,7 @@ r += ["## Cập nhật tài liệu", "",
       "- `data/scripts.json` và thư mục `tools/`: script tiện ích (siêu dữ liệu trong JSON, mã nguồn `.sh` hoặc `.py` trong `tools/`).", "",
       "Sau khi sửa, chạy:", "",
       "```bash", f"python3 scripts/build.py --repo {args.repo or '<user>/<repo>'}", "```", "",
-      "Lệnh trên sinh lại README này, toàn bộ `docs/**/*.md` và `docs/index.html`.", ""]
+      "Lệnh trên sinh lại README này, toàn bộ `docs/**/*.md`, `docs/index.html` và `prototype/index.html`.", ""]
 (ROOT / "README.md").write_text("\n".join(r), encoding="utf-8")
 
 # ---- mindmap HTML ----
@@ -206,6 +207,11 @@ html = (tpl.replace("/*__DATA__*/null", json.dumps(data, ensure_ascii=False))
            .replace("/*__TRIAGE__*/[]", json.dumps(triage, ensure_ascii=False).replace("</", "<\\/"))
            .replace("/*__SCRIPTS__*/[]", json.dumps(scr_list, ensure_ascii=False).replace("</", "<\\/")))
 (ROOT / "docs/index.html").write_text(html, encoding="utf-8")
+prototype_tpl = (ROOT / "prototype/template.html").read_text(encoding="utf-8")
+prototype_html = (prototype_tpl
+                  .replace("/*__TRIAGE__*/[]", json.dumps(triage, ensure_ascii=False).replace("</", "<\\/"))
+                  .replace("/*__CASES__*/[]", json.dumps(cases, ensure_ascii=False).replace("</", "<\\/")))
+(ROOT / "prototype/index.html").write_text(prototype_html, encoding="utf-8")
 nrb = sum(c.get("kind") == "runbook" for c in cases)
 nce = sum(c["scope"] == "ceph" and c.get("kind") != "runbook" for c in cases)
 npv = sum(c["scope"] == "pve" and c.get("kind") != "runbook" for c in cases)

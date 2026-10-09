@@ -1,0 +1,27 @@
+[Unit]
+Description=Read-only Proxmox diagnostic collector
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pve-diagnostic
+Group=pve-diagnostic
+WorkingDirectory=/opt/pve-diagnostic
+EnvironmentFile=/etc/pve-diagnostic/connector.env
+ExecStart=/usr/bin/python3 /opt/pve-diagnostic/server.py
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
