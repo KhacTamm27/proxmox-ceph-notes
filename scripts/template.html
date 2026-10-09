@@ -95,6 +95,8 @@ details.case{border:1px solid var(--line);border-radius:10px;background:var(--pa
 details.case summary{padding:10px 0;font-weight:600;cursor:pointer}
 details.case ol{padding-left:20px;margin:6px 0}
 details.case ol li{border:0;padding:4px 0}
+.quick-reference{margin:4px 0 10px}
+.quick-reference li{padding:4px 0}
 .cmdline{display:block;margin:2px 0 6px}
 .note{color:var(--muted);font-size:13px}
 .pbtn{padding:5px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel);font-size:13px}
@@ -216,7 +218,7 @@ if(window.ResizeObserver)new ResizeObserver(draw).observe(map);
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
 const res=$('#results'),secs={ceph:$('#cases-ceph'),pve:$('#cases-pve'),run:$('#cases-run'),scr:$('#cases-scr')},casesEl=document;
 function mkPrompt(title,sym,cmds){return 'Tôi đang xử lý trên cluster Proxmox + Ceph: '+title+'\n'+(sym?'Triệu chứng: '+sym+'\n':'')+'Các lệnh chẩn đoán liên quan:\n'+cmds.map(c=>'- '+c).join('\n')+'\n\nOutput lệnh thực tế của tôi (đã xóa IP, tên host, key):\n<<< dán output vào đây >>>\n\nHãy phân tích nguyên nhân khả dĩ nhất, nói rõ còn thiếu thông tin gì, và đề xuất bước tiếp theo theo thứ tự an toàn nhất. Cảnh báo trước nếu có lệnh nguy hiểm.'}
-const ct=c=>N([c.title,c.tags,c.symptoms,c.causes,c.goal,c.prereq].filter(Boolean).join(' '));
+const ct=c=>N([c.title,c.tags,c.symptoms,c.causes,c.goal,c.prereq,(c.quick_reference||[]).map(x=>x.title+' '+x.text).join(' ')].filter(Boolean).join(' '));
 function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
 function cmdEl(c){const e=el('code','cmdline',c);e.title='Bấm để copy';e.tabIndex=0;e.addEventListener('click',()=>copy(e,c));return e}
 CASES.forEach(c=>{
@@ -233,7 +235,13 @@ CASES.forEach(c=>{
   pb.addEventListener('click',()=>copy(pb,mkPrompt(c.title,c.symptoms||c.goal,c.steps.flatMap(s=>s.cmds))));
   d.append(p1,p2);
   (c.diagrams||[]).forEach(g=>{const dv=el('div','diagram');dv.innerHTML=g.svg;d.append(dv,el('p','note',g.caption))});
-  d.append(ol,nt);
+  d.append(ol);
+  if(c.quick_reference&&c.quick_reference.length){
+    const qh=el('b',null,'Tham khảo nhanh:');const ql=el('ul','quick-reference');
+    c.quick_reference.forEach(x=>{const li=el('li');li.append(el('b',null,x.title+': '),x.text);ql.append(li)});
+    d.append(qh,ql);
+  }
+  d.append(nt);
   if(c.refs&&c.refs.length){const rp=el('p','refs');rp.append(el('b',null,'Nguồn tham khảo: '));
     c.refs.forEach((r,i)=>{if(i)rp.append(' · ');const a=el('a',null,r.t);a.href=r.u;a.target='_blank';a.rel='noopener';rp.append(a)});d.append(rp)}
   d.append(pb);(rb?secs.run:c.scope==='pve'?secs.pve:secs.ceph).append(d);

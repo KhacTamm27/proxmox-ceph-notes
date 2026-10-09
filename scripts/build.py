@@ -123,6 +123,10 @@ for c in cases:
             o += ["```bash"] + st["cmds"] + ["```", ""]
         for f in st.get("files", []):
             o += [f"**`{f['path']}`**", "", f"```{f.get('lang', '')}", f["code"].rstrip("\n"), "```", ""]
+    if c.get("quick_reference"):
+        o += ["## Tham khảo nhanh", ""]
+        o += [f"- **{item['title']}:** {item['text']}" for item in c["quick_reference"]]
+        o.append("")
     o += ["## Lưu ý", "", c["notes"], ""]
     if c.get("refs"):
         o += ["## Nguồn tham khảo", ""] + [f"- [{r['t']}]({r['u']})" for r in c["refs"]] + [""]
