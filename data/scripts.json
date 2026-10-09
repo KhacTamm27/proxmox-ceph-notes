@@ -1,5 +1,33 @@
 [
  {
+  "id": "pve-cluster-inventory",
+  "file": "pve_check.py",
+  "title": "Kiểm tra tổng hợp host, storage và network/VLAN toàn cluster",
+  "tags": "script proxmox pve cluster inventory kiểm tra host node hostname nodeid ip datastore storage dung lượng network vlan bridge vlan-aware csv",
+  "goal": "Tổng hợp node/host, datastore cluster, trạng thái và dung lượng datastore theo từng node, cùng interface VLAN và bridge VLAN-aware để kiểm tra cấu hình toàn cluster. Xuất kết quả ra màn hình và các file CSV.",
+  "usage": [
+   {
+    "c": "python3 tools/pve_check.py",
+    "d": "Chạy kiểm tra từ một node Proxmox và tạo thư mục CSV theo thời gian"
+   }
+  ],
+  "notes": "Chạy trực tiếp trên một node Proxmox đang hoạt động với quyền đủ để gọi pvesh; dữ liệu node/host đọc từ /etc/pve/.members, các phần còn lại lấy qua API pvesh. Script chỉ đọc dữ liệu, không đổi cấu hình. Tạo thư mục proxmox-inventory-<thời gian> trong thư mục hiện tại gồm hosts.csv, storage.csv, storage-status-by-host.csv, network-summary-by-host.csv và networks-by-host.csv. Node offline hoặc API lỗi được ghi vào cột error nếu truy vấn theo node thất bại. VLAN tag khai báo bên trong cấu hình VM/CT được liệt kê riêng bằng list_vlan_tags.sh."
+ },
+ {
+  "id": "list-vlan-tags",
+  "file": "list_vlan_tags.sh",
+  "title": "Liệt kê VLAN tag/trunks đang dùng trên toàn cluster",
+  "tags": "script proxmox pve vlan tag trunk trunks vlan id vm ct qemu lxc cluster network mạng kiểm tra cấu hình",
+  "goal": "Tổng hợp các VLAN ID có tag hoặc trunks trong cấu hình VM/CT trên mọi node Proxmox, giúp kiểm tra VLAN nào đang được sử dụng trước khi cấu hình switch hoặc bridge.",
+  "usage": [
+   {
+    "c": "./list_vlan_tags.sh",
+    "d": "Liệt kê VLAN ID duy nhất từ cấu hình VM và container trên cluster"
+   }
+  ],
+  "notes": "Chạy trên một node Proxmox đang hoạt động; không cần SSH vì /etc/pve/nodes là pmxcfs dùng chung toàn cluster. Script chỉ đọc cấu hình VM/CT, tìm các trường tag= và trunks=, rồi tách và sắp xếp VLAN ID duy nhất; không thay đổi cấu hình hay trạng thái mạng. Cần Bash và GNU grep hỗ trợ PCRE (-P)."
+ },
+ {
   "id": "list-up-ports",
   "file": "list_up_ports.sh",
   "title": "Liệt kê cổng mạng vật lý đang UP (1Gb / 10Gb) trên mọi node cluster",

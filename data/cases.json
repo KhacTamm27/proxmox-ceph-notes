@@ -853,6 +853,47 @@
   "notes": "Sau khi đổi quota có thể cần radosgw-admin quota enable. Lỗi chỉ xảy ra với một bucket thì kiểm tra bucket policy và ACL."
  },
  {
+  "id": "rgw-view-s3-keys",
+  "scope": "ceph",
+  "title": "Xem lại Access Key và Secret Key của user S3",
+  "tags": "ceph rgw s3 xem lại access key secret key credentials thông tin đăng nhập user mất key",
+  "symptoms": "Cần tra lại Access Key/Secret Key để cấu hình client S3 hoặc kiểm tra lỗi xác thực.",
+  "causes": "Thông tin key không còn trong cấu hình ứng dụng, cần xác nhận key đang gắn với user RGW nào.",
+  "steps": [
+   {
+    "t": "Xác định đúng UID của user S3",
+    "cmds": [
+     "radosgw-admin user list"
+    ]
+   },
+   {
+    "t": "Xem key và trạng thái user; đối chiếu access_key với cấu hình client",
+    "cmds": [
+     "radosgw-admin user info --uid=<uid>"
+    ]
+   },
+   {
+    "t": "Nếu cần key mới, tạo key rồi cập nhật client trước khi xóa key cũ",
+    "cmds": [
+     "radosgw-admin key create --uid=<uid> --key-type=s3 --gen-access-key --gen-secret"
+    ]
+   },
+   {
+    "t": "Sau khi tất cả client đã chuyển sang key mới, mới thu hồi key cũ nếu không còn dùng",
+    "cmds": [
+     "radosgw-admin key rm --uid=<uid> --access-key=<old-access-key>"
+    ]
+   }
+  ],
+  "notes": "Output user info có thể chứa Secret Key dạng rõ. Chỉ người được phân quyền mới xem; không dán output vào ticket/chat, ảnh chụp, log hoặc lịch sử chia sẻ. Nếu user info không còn Secret Key cần dùng thì tạo key mới và cập nhật client; không xóa key cũ cho đến khi xác nhận không còn dịch vụ nào dùng nó. Xóa key sẽ làm các client dùng key đó mất quyền truy cập.",
+  "refs": [
+   {
+    "t": "Ceph docs: radosgw-admin",
+    "u": "https://docs.ceph.com/en/reef/man/8/radosgw-admin/"
+   }
+  ]
+ },
+ {
   "id": "add-osd-throttle",
   "scope": "ceph",
   "title": "Thêm OSD hoặc node mới làm chậm production",

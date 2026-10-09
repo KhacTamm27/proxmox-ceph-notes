@@ -29,6 +29,7 @@ Tài liệu cá nhân: 493 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 | [Cảnh báo too many / too few PGs, chỉnh pg_num](docs/cases/ceph/pg-count.md) | HEALTH_WARN "too many PGs per OSD" hoặc "pool has too few/many pgs". |
 | [Mạng Ceph: MTU không khớp, nghẽn hoặc rớt gói](docs/cases/ceph/network-mtu.md) | Slow ops hoặc OSD flapping chỉ liên quan một vài node, ping thường được nhưng IO lớn bị treo. |
 | [RGW/S3 trả 403 (AccessDenied, SignatureDoesNotMatch, QuotaExceeded)](docs/cases/ceph/rgw-403.md) | Client S3 nhận 403 dù cluster khỏe: AccessDenied, SignatureDoesNotMatch hoặc QuotaExceeded. |
+| [Xem lại Access Key và Secret Key của user S3](docs/cases/ceph/rgw-view-s3-keys.md) | Cần tra lại Access Key/Secret Key để cấu hình client S3 hoặc kiểm tra lỗi xác thực. |
 | [Thêm OSD hoặc node mới làm chậm production](docs/cases/ceph/add-osd-throttle.md) | Sau khi thêm OSD hoặc node, VM chậm, nhiều PG backfilling, objects misplaced. |
 | [PG down, peering kẹt hoặc unfound objects (mất nhiều OSD)](docs/cases/ceph/pg-down-incomplete.md) | HEALTH_ERR, "N pgs down", pg ở trạng thái down+peering, IO vào một số object bị treo; hoặc "N unfound" (objects unfound). |
 | [BLUEFS_SPILLOVER: metadata RocksDB tràn sang đĩa chậm](docs/cases/ceph/bluefs-spillover.md) | HEALTH_WARN "BlueFS spillover detected on N OSD(s)", latency của các OSD HDD tăng. |
@@ -82,6 +83,8 @@ Tài liệu cá nhân: 493 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 
 | Script | Mục đích |
 |---|---|
+| [Kiểm tra tổng hợp host, storage và network/VLAN toàn cluster](docs/scripts/pve-cluster-inventory.md) | Tổng hợp node/host, datastore cluster, trạng thái và dung lượng datastore theo từng node, cùng interface VLAN và bridge VLAN-aware để kiểm tra cấu hình toàn cluster. Xuất kết quả ra màn hình và các file CSV. |
+| [Liệt kê VLAN tag/trunks đang dùng trên toàn cluster](docs/scripts/list-vlan-tags.md) | Tổng hợp các VLAN ID có tag hoặc trunks trong cấu hình VM/CT trên mọi node Proxmox, giúp kiểm tra VLAN nào đang được sử dụng trước khi cấu hình switch hoặc bridge. |
 | [Liệt kê cổng mạng vật lý đang UP (1Gb / 10Gb) trên mọi node cluster](docs/scripts/list-up-ports.md) | Kiểm tra nhanh card mạng vật lý nào đang UP và đạt tốc độ nào trên từng node của cluster (đọc danh sách node và IP từ /etc/pve/.members), để phát hiện cổng rớt tốc độ, đứt cáp hoặc cắm nhầm cổng. |
 | [Menu Stop / Start / Status HA (pve-ha-lrm, pve-ha-crm) trên toàn cluster](docs/scripts/ha-menu.md) | Tắt hoặc bật HA đồng loạt trên mọi node online đúng thứ tự khi bảo trì production (stop LRM trước rồi CRM; start CRM trước, chờ bầu master, rồi LRM) thay vì gõ tay từng node. Tương ứng bước tắt HA trong runbook bảo trì production. |
 
@@ -132,7 +135,7 @@ Tài liệu cá nhân: 493 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 - `data/commands.json`: nhóm → nhóm con → `{c: lệnh, p: mô tả, d: nguy hiểm?}`.
 - `data/vi.json`: mô tả tiếng Việt và từ khóa, khóa là đúng chuỗi lệnh trong commands.json: `"lệnh": ["mô tả", "từ khóa"]`.
 - `data/cases.json`: các case study (triệu chứng, nguyên nhân, các bước, lưu ý).
-- `data/scripts.json` và thư mục `tools/`: script tiện ích (siêu dữ liệu trong JSON, mã nguồn là file `.sh` trong `tools/`).
+- `data/scripts.json` và thư mục `tools/`: script tiện ích (siêu dữ liệu trong JSON, mã nguồn `.sh` hoặc `.py` trong `tools/`).
 
 Sau khi sửa, chạy:
 

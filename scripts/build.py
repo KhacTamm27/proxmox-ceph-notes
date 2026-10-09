@@ -128,11 +128,12 @@ for c in cases:
 
 # ---- script .md ----
 for sc_ in scr_list:
+    lang = "python" if Path(sc_["file"]).suffix == ".py" else "bash"
     o = [f"# {sc_['title']}", "", "[← Mục lục](../../README.md) · Script tiện ích", "",
          f"**Mục đích:** {sc_['goal']}", "", "## Cách dùng", "", "```bash"]
     o += [f"{u['c']}    # {u['d']}" for u in sc_["usage"]]
     o += ["```", "", f"File gốc: [`tools/{sc_['file']}`](../../tools/{sc_['file']})", "",
-          "## Lưu ý", "", sc_["notes"], "", "## Mã nguồn", "", "```bash", sc_["code"].rstrip("\n"), "```", "",
+          "## Lưu ý", "", sc_["notes"], "", "## Mã nguồn", "", f"```{lang}", sc_["code"].rstrip("\n"), "```", "",
           f"<!-- từ khóa: {sc_['tags']} -->"]
     (ROOT / "docs/scripts" / f"{sc_['id']}.md").write_text("\n".join(o) + "\n", encoding="utf-8")
 
@@ -177,7 +178,7 @@ r += ["## Cập nhật tài liệu", "",
       "- `data/commands.json`: nhóm → nhóm con → `{c: lệnh, p: mô tả, d: nguy hiểm?}`.",
       "- `data/vi.json`: mô tả tiếng Việt và từ khóa, khóa là đúng chuỗi lệnh trong commands.json: `\"lệnh\": [\"mô tả\", \"từ khóa\"]`.",
       "- `data/cases.json`: các case study (triệu chứng, nguyên nhân, các bước, lưu ý).",
-      "- `data/scripts.json` và thư mục `tools/`: script tiện ích (siêu dữ liệu trong JSON, mã nguồn là file `.sh` trong `tools/`).", "",
+      "- `data/scripts.json` và thư mục `tools/`: script tiện ích (siêu dữ liệu trong JSON, mã nguồn `.sh` hoặc `.py` trong `tools/`).", "",
       "Sau khi sửa, chạy:", "",
       "```bash", f"python3 scripts/build.py --repo {args.repo or '<user>/<repo>'}", "```", "",
       "Lệnh trên sinh lại README này, toàn bộ `docs/**/*.md` và `docs/index.html`.", ""]
