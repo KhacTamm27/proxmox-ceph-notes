@@ -37,6 +37,7 @@ def count(b):
 slugs = {}
 all_cmds = set()
 covered = 0
+missing = []
 for side, branches in data.items():
     for b in branches:
         slugs[b["id"]] = relpath(b, SIDES[side][0])
@@ -46,9 +47,13 @@ for side, branches in data.items():
                 if it["c"] in vi:
                     it["v"], it["k"] = vi[it["c"]]
                     covered += 1
+                else:
+                    missing.append(it["c"])
 unknown = [c for c in vi if c not in all_cmds]
 if unknown:
     print("CẢNH BÁO: vi.json có lệnh không khớp commands.json:", *unknown, sep="\n  ")
+if missing:
+    print("CẢNH BÁO: commands.json có lệnh thiếu mô tả tiếng Việt/từ khóa trong vi.json:", *missing, sep="\n  ")
 
 for folder in ("proxmox", "ceph", "cases", "runbooks", "scripts", "diagrams"):
     p = ROOT / "docs" / folder

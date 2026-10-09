@@ -20,7 +20,7 @@ ceph health detail
 ceph daemon osd.<osd-id> perf dump bluefs
 ```
 
-3. Giảm tạm thời bằng compact (cảnh báo có thể quay lại)
+3. Nếu DB phình bất thường, thử compact một OSD rồi kiểm tra lại spillover và latency
 
 ```bash
 ceph tell osd.<osd-id> compact
@@ -36,10 +36,11 @@ systemctl start ceph-osd@<osd-id>
 
 ## Lưu ý
 
-Mức khuyến nghị tham khảo là DB khoảng 4% dung lượng OSD. Có thể tắt cảnh báo bằng ceph config set osd bluestore_warn_on_bluefs_spillover false nhưng đó chỉ là che cảnh báo, không giải quyết nguyên nhân. Làm lần lượt từng OSD, kiểm tra noout/ok-to-stop trước khi dừng.
+Mức khuyến nghị block.db phụ thuộc workload và thường được tính theo tỉ lệ dung lượng block; 100 GB không phải ngưỡng chung để compact. Compact chỉ dọn/thu gọn dữ liệu RocksDB nội bộ không còn cần, không xóa dữ liệu Ceph đang dùng và không đảm bảo latency giảm; thao tác có thể gây thêm I/O tạm thời. Làm từng OSD, theo dõi hiệu quả; nếu spillover quay lại thì xử lý gốc bằng cách tăng/chuyển DB device. Có thể tắt cảnh báo bằng ceph config set osd bluestore_warn_on_bluefs_spillover false nhưng đó chỉ là che cảnh báo, không giải quyết nguyên nhân. Kiểm tra noout/ok-to-stop trước khi dừng OSD.
 
 ## Nguồn tham khảo
 
+- [Ceph docs: BlueStore DB sizing and spillover](https://docs.ceph.com/en/reef/rados/configuration/bluestore-config-ref/)
 - [Netdata: Ceph BlueStore DB spillover](https://www.netdata.cloud/guides/ceph/ceph-bluestore-db-spillover/)
 - [Red Hat: BlueFS spillover warning](https://access.redhat.com/node/4820151)
 
