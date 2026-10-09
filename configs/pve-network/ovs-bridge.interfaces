@@ -1,0 +1,30 @@
+auto lo
+iface lo inet loopback
+
+auto enp24s0f0np0
+iface enp24s0f0np0 inet manual
+
+auto enp24s0f1np1
+iface enp24s0f1np1 inet manual
+
+auto bond0
+iface bond0 inet manual
+        ovs_bonds enp24s0f0np0 enp24s0f1np1
+        ovs_type OVSBond
+        ovs_bridge vmbr0
+        ovs_options bond_mode=active-backup
+
+auto vlan70
+iface vlan70 inet static
+        address 192.168.70.147/24
+        gateway 192.168.70.1
+        ovs_type OVSIntPort
+        ovs_bridge vmbr0
+        ovs_options tag=70
+
+auto vmbr0
+iface vmbr0 inet manual
+        ovs_type OVSBridge
+        ovs_ports bond0 vlan70
+
+source /etc/network/interfaces.d/*

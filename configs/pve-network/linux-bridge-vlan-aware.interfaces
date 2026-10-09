@@ -1,0 +1,33 @@
+auto lo
+iface lo inet loopback
+
+auto enp24s0f0np0
+iface enp24s0f0np0 inet manual
+
+auto enp24s0f1np1
+iface enp24s0f1np1 inet manual
+
+auto bond0
+iface bond0 inet manual
+        bond-slaves enp24s0f0np0 enp24s0f1np1
+        bond-miimon 100
+        bond-mode 802.3ad
+        bond-xmit-hash-policy layer2+3
+        mtu 9000
+
+auto vmbr0
+iface vmbr0 inet manual
+        bridge-ports bond0
+        bridge-stp off
+        bridge-fd 0
+        bridge-vlan-aware yes
+        bridge-vids 10 20 70
+        mtu 9000
+
+auto vmbr0.70
+iface vmbr0.70 inet static
+        address 10.2.70.147/24
+        gateway 10.2.70.1
+        mtu 9000
+
+source /etc/network/interfaces.d/*

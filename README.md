@@ -50,6 +50,7 @@ Tài liệu cá nhân: 499 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 | [VM bị lock (backup/snapshot), không start hoặc migrate được](docs/cases/pve/vm-locked.md) | Báo "VM is locked (backup)" hoặc "(snapshot)", không start, stop, migrate hoặc xóa được. |
 | [GUI Proxmox bị đăng xuất liên tục hoặc không đăng nhập được](docs/cases/pve/pve-gui-logout.md) | GUI bị đá ra sau một thời gian ngắn, báo "permission denied" hoặc "invalid ticket", trang tải chậm hoặc treo. |
 | [Node Proxmox đầy ổ root, dịch vụ lỗi](docs/cases/pve/pve-disk-full.md) | "No space left on device", dịch vụ không start, không ghi được /etc/pve, GUI lỗi. |
+| [Cấu hình mạng Proxmox: OVS/Linux bridge, bond, LACP và VLAN trunk](docs/cases/pve/pve-network-bridge-bond-vlan.md) | VM/CT mất mạng hoặc không nhận VLAN; host mất IP quản trị sau khi sửa /etc/network/interfaces; bond chỉ chạy một link hoặc LACP không lên; VLAN tag/trunk không thông suốt. |
 | [Migrate VM thất bại](docs/cases/pve/migrate-fail.md) | Migrate báo lỗi, treo ở một phần trăm nào đó, hoặc không cho chọn node đích. |
 | [VM không start được](docs/cases/pve/vm-wont-start.md) | qm start báo lỗi, task lỗi, VM dừng ngay sau khi bật. |
 | [Node hoặc VM hiện dấu hỏi (unknown), GUI không cập nhật](docs/cases/pve/pvestatd-unknown.md) | Trong GUI node, VM hoặc storage hiện dấu (?) xám, số liệu không cập nhật dù VM vẫn chạy. |
