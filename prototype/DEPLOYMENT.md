@@ -4,6 +4,19 @@ This extends the Phase 1 static page with an **opt-in** status collector. The br
 
 The real cluster is not contacted by the repository build or tests. Do not enter credentials in this repository, source code, chat, browser storage, or a ticket.
 
+## Vietnamese text encoding and document display
+
+The browser screenshot showed Markdown being served as plain text without an explicit UTF-8 charset, which can make Vietnamese appear as mojibake. The bundled server sends Markdown as `text/markdown; charset=utf-8`; when serving files directly with host Nginx, add `charset utf-8;` inside the documentation location (or use the container reverse-proxy configuration below, which preserves the upstream UTF-8 content type). After deployment, verify with browser developer tools or:
+
+```bash
+curl -sSI http://127.0.0.1/pve-diagnostic/docs/proxmox/A01-system-and-node.md \
+  | grep -i '^Content-Type:'
+```
+
+Expected: `Content-Type: text/markdown; charset=utf-8`. The file is still raw Markdown in the browser; the UTF-8 change fixes Vietnamese encoding, not Markdown rendering.
+
+For the current host-Nginx/static-files setup, the immediate fix is to add `charset utf-8;` inside the existing `location /pve-diagnostic/ { ... }`, run `sudo nginx -t`, then `sudo systemctl reload nginx`. Do not save a backup file inside `sites-enabled`; use `/root/nginx-backups/`.
+
 ## Chỗ nhập thông tin cluster trên VM (không nhập trong Git)
 
 Thông tin kết nối chỉ điền trên VM ứng dụng, trong file `/etc/pve-diagnostic/connector.env`. Không sửa `connector.env.example` thành file thật và không commit file đã điền. Sau khi đã tạo user dịch vụ và thư mục `/etc/pve-diagnostic`, tạo file cấu hình riêng rồi mở bằng `sudoedit`:
@@ -156,3 +169,86 @@ sudo systemctl disable --now pve-diagnostic
 Then remove the Nginx API proxy location and revoke the dedicated API token in PVE. The static documentation can remain available only if its VPN/auth controls are retained.
 
 Do not proceed to automated diagnosis, command execution, or write-capable access without the operator explicitly approving the next phase.
+
+## Single-container deployment (host Nginx remains the access gateway)
+
+The repository can package the static UI, Markdown docs, and read-only API server in one small Python container. Keep the existing host Nginx as the only network-facing entry point: it retains VPN/firewall restrictions and Basic Auth, then proxies to a container port published only on host loopback. The PVE API token and CA are mounted read-only at runtime and are not copied into the image. Do not expose port 8765/18765 to the LAN.
+
+This path assumes Docker Engine is already installed and the checkout on the VM contains `Dockerfile`, `.dockerignore`, `docs/`, `README.md`, and `prototype/`. If the checkout was created with sparse-checkout containing only `prototype/`, add the container build inputs first:
+
+```bash
+git -C "$HOME/pve-diagnostic-phase2" sparse-checkout add docs README.md Dockerfile .dockerignore
+```
+
+Do not install a container runtime or change the host firewall as part of these commands.
+
+1. Confirm the runtime and required host secret files exist, without printing their contents:
+
+   ```bash
+   docker version
+   sudo test -r /etc/pve-diagnostic/connector.env
+   sudo test -r /etc/pve-diagnostic/pve-root-ca.pem
+   getent group pve-diagnostic
+   ```
+
+2. Build the image from the repository root. `.dockerignore` excludes `.git`, local environment files, and PEM files; Dockerfile copies only the server, generated UI/docs, and README.
+
+   ```bash
+   cd "$HOME/pve-diagnostic-phase2"
+   sudo docker build --pull -t pve-diagnostic:pilot .
+   ```
+
+3. Start one restricted container. The supplementary host group grants read-only access to the root-owned `0640` configuration/CA files. The host port is loopback-only:
+
+   ```bash
+   PVE_DIAG_GID=$(getent group pve-diagnostic | cut -d: -f3)
+   sudo docker run --detach \
+     --name pve-diagnostic-app \
+     --restart unless-stopped \
+     --read-only \
+     --tmpfs /tmp:rw,noexec,nosuid,size=16m \
+     --cap-drop ALL \
+     --security-opt no-new-privileges:true \
+     --pids-limit 64 \
+     --memory 512m \
+     --cpus 1 \
+     --user 10001:10001 \
+     --group-add "$PVE_DIAG_GID" \
+     --publish 127.0.0.1:18765:8765 \
+     --mount type=bind,src=/etc/pve-diagnostic/connector.env,dst=/run/secrets/connector.env,readonly \
+     --mount type=bind,src=/etc/pve-diagnostic/pve-root-ca.pem,dst=/etc/pve-diagnostic/pve-root-ca.pem,readonly \
+     pve-diagnostic:pilot
+   unset PVE_DIAG_GID
+   ```
+
+4. Check container health locally; do not stop the current systemd backend until this passes:
+
+   ```bash
+   sudo docker ps --filter name=pve-diagnostic-app
+   curl --fail http://127.0.0.1:18765/healthz
+   curl -sSI http://127.0.0.1:18765/pve-diagnostic/docs/proxmox/A01-system-and-node.md \
+     | grep -i '^Content-Type:'
+   ```
+
+   The Markdown response must include `charset=utf-8`. The host Nginx proxy passes the authenticated operator identity as a header; the container refuses protected page/API requests without it.
+
+5. Back up the existing Nginx config **outside** `/etc/nginx/sites-enabled/` (otherwise Nginx may parse the backup as another server block), then update the existing server block with `prototype/nginx-location.conf`. Keep the existing `auth_basic` file and firewall/VPN controls. Test and reload:
+
+   ```bash
+   sudo install -d -o root -g root -m 700 /root/nginx-backups
+   sudo cp -a /etc/nginx/sites-enabled/pve-diagnostic.conf \
+     "/root/nginx-backups/pve-diagnostic.conf.$(date +%Y%m%d-%H%M%S)"
+   sudoedit /etc/nginx/sites-enabled/pve-diagnostic.conf
+   sudo nginx -t && sudo systemctl reload nginx
+   ```
+
+6. Confirm the public route still challenges unauthenticated requests with `401`, then sign in and open the prototype/docs. Check the protected Markdown response's `Content-Type` for UTF-8. After the container-backed page/API is confirmed, stop and disable the old host service to avoid maintaining two copies:
+
+   ```bash
+   sudo systemctl disable --now pve-diagnostic
+   sudo ss -lntp | grep -E ':(8765|18765)\b'
+   ```
+
+   The Docker publish must remain `127.0.0.1:18765`; only Nginx should be reachable from the VPN.
+
+Rollback: restore the Nginx backup from `/root/nginx-backups/`, run `nginx -t`, reload Nginx, then remove the container with `docker rm -f pve-diagnostic-app` and re-enable the systemd backend only if its files/config are intact. Never delete the mounted connector config, token, or CA as part of rollback.

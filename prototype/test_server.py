@@ -2,9 +2,11 @@ import json
 import http.client
 import os
 import ssl
+import tempfile
 import threading
 import unittest
 from io import BytesIO
+from pathlib import Path
 from unittest.mock import patch
 
 from prototype import server
@@ -89,6 +91,26 @@ class ProxmoxClientTests(unittest.TestCase):
         with patch.dict(os.environ, {"PVE_API_URL": "http://pve.example:8006"}):
             with self.assertRaises(server.ConfigurationError):
                 server.api_url_from_env()
+
+    def test_env_file_loader_accepts_only_known_connector_settings(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            env_file = Path(temp_dir) / "connector.env"
+            env_file.write_text(
+                "PVE_API_URL=https://pve.example:8006\n"
+                "PVE_API_TOKEN_SECRET=secret=with=equals\n",
+                encoding="utf-8",
+            )
+            with patch.dict(os.environ, {}, clear=True):
+                server.load_env_file(str(env_file))
+                self.assertEqual(os.environ["PVE_API_URL"], "https://pve.example:8006")
+                self.assertEqual(
+                    os.environ["PVE_API_TOKEN_SECRET"],
+                    "secret=with=equals",
+                )
+
+            env_file.write_text("PYTHONPATH=/tmp/attacker\n", encoding="utf-8")
+            with self.assertRaises(server.ConfigurationError):
+                server.load_env_file(str(env_file))
 
 
 class ProjectionTests(unittest.TestCase):
@@ -229,6 +251,22 @@ class CollectionTests(unittest.TestCase):
 class HandlerTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        cls.web_dir = tempfile.TemporaryDirectory()
+        web_root = Path(cls.web_dir.name)
+        (web_root / "prototype").mkdir()
+        (web_root / "docs" / "proxmox").mkdir(parents=True)
+        (web_root / "index.html").write_text("<html>Home</html>", encoding="utf-8")
+        (web_root / "prototype" / "index.html").write_text(
+            "<html>Prototype</html>", encoding="utf-8"
+        )
+        (web_root / "docs" / "proxmox" / "A01.md").write_text(
+            "# Kiểm tra node\n", encoding="utf-8"
+        )
+        cls.web_root_env = patch.dict(
+            os.environ,
+            {"PVE_DIAG_WEB_ROOT": cls.web_dir.name},
+        )
+        cls.web_root_env.start()
         cls.httpd = server.ThreadingHTTPServer(("127.0.0.1", 0), server.DiagnosticHandler)
         cls.thread = threading.Thread(target=cls.httpd.serve_forever, daemon=True)
         cls.thread.start()
@@ -239,6 +277,8 @@ class HandlerTests(unittest.TestCase):
         cls.httpd.shutdown()
         cls.httpd.server_close()
         cls.thread.join(timeout=2)
+        cls.web_root_env.stop()
+        cls.web_dir.cleanup()
 
     def post(self, body, authenticated=True, origin="http://127.0.0.1"):
         connection = http.client.HTTPConnection("127.0.0.1", self.port, timeout=2)
@@ -252,6 +292,32 @@ class HandlerTests(unittest.TestCase):
         payload = json.loads(response.read())
         connection.close()
         return response.status, payload
+
+    def get(self, path, authenticated=True):
+        connection = http.client.HTTPConnection("127.0.0.1", self.port, timeout=2)
+        headers = {"Host": "127.0.0.1"}
+        if authenticated:
+            headers["X-Authenticated-User"] = "operator"
+        connection.request("GET", path, headers=headers)
+        response = connection.getresponse()
+        payload = response.read()
+        content_type = response.getheader("Content-Type")
+        status = response.status
+        connection.close()
+        return status, content_type, payload
+
+    def test_static_pages_require_authentication(self):
+        status, _, _ = self.get("/pve-diagnostic/prototype/", authenticated=False)
+        self.assertEqual(status, 401)
+
+    def test_markdown_is_served_as_utf8_markdown(self):
+        status, content_type, payload = self.get(
+            "/pve-diagnostic/docs/proxmox/A01.md"
+        )
+        self.assertEqual(status, 200)
+        self.assertIn("text/markdown", content_type)
+        self.assertIn("charset=utf-8", content_type)
+        self.assertIn("Kiểm tra node".encode("utf-8"), payload)
 
     def test_requires_authenticated_operator(self):
         status, payload = self.post({"scope": "ceph"}, authenticated=False)

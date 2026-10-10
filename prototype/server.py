@@ -4,21 +4,31 @@
 from __future__ import annotations
 
 import json
+import mimetypes
 import os
 import re
 import ssl
 import sys
 from datetime import datetime, timedelta, timezone
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 from urllib.error import HTTPError, URLError
-from urllib.parse import quote, urlencode, urlsplit
+from urllib.parse import quote, unquote, urlencode, urlsplit
 from urllib.request import HTTPRedirectHandler, HTTPSHandler, Request, build_opener
 
 MAX_REQUEST_BYTES = 1024
 MAX_RESPONSE_BYTES = 1_048_576
 ALLOWED_SCOPES = {"all", "pve", "ceph", "storage", "hosts", "host"}
 NODE_NAME_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,62}\Z")
+CONNECTOR_ENV_KEYS = {
+    "PVE_API_URL",
+    "PVE_API_TOKEN_ID",
+    "PVE_API_TOKEN_SECRET",
+    "PVE_CA_FILE",
+    "PVE_API_TIMEOUT",
+    "PVE_DIAG_BIND",
+    "PVE_DIAG_PORT",
+}
 
 ENDPOINTS: dict[str, tuple[str, dict[str, str] | None]] = {
     "cluster": ("/cluster/status", None),
@@ -58,6 +68,29 @@ class ConfigurationError(Exception):
 
 class ProxmoxApiError(Exception):
     """A sanitized error suitable for returning to the operator."""
+
+
+def load_env_file(path: str) -> None:
+    try:
+        lines = open(path, encoding="utf-8")
+    except OSError as exc:
+        raise ConfigurationError("Could not read the mounted connector environment file.") from exc
+    with lines:
+        for line_number, raw_line in enumerate(lines, start=1):
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            key, separator, value = line.partition("=")
+            if (
+                not separator
+                or not re.fullmatch(r"[A-Z][A-Z0-9_]*", key)
+                or key not in CONNECTOR_ENV_KEYS
+                or not value.strip()
+            ):
+                raise ConfigurationError(
+                    f"Invalid connector environment setting on line {line_number}."
+                )
+            os.environ.setdefault(key, value.strip())
 
 
 def _required_env(name: str) -> str:
@@ -399,19 +432,47 @@ def _json_response(handler: BaseHTTPRequestHandler, status: int, payload: dict[s
     handler.send_response(status)
     handler.send_header("Content-Type", "application/json; charset=utf-8")
     handler.send_header("Content-Length", str(len(body)))
-    handler.send_header("Cache-Control", "no-store")
-    handler.send_header("X-Content-Type-Options", "nosniff")
     handler.end_headers()
     handler.wfile.write(body)
 
 
-class DiagnosticHandler(BaseHTTPRequestHandler):
+class DiagnosticHandler(SimpleHTTPRequestHandler):
     server_version = "PveDiagnostic"
     sys_version = ""
+    extensions_map = {
+        **SimpleHTTPRequestHandler.extensions_map,
+        ".md": "text/markdown; charset=utf-8",
+        ".json": "application/json; charset=utf-8",
+    }
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        web_root = os.environ.get("PVE_DIAG_WEB_ROOT", "").strip() or None
+        super().__init__(*args, directory=web_root, **kwargs)
+
+    def translate_path(self, path: str) -> str:
+        clean_path = unquote(urlsplit(path).path)
+        if clean_path == "/":
+            clean_path = "/index.html"
+        elif clean_path.startswith("/pve-diagnostic/"):
+            clean_path = clean_path[len("/pve-diagnostic"):]
+        return super().translate_path(clean_path)
+
+    def end_headers(self) -> None:
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header("Cache-Control", "no-store")
+        super().end_headers()
+
+    def list_directory(self, path: str) -> None:
+        self.send_error(404, "Directory listing is disabled.")
+        return None
 
     def do_GET(self) -> None:
         if self.path != "/healthz":
-            _json_response(self, 404, {"error": "Not found."})
+            if not self.headers.get("X-Authenticated-User", "").strip():
+                _json_response(self, 401, {"error": "Operator authentication is required."})
+                return
+            super().do_GET()
             return
         configured = all(
             os.environ.get(name, "").strip()
@@ -420,7 +481,7 @@ class DiagnosticHandler(BaseHTTPRequestHandler):
         _json_response(self, 200, {"status": "ok", "collector_configured": configured})
 
     def do_POST(self) -> None:
-        if self.path != "/api/diagnose":
+        if self.path not in ("/api/diagnose", "/pve-diagnostic/api/diagnose"):
             _json_response(self, 404, {"error": "Not found."})
             return
         if not self.headers.get("X-Authenticated-User", "").strip():
@@ -498,14 +559,27 @@ class DiagnosticHandler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
+    env_file = os.environ.get("PVE_DIAG_ENV_FILE", "").strip()
+    if env_file:
+        try:
+            load_env_file(env_file)
+        except ConfigurationError as exc:
+            raise SystemExit(str(exc)) from exc
     host = os.environ.get("PVE_DIAG_BIND", "127.0.0.1")
     port_text = os.environ.get("PVE_DIAG_PORT", "8765")
     try:
         port = int(port_text)
     except ValueError as exc:
         raise SystemExit("PVE_DIAG_PORT must be an integer.") from exc
-    if host != "127.0.0.1" or not 1 <= port <= 65535:
-        raise SystemExit("The diagnostic API must bind to loopback and a valid port.")
+    trusted_proxy = os.environ.get("PVE_DIAG_TRUSTED_PROXY") == "1"
+    if (
+        not 1 <= port <= 65535
+        or (host != "127.0.0.1" and not trusted_proxy)
+        or (trusted_proxy and host not in ("0.0.0.0", "::"))
+    ):
+        raise SystemExit(
+            "Non-loopback binding requires trusted-proxy mode and proxy-provided authentication."
+        )
     server = ThreadingHTTPServer((host, port), DiagnosticHandler)
     server.daemon_threads = True
     print(f"Read-only diagnostic API listening on {host}:{port}", file=sys.stderr)

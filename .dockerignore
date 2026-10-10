@@ -1,0 +1,13 @@
+.git
+.venv
+__pycache__
+**/__pycache__
+HANDOFF.md
+prototype/connector.env
+prototype/*.pem
+**/connector.env
+**/*.env
+**/*.pem
+**/*.key
+**/*.crt
+*.pem
