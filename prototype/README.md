@@ -26,6 +26,7 @@ The connector backend is not generated into the browser page. The browser sends 
 ## Safety boundary
 
 - Only fixed Proxmox API `GET` routes are implemented; arbitrary paths, shell commands and write methods are not accepted.
+- Host checks first verify the requested node against the PVE node list, then query status for that one node only.
 - Proxmox API token secrets are read from a protected server-side environment file.
 - The backend verifies the PVE TLS certificate and cannot disable certificate verification.
 - Responses are projected onto allow-listed fields before being returned to the browser.
@@ -33,3 +34,5 @@ The connector backend is not generated into the browser page. The browser sends 
 - The temporary HTTP-over-VPN choice is a risk exception, not end-state guidance. Retain VPN source restrictions and per-operator Nginx authentication; complete HTTPS before broader or long-term use.
 
 Cluster connectivity remains off until the backend service and protected token configuration are explicitly installed on the VM.
+
+For a host reboot/hang symptom, search for **Node Proxmox hỏng**, load the node list on demand, select the affected host, and request its host-only status. Uptime provides an approximate current boot time, not a reboot cause or event history. A failed status request is not sufficient evidence that the whole server is frozen; verify out-of-band using console/BMC and the host's logs.

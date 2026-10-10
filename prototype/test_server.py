@@ -22,6 +22,13 @@ class FakeClient:
             raise response
         return response
 
+    def get_node_status(self, node):
+        self.calls.append(f"node_status:{node}")
+        response = self.responses[f"node_status:{node}"]
+        if isinstance(response, Exception):
+            raise response
+        return response
+
 
 class Response(BytesIO):
     def __enter__(self):
@@ -56,6 +63,23 @@ class ProxmoxClientTests(unittest.TestCase):
             request.get_header("Authorization"),
             "PVEAPIToken=diagnostic@pve!reader=test-secret",
         )
+
+    def test_requests_only_the_selected_node_status_endpoint(self):
+        self.opener.open.return_value = Response(b'{"data": {"uptime": 3600}}')
+        result = self.client.get_node_status("pve1")
+        request = self.opener.open.call_args.args[0]
+        self.assertEqual(result, {"data": {"uptime": 3600}})
+        self.assertEqual(
+            request.full_url,
+            "https://pve.example:8006/api2/json/nodes/pve1/status",
+        )
+        self.assertEqual(request.method, "GET")
+
+    def test_rejects_path_like_node_names(self):
+        for node in ("../cluster/status", "pve1/status", ""):
+            with self.subTest(node=node):
+                with self.assertRaises(server.ProxmoxApiError):
+                    self.client.get_node_status(node)
 
     def test_rejects_unknown_endpoint(self):
         with self.assertRaises(server.ProxmoxApiError):
@@ -107,6 +131,27 @@ class ProjectionTests(unittest.TestCase):
         self.assertNotIn("mons", result["monmap"])
         self.assertNotIn("secret", result["osdmap"])
 
+    def test_node_status_projection_keeps_only_diagnostic_fields(self):
+        result = server.project_node_status(
+            {
+                "data": {
+                    "uptime": 7200,
+                    "cpu": 0.2,
+                    "wait": 0.01,
+                    "loadavg": ["0.10", "0.20", "0.30"],
+                    "memory": {"total": 1000, "used": 400, "free": 600, "secret": "omit"},
+                    "rootfs": {"total": 2000, "used": 500, "avail": 1500},
+                    "network": {"interfaces": ["private-interface"]},
+                    "secret": "must-not-leak",
+                }
+            }
+        )
+        self.assertEqual(result["uptime"], 7200)
+        self.assertEqual(result["memory"], {"total": 1000, "used": 400, "free": 600})
+        self.assertNotIn("network", result)
+        self.assertNotIn("secret", result)
+        self.assertNotIn("secret", result["memory"])
+
 
 class CollectionTests(unittest.TestCase):
     def test_ceph_scope_reads_only_ceph_status(self):
@@ -115,6 +160,12 @@ class CollectionTests(unittest.TestCase):
         self.assertEqual(client.calls, ["ceph"])
         self.assertEqual(result["sources"]["ceph"]["health"]["status"], "HEALTH_OK")
         self.assertIn("collected_at", result)
+
+    def test_hosts_scope_reads_only_the_node_list(self):
+        client = FakeClient({"nodes": {"data": [{"node": "pve1", "status": "online"}]}})
+        result = server.collect_snapshot("hosts", client)
+        self.assertEqual(client.calls, ["nodes"])
+        self.assertEqual(result["sources"]["nodes"], [{"node": "pve1", "status": "online"}])
 
     def test_pve_scope_uses_fixed_sources_and_keeps_partial_errors(self):
         responses = {
@@ -132,6 +183,47 @@ class CollectionTests(unittest.TestCase):
     def test_rejects_unknown_scope(self):
         with self.assertRaises(ValueError):
             server.collect_snapshot("custom", FakeClient({}))
+        with self.assertRaises(ValueError):
+            server.collect_snapshot("host", FakeClient({}))
+
+    def test_host_scope_reads_only_node_list_then_selected_node_status(self):
+        client = FakeClient(
+            {
+                "nodes": {"data": [{"node": "pve1", "status": "online"}]},
+                "node_status:pve1": {
+                    "data": {
+                        "uptime": 3600,
+                        "cpu": 0.2,
+                        "memory": {"total": 1000, "used": 400, "free": 600},
+                    }
+                },
+            }
+        )
+        result = server.collect_host_snapshot("pve1", client)
+        self.assertEqual(client.calls, ["nodes", "node_status:pve1"])
+        self.assertEqual(result["scope"], "host")
+        self.assertEqual(result["sources"]["membership"]["status"], "online")
+        self.assertEqual(result["sources"]["node_status"]["uptime"], 3600)
+        self.assertIn("estimated_boot_at", result["sources"]["node_status"])
+        self.assertEqual(result["errors"], [])
+
+    def test_host_scope_rejects_a_node_not_in_cluster_membership(self):
+        client = FakeClient({"nodes": {"data": [{"node": "pve1", "status": "online"}]}})
+        with self.assertRaisesRegex(ValueError, "not found"):
+            server.collect_host_snapshot("pve2", client)
+        self.assertEqual(client.calls, ["nodes"])
+
+    def test_host_scope_reports_status_failure_without_claiming_host_is_down(self):
+        client = FakeClient(
+            {
+                "nodes": {"data": [{"node": "pve1", "status": "online"}]},
+                "node_status:pve1": server.ProxmoxApiError("PVE status request timed out."),
+            }
+        )
+        result = server.collect_host_snapshot("pve1", client)
+        self.assertEqual(result["sources"]["membership"]["status"], "online")
+        self.assertNotIn("node_status", result["sources"])
+        self.assertEqual(result["errors"][0]["source"], "node_status")
 
 
 class HandlerTests(unittest.TestCase):
@@ -190,6 +282,31 @@ class HandlerTests(unittest.TestCase):
         self.assertEqual(status, 400)
         self.assertIn("only the diagnostic scope", payload["error"])
         collect_snapshot.assert_not_called()
+
+    @patch("prototype.server.collect_host_snapshot")
+    def test_accepts_host_scope_with_a_node_name(self, collect_host_snapshot):
+        collect_host_snapshot.return_value = {
+            "scope": "host",
+            "node": "pve1",
+            "collected_at": "2026-01-01T00:00:00+00:00",
+            "sources": {"membership": {"status": "online"}},
+            "errors": [],
+        }
+        status, payload = self.post({"scope": "host", "node": "pve1"})
+        self.assertEqual(status, 200)
+        self.assertEqual(payload["node"], "pve1")
+        collect_host_snapshot.assert_called_once_with("pve1")
+
+    @patch("prototype.server.collect_host_snapshot")
+    def test_rejects_arbitrary_host_path_and_extra_host_data(self, collect_host_snapshot):
+        for body in (
+            {"scope": "host", "node": "../cluster/status"},
+            {"scope": "host", "node": "pve1", "issue": "private incident"},
+        ):
+            with self.subTest(body=body):
+                status, _ = self.post(body)
+                self.assertEqual(status, 400)
+        collect_host_snapshot.assert_not_called()
 
 
 if __name__ == "__main__":

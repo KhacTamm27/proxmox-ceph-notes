@@ -8,16 +8,17 @@ import os
 import re
 import ssl
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode, urlsplit
+from urllib.parse import quote, urlencode, urlsplit
 from urllib.request import HTTPRedirectHandler, HTTPSHandler, Request, build_opener
 
 MAX_REQUEST_BYTES = 1024
 MAX_RESPONSE_BYTES = 1_048_576
-ALLOWED_SCOPES = {"all", "pve", "ceph", "storage"}
+ALLOWED_SCOPES = {"all", "pve", "ceph", "storage", "hosts", "host"}
+NODE_NAME_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,62}\Z")
 
 ENDPOINTS: dict[str, tuple[str, dict[str, str] | None]] = {
     "cluster": ("/cluster/status", None),
@@ -33,6 +34,7 @@ SCOPE_SOURCES = {
     "pve": ("cluster", "nodes", "node_resources", "vm_resources"),
     "ceph": ("ceph",),
     "storage": ("storage_resources",),
+    "hosts": ("nodes",),
 }
 
 RESOURCE_FIELDS = {
@@ -130,6 +132,33 @@ def project_cluster(payload: Any) -> list[dict[str, Any]]:
     ]
 
 
+def project_node_status(payload: Any) -> dict[str, Any]:
+    data = unwrap_api_data(payload)
+    if not isinstance(data, dict):
+        raise ProxmoxApiError("Proxmox returned an unexpected node status.")
+
+    result: dict[str, Any] = {}
+    for field in ("uptime", "cpu", "wait", "pveversion", "kversion"):
+        value = data.get(field)
+        if isinstance(value, (str, int, float)):
+            result[field] = value
+    for field in ("loadavg",):
+        value = data.get(field)
+        if isinstance(value, list) and all(
+            isinstance(item, (str, int, float)) for item in value
+        ):
+            result[field] = value
+    for section in ("memory", "swap", "rootfs"):
+        value = data.get(section)
+        if isinstance(value, dict):
+            result[section] = {
+                key: value[key]
+                for key in ("total", "used", "free", "avail")
+                if key in value and isinstance(value[key], (int, float))
+            }
+    return result
+
+
 def project_ceph(payload: Any) -> dict[str, Any]:
     data = unwrap_api_data(payload)
     if not isinstance(data, dict):
@@ -223,8 +252,16 @@ class ProxmoxClient:
             raise ProxmoxApiError("Requested Proxmox API endpoint is not allowed.")
         path, query = ENDPOINTS[source]
         query_string = f"?{urlencode(query)}" if query else ""
+        return self._get_path(f"{path}{query_string}")
+
+    def get_node_status(self, node: str) -> Any:
+        if not NODE_NAME_PATTERN.fullmatch(node):
+            raise ProxmoxApiError("The selected Proxmox node name is invalid.")
+        return self._get_path(f"/nodes/{quote(node, safe='')}/status")
+
+    def _get_path(self, path: str) -> Any:
         request = Request(
-            f"{self.api_url}/api2/json{path}{query_string}",
+            f"{self.api_url}/api2/json{path}",
             headers={
                 "Accept": "application/json",
                 "Authorization": self.authorization,
@@ -298,7 +335,7 @@ def _project(source: str, payload: Any) -> Any:
 
 
 def collect_snapshot(scope: str, client: ProxmoxClient | None = None) -> dict[str, Any]:
-    if scope not in ALLOWED_SCOPES:
+    if scope not in SCOPE_SOURCES:
         raise ValueError("Unsupported diagnostic scope.")
     api_client = client or _read_only_client()
     snapshot: dict[str, Any] = {
@@ -316,6 +353,44 @@ def collect_snapshot(scope: str, client: ProxmoxClient | None = None) -> dict[st
         raise ProxmoxApiError(
             snapshot["errors"][0]["message"] if snapshot["errors"] else "No status data was collected."
         )
+    return snapshot
+
+
+def collect_host_snapshot(
+    node: str,
+    client: ProxmoxClient | None = None,
+) -> dict[str, Any]:
+    if not isinstance(node, str) or not NODE_NAME_PATTERN.fullmatch(node):
+        raise ValueError("Invalid Proxmox node name.")
+    api_client = client or _read_only_client()
+    node_rows = project_resource(api_client.get("nodes"), "node")
+    selected = next((row for row in node_rows if row.get("node") == node), None)
+    if selected is None:
+        raise ValueError("Selected host was not found in the Proxmox node list.")
+
+    collected_at = datetime.now(timezone.utc)
+    snapshot: dict[str, Any] = {
+        "scope": "host",
+        "node": node,
+        "collected_at": collected_at.isoformat(),
+        "sources": {
+            "membership": {
+                key: selected[key]
+                for key in ("node", "status", "uptime")
+                if key in selected
+            }
+        },
+        "errors": [],
+    }
+    try:
+        status = project_node_status(api_client.get_node_status(node))
+        if isinstance(status.get("uptime"), (int, float)) and status["uptime"] >= 0:
+            status["estimated_boot_at"] = (
+                collected_at - timedelta(seconds=status["uptime"])
+            ).isoformat()
+        snapshot["sources"]["node_status"] = status
+    except ProxmoxApiError as exc:
+        snapshot["errors"].append({"source": "node_status", "message": str(exc)})
     return snapshot
 
 
@@ -373,17 +448,33 @@ class DiagnosticHandler(BaseHTTPRequestHandler):
         except (UnicodeDecodeError, json.JSONDecodeError):
             _json_response(self, 400, {"error": "Request body must be valid JSON."})
             return
-        if not isinstance(body, dict) or set(body) != {"scope"}:
-            _json_response(self, 400, {"error": "Request must contain only the diagnostic scope."})
+        if not isinstance(body, dict) or "scope" not in body:
+            _json_response(self, 400, {"error": "Request must contain a diagnostic scope."})
             return
         scope = body["scope"]
         if not isinstance(scope, str) or scope not in ALLOWED_SCOPES:
             _json_response(self, 400, {"error": "Unsupported diagnostic scope."})
             return
+        if scope == "host":
+            if set(body) != {"scope", "node"}:
+                _json_response(self, 400, {"error": "Host checks require only scope and node."})
+                return
+            if not isinstance(body["node"], str) or not NODE_NAME_PATTERN.fullmatch(body["node"]):
+                _json_response(self, 400, {"error": "Invalid Proxmox node name."})
+                return
+        elif set(body) != {"scope"}:
+            _json_response(self, 400, {"error": "Request must contain only the diagnostic scope."})
+            return
         try:
-            result = collect_snapshot(scope)
+            if scope == "host":
+                result = collect_host_snapshot(body["node"])
+            else:
+                result = collect_snapshot(scope)
         except ConfigurationError as exc:
             _json_response(self, 503, {"error": str(exc)})
+            return
+        except ValueError as exc:
+            _json_response(self, 400, {"error": str(exc)})
             return
         except ProxmoxApiError as exc:
             _json_response(self, 502, {"error": str(exc)})

@@ -34,7 +34,7 @@ The operator has chosen to defer HTTPS for now. Treat that as a short-lived pilo
 - Restrict the web app to the VPN/admin source range at both the network firewall and Nginx.
 - Keep per-operator Nginx authentication enabled. Use unique credentials, never a shared team password.
 - HTTP Basic credentials are not end-to-end encrypted by HTTP. VPN protects traffic only as far as the VPN tunnel endpoint; an internal hop after VPN termination may still be observable.
-- The browser sends only a fixed scope (`pve`, `ceph`, `storage`, or `all`) to the same-origin backend. It does not send the incident description.
+- The browser sends only a fixed scope (`pve`, `ceph`, `storage`, `hosts`, `host`, or `all`) to the same-origin backend. A host check sends the selected node name, which the backend matches against the PVE node list before requesting its status. It does not send the incident description.
 - The API token is held only in a root-owned environment file on the app VM. The backend binds to `127.0.0.1`; Nginx is the only network-facing proxy.
 - The backend verifies the PVE certificate chain and hostname/IP. There is no option to disable TLS verification. If PVE uses a private CA, install only its public CA certificate and verify its fingerprint out-of-band.
 - Permit outbound TCP 8006 from the app VM to the named PVE API endpoint only. Do not allow SSH or shell access from the app VM to cluster nodes.
@@ -51,9 +51,11 @@ It calls only these fixed endpoints, on operator request:
 | Proxmox | `/cluster/status`, `/nodes`, `/cluster/resources?type=node`, `/cluster/resources?type=vm` |
 | Ceph | `/cluster/ceph/status` |
 | Storage | `/cluster/resources?type=storage` |
+| Host list | `/nodes` |
+| Selected host | `/nodes/{node}/status`, only after the selected name is verified in `/nodes` |
 | All | All of the above |
 
-Response fields are allow-listed before they reach the browser. The connector omits PVE storage configuration details, addresses, Ceph FSID/daemon addresses, credentials, and arbitrary response fields. This first pass displays a timestamped snapshot; it does not claim to identify a root cause or make configuration changes. The operator can compare the snapshot with the local runbooks.
+Response fields are allow-listed before they reach the browser. The connector omits PVE storage configuration details, addresses, Ceph FSID/daemon addresses, credentials, and arbitrary response fields. For a host issue, choose **Node Proxmox hỏng**, explicitly load the node list, select the affected host, then request its status. The result includes only that host's membership status and allow-listed current metrics (uptime, load, CPU, memory, root filesystem, and version). An estimated boot time is calculated from snapshot time minus uptime; it does not establish why or when an earlier reboot was initiated. A timeout means the management API did not answer in time, not proof that the whole host is frozen. Check the host's console/BMC, management network, and local boot/service logs to establish cause. The connector never runs repair actions.
 
 `PVEAuditor` is a convenient read-only starting role but can expose more audit data than these endpoints need. Prefer a custom read-only role with only the required audit privileges after validating the exact API permissions on the installed PVE version. Never grant `Administrator`, `PVEAdmin`, `Sys.Modify`, `VM.PowerMgmt`, or storage/Ceph modification privileges.
 

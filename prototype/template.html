@@ -62,6 +62,11 @@ button{font:inherit;cursor:pointer}
 .result h3{margin:0 0 6px;font-size:18px}
 .snapshot-json{max-height:420px;overflow:auto;padding:13px;border-radius:9px;background:#101b2b;color:#e6edf7;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}
 .snapshot-time{font-size:13px;font-weight:700}
+.host-controls{display:grid;grid-template-columns:minmax(220px,1fr) auto auto;gap:10px;align-items:end;margin:14px 0}
+.host-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:9px;margin:12px 0}
+.host-metric{padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:#f8fafc}
+.host-metric strong{display:block;font-size:12px;color:var(--muted)}
+.host-metric span{display:block;margin-top:3px;font-weight:750;overflow-wrap:anywhere}
 button:disabled{opacity:.65;cursor:wait}
 .muted{color:var(--muted)}
 .guide-summary{margin:0 0 13px}
@@ -83,7 +88,7 @@ button:disabled{opacity:.65;cursor:wait}
 .local-only{font-size:12px;color:var(--muted);margin-top:9px}
 footer{padding:12px 0 4px;color:var(--muted);font-size:12px}
 @media(max-width:760px){.scope-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:540px){.formgrid{grid-template-columns:1fr}.panel{padding:15px}header{padding:20px}.progress{grid-template-columns:1fr}.progress-item{padding:7px 10px}.scope-card{min-height:104px}}
+@media(max-width:540px){.formgrid,.host-controls{grid-template-columns:1fr}.panel{padding:15px}header{padding:20px}.progress{grid-template-columns:1fr}.progress-item{padding:7px 10px}.scope-card{min-height:104px}}
 </style>
 </head>
 <body>
@@ -252,7 +257,7 @@ function render(){
   const assistantBubble=el("div","bubble bubble-assistant");
   assistantBubble.append(el("span","bubble-label","Trợ lý tài liệu · chưa kiểm tra cluster"));
   const content=el("div","reply-content");
-  content.append(renderSnapshotPanel(scope));
+  content.append(renderSnapshotPanel(scope,query));
   if(guides.length)guides.forEach(hit=>content.append(renderGuide(hit)));
   if(cases.length){
     const box=el("article","result");
@@ -269,7 +274,8 @@ function render(){
   }
   assistantBubble.append(content);conversation.append(userBubble,assistantBubble);root.append(conversation);
 }
-function renderSnapshotPanel(scope){
+function renderSnapshotPanel(scope,query){
+  if(scope==="pve"&&isHostDiagnostic(query))return renderHostSnapshotPanel();
   const panel=el("section","result");
   panel.append(el("h3",null,"Trạng thái cluster (chỉ đọc)"));
   panel.append(el("p","muted","Chưa có dữ liệu live. Bấm nút để backend nội bộ lấy snapshot qua các API GET được cho phép. Chỉ gửi phạm vi; câu mô tả sự cố không gửi tới backend."));
@@ -317,6 +323,131 @@ function renderSnapshotPanel(scope){
   });
   panel.append(button,output);
   return panel;
+}
+function isHostDiagnostic(query){
+  return /\b(node|host|server|may chu)\b/.test(norm(query));
+}
+async function postDiagnostic(body,timeoutMs=25000){
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),timeoutMs);
+  try{
+    const response=await fetch("../api/diagnose",{
+      method:"POST",
+      credentials:"same-origin",
+      cache:"no-store",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(body),
+      signal:controller.signal
+    });
+    const payload=await response.json().catch(()=>({error:"Backend trả về phản hồi không đọc được."}));
+    if(!response.ok)throw new Error(payload.error||"Yêu cầu kiểm tra thất bại.");
+    return payload;
+  }finally{clearTimeout(timer)}
+}
+function renderHostSnapshotPanel(){
+  const panel=el("section","result");
+  panel.append(el("h3",null,"Kiểm tra một host cụ thể (chỉ đọc)"));
+  panel.append(el("p","muted","Tải danh sách node, chọn đúng host rồi mới yêu cầu trạng thái riêng. Mô tả sự cố không được gửi tới backend."));
+  const controls=el("div","host-controls");
+  const selectWrap=el("div");
+  const label=el("label",null,"Host / node cần kiểm tra");
+  const select=el("select");
+  select.disabled=true;
+  select.append(new Option("Trước tiên hãy tải danh sách host",""));
+  label.append(select);selectWrap.append(label);
+  const loadButton=el("button","secondary","Tải danh sách host");
+  loadButton.type="button";
+  const inspectButton=el("button","primary","Kiểm tra host đã chọn");
+  inspectButton.type="button";inspectButton.disabled=true;
+  const output=el("div","snapshot-output");
+  loadButton.addEventListener("click",async()=>{
+    loadButton.disabled=true;output.replaceChildren();
+    try{
+      const payload=await postDiagnostic({scope:"hosts"});
+      const nodes=payload.sources&&payload.sources.nodes;
+      if(!Array.isArray(nodes))throw new Error("Backend không trả danh sách node.");
+      select.replaceChildren(new Option("Chọn host / node",""));
+      const validNodes=nodes.filter(item=>item&&typeof item.node==="string");
+      validNodes.forEach(item=>{
+        const option=new Option(item.node+(item.status?" · "+item.status:""),item.node);
+        select.append(option);
+      });
+      select.disabled=validNodes.length===0;
+      inspectButton.disabled=validNodes.length===0;
+      if(validNodes.length===0)throw new Error("Danh sách node đang trống; kiểm tra quyền Sys.Audit và trạng thái cluster.");
+      output.append(el("p","muted","Đã tải "+validNodes.length+" node. Chọn đúng host bị ảnh hưởng rồi bấm kiểm tra."));
+    }catch(error){
+      output.append(el("p","safety-text",error.name==="AbortError"
+        ?"Quá thời gian chờ khi tải danh sách node."
+        :error.message||"Không tải được danh sách node."));
+    }finally{loadButton.disabled=false}
+  });
+  inspectButton.addEventListener("click",async()=>{
+    if(!select.value)return;
+    inspectButton.disabled=true;output.replaceChildren();
+    try{
+      const payload=await postDiagnostic({scope:"host",node:select.value},35000);
+      renderHostSnapshot(payload,output);
+    }catch(error){
+      output.append(el("p","safety-text",error.name==="AbortError"
+        ?"Quá thời gian chờ khi kiểm tra host. Điều này chưa đủ để kết luận host bị treo; kiểm tra mạng quản trị, console/BMC và dịch vụ PVE."
+        :error.message||"Không lấy được trạng thái host."));
+    }finally{inspectButton.disabled=false}
+  });
+  controls.append(selectWrap,loadButton,inspectButton);
+  panel.append(controls,output);
+  const link=el("a","links","Checklist lệnh kiểm tra host");
+  link.href="../docs/proxmox/A01-system-and-node.md";link.target="_blank";link.rel="noopener noreferrer";
+  panel.append(link);
+  return panel;
+}
+function renderHostSnapshot(payload,output){
+  const title=el("h4",null,"Kết quả riêng cho host: "+payload.node);
+  const metrics=el("div","host-metrics");
+  const membership=payload.sources&&payload.sources.membership||{};
+  const status=payload.sources&&payload.sources.node_status;
+  addHostMetric(metrics,"Trạng thái membership",membership.status||"Không có dữ liệu");
+  addHostMetric(metrics,"API quản lý của node",status?"Đã phản hồi":"Chưa phản hồi");
+  if(status){
+    if(typeof status.uptime==="number"){
+      addHostMetric(metrics,"Uptime hiện tại",formatDuration(status.uptime));
+      addHostMetric(metrics,"Giờ boot ước tính",formatLocalTime(status.estimated_boot_at));
+    }
+    if(typeof status.cpu==="number")addHostMetric(metrics,"CPU hiện tại",(status.cpu*100).toFixed(1)+"%");
+    if(typeof status.wait==="number")addHostMetric(metrics,"CPU I/O wait",(status.wait*100).toFixed(1)+"%");
+    if(Array.isArray(status.loadavg))addHostMetric(metrics,"Load average",status.loadavg.join(" / "));
+    addHostMetric(metrics,"RAM",formatUsage(status.memory));
+    addHostMetric(metrics,"Root filesystem",formatUsage(status.rootfs));
+    if(status.pveversion)addHostMetric(metrics,"PVE version",status.pveversion);
+    if(status.kversion)addHostMetric(metrics,"Kernel",status.kversion);
+  }
+  output.append(title,el("p","snapshot-time","Snapshot: "+formatLocalTime(payload.collected_at)),metrics);
+  if(payload.errors&&payload.errors.length){
+    const errors=el("ul","signals");
+    payload.errors.forEach(error=>errors.append(el("li",null,error.source+": "+error.message)));
+    output.append(el("p","safety-text","Không lấy được toàn bộ trạng thái host."),errors);
+  }
+  output.append(el("p","muted","Giờ boot là ước tính từ uptime tại thời điểm snapshot; không cho biết nguyên nhân reboot. API phản hồi không đồng nghĩa mọi dịch vụ/workload đều khỏe. Nếu host không phản hồi, kiểm tra console/BMC, mạng quản trị và journal trên host; không tự động reboot."));
+}
+function addHostMetric(container,label,value){
+  const metric=el("div","host-metric");
+  metric.append(el("strong",null,label),el("span",null,String(value)));
+  container.append(metric);
+}
+function formatDuration(seconds){
+  const total=Math.max(0,Math.floor(seconds));
+  const days=Math.floor(total/86400),hours=Math.floor(total%86400/3600),minutes=Math.floor(total%3600/60);
+  return (days?days+" ngày ":"")+(hours?hours+" giờ ":"")+minutes+" phút";
+}
+function formatLocalTime(value){
+  if(!value)return "Không có dữ liệu";
+  const date=new Date(value);
+  return Number.isNaN(date.getTime())?"Không có dữ liệu":date.toLocaleString();
+}
+function formatUsage(data){
+  if(!data||typeof data!=="object")return "Không có dữ liệu";
+  const gib=value=>typeof value==="number"?(value/1073741824).toFixed(1)+" GiB":"?";
+  return gib(data.used)+" / "+gib(data.total)+" đã dùng";
 }
 function scopeLabel(scope){
   return scope==="pve"?"Proxmox host / VM / cluster":scope==="ceph"?"Ceph":scope==="storage"?"Storage":"Tất cả";

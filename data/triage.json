@@ -1,5 +1,88 @@
 [
   {
+    "id": "pve-host-reboot-hang",
+    "title": "PVE host reboot bất thường hoặc không phản hồi",
+    "scope": "pve",
+    "aliases": "node host pve proxmox server reboot rebooted restart khởi động lại tự khởi động treo hang hung freeze frozen không phản hồi offline mất kết nối mất mạng sau reboot máy chủ",
+    "summary": "Khoanh đúng node, xác nhận trạng thái membership và uptime hiện tại; sau đó đối chiếu boot history, journal, service PVE, quorum và storage quanh thời điểm lỗi. Không thể suy ra nguyên nhân reboot chỉ từ uptime hoặc một snapshot.",
+    "steps": [
+      {
+        "title": "1. Chọn đúng node và xác định host có phản hồi không",
+        "why": "Trong giao diện live, tải danh sách node, chọn đúng host rồi thu thập riêng trạng thái node. Nếu API timeout, chưa đủ cơ sở kết luận toàn bộ host bị treo; kiểm tra console/BMC và mạng quản trị.",
+        "commands": [
+          "pvecm nodes",
+          "uptime -s && uptime",
+          "ip -br link"
+        ],
+        "signals": [
+          {
+            "match": "Host online và uptime thấp hơn thời điểm dự kiến",
+            "meaning": "Có thể host đã reboot; ghi lại thời điểm boot ước tính và đối chiếu journal/task history để tìm nguyên nhân, không suy đoán reboot do kernel hay người vận hành."
+          },
+          {
+            "match": "Host không phản hồi API/SSH nhưng console hoặc BMC vẫn truy cập được",
+            "meaning": "Kiểm tra trạng thái boot, mạng quản trị, dịch vụ PVE và log từ console; tránh reboot thêm khi chưa thu thập được bằng chứng."
+          },
+          {
+            "match": "Node offline trong membership hoặc mất khỏi cluster",
+            "meaning": "Xác nhận node có thật sự tắt qua BMC/console và kiểm tra quorum/Ceph trên node còn sống trước mọi thao tác."
+          }
+        ]
+      },
+      {
+        "title": "2. Tìm thời điểm reboot và lỗi của boot trước",
+        "why": "Chạy trực tiếp trên host sau khi truy cập được. Journal boot trước có thể không tồn tại nếu journald không lưu persistent logs; `last` dựa vào wtmp nên chỉ là nguồn đối chiếu.",
+        "commands": [
+          "journalctl --list-boots",
+          "journalctl -b -1 -p warning..alert --no-pager -n 200",
+          "last -x -F | head -n 20"
+        ],
+        "signals": [
+          {
+            "match": "Boot trước có kernel panic, watchdog, OOM hoặc lỗi I/O ngay trước khi dừng log",
+            "meaning": "Giữ lại log và đối chiếu kernel, RAM, thiết bị và storage; thiếu dòng shutdown cuối có thể do mất điện hoặc log chưa flush nhưng không tự chứng minh điều đó."
+          },
+          {
+            "match": "Không có boot trước trong journal hoặc wtmp",
+            "meaning": "Kiểm tra journald persistent storage, log remote, BMC/IPMI và monitoring; không kết luận là host chưa reboot."
+          }
+        ]
+      },
+      {
+        "title": "3. Kiểm tra dịch vụ PVE và sức khỏe cluster sau khi boot",
+        "why": "Chạy trên node đang truy cập được. `pvesm status` có thể chậm nếu backend storage treo; dùng timeout và dừng phân tích nhánh storage nếu lệnh không trả về.",
+        "commands": [
+          "systemctl --failed",
+          "systemctl status pve-cluster pvedaemon pveproxy pvestatd --no-pager",
+          "pvecm status",
+          "timeout 20 pvesm status",
+          "ceph -s"
+        ],
+        "signals": [
+          {
+            "match": "pve-cluster/corosync lỗi hoặc quorum không đủ",
+            "meaning": "Đối chiếu case mất quorum và trạng thái các node còn lại; không ép quorum hoặc remove node trong bước chẩn đoán."
+          },
+          {
+            "match": "pvestatd treo hoặc pvesm status timeout",
+            "meaning": "Kiểm tra từng backend storage, nhất là NFS/iSCSI/Ceph; storage lỗi có thể làm giao diện node báo dấu hỏi."
+          },
+          {
+            "match": "Dịch vụ hoạt động nhưng CPU wait/load hoặc host vẫn bất thường",
+            "meaning": "Đối chiếu kernel/device logs và monitoring theo cùng khoảng thời gian; một snapshot hiện tại không cho biết xu hướng."
+          }
+        ]
+      }
+    ],
+    "related_cases": [
+      "pve-host-rebuild-no-config-backup",
+      "pve-quorum-lost",
+      "pvestatd-unknown",
+      "nfs-storage-offline"
+    ],
+    "safety": "Chỉ thu thập trạng thái và log. Chưa reboot/restart service, force stop VM, ép quorum, remove node hoặc thay đổi Ceph/storage; ẩn hostname, IP, username và dữ liệu nhạy cảm trước khi chia sẻ log."
+  },
+  {
     "id": "vm-unexpected-stop",
     "title": "VM crash / tự tắt / reboot bất thường",
     "scope": "pve",

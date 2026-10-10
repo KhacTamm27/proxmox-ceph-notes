@@ -156,6 +156,10 @@ r = ["# Proxmox + Ceph command notes", "",
 if args.repo:
     user, name = args.repo.split("/")
     r += [f"**Mindmap tương tác (lọc lệnh, mở thẳng từng mục):** https://{user}.github.io/{name}/", ""]
+r += ["## Trạng thái dự án", "",
+      "- Prototype đang ở Phase 2 pilot: backend chỉ đọc đã cài trên VM và chỉ gọi API khi operator chủ động yêu cầu.",
+      "- Bản cập nhật này bổ sung chọn một host cụ thể, xem trạng thái/uptime và giờ boot ước tính; cần cập nhật backend + giao diện mới lên VM để dùng luồng đó.",
+      "- URL/token/CA được cấu hình riêng trên VM, không lưu trong Git. Ứng dụng không chạy lệnh, reboot hoặc thay đổi cấu hình cluster.", ""]
 r += ["## Cách tìm nhanh", "",
       "- Mới bắt đầu: mở mindmap, chọn lối đi theo nhu cầu (tìm lệnh, sửa lỗi Proxmox/Ceph, cấu hình network); mở case để đọc triệu chứng, nguyên nhân, các bước và lưu ý.",
       "- Tìm nội dung: gõ từ khóa tiếng Việt hoặc tiếng Anh vào ô tìm kiếm; truy vấn như `storage bị chậm` hoặc `VM crash` có thể hiện quy trình chẩn đoán ban đầu, lệnh đọc trạng thái và cách hiểu dấu hiệu. Mindmap tài liệu là trang tĩnh, không kết nối cluster.",
