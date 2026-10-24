@@ -1,17 +1,19 @@
-# B11 · Recovery, scrub and config tuning
+# B11 · Recovery, scrub và tinh chỉnh cấu hình
 
-[← Mục lục](../../README.md) · Ceph · 11 lệnh
+[← Mục lục](../../README.md) · Ceph · 11 lệnh · tên gốc: Recovery, scrub and config tuning
 
-[← B10 Placement groups](../ceph/B10-placement-groups.md) · [B12 RBD (VM disks) →](../ceph/B12-rbd-vm-disks.md)
+Ký hiệu: `[chỉ đọc]` chỉ xem trạng thái, không thay đổi hệ thống; `⚠ NGUY HIỂM` phá hủy hoặc ảnh hưởng dịch vụ; không ghi chú gì là lệnh có thay đổi cấu hình hoặc trạng thái, đọc kỹ trước khi chạy.
 
-## Config
+[← B10 Placement group (PG)](../ceph/B10-placement-groups.md) · [B12 RBD (đĩa VM) →](../ceph/B12-rbd-vm-disks.md)
+
+## Cấu hình (Config)
 
 ```bash
-# Toàn bộ cấu hình tập trung đã đặt | All centralized settings
+# [chỉ đọc] Toàn bộ cấu hình tập trung đã đặt | All centralized settings
 # từ khóa: config cấu hình
 ceph config dump
 
-# Đọc một tùy chọn cấu hình | Read one option
+# [chỉ đọc] Đọc một tùy chọn cấu hình | Read one option
 # từ khóa: config get
 ceph config get <who> <option>
 
@@ -32,7 +34,7 @@ ceph config rm <who> <option>
 ceph config set osd osd_max_backfills 1
 ```
 
-## Recovery
+## Phục hồi (Recovery)
 
 ```bash
 # Giới hạn số thao tác recovery đồng thời | Limit recovery ops
@@ -67,3 +69,10 @@ ceph config set osd osd_scrub_begin_hour 22
 # từ khóa: scrub giờ lịch
 ceph config set osd osd_scrub_end_hour 6
 ```
+
+## Case và runbook dùng lệnh trong nhóm này
+
+- [Cảnh báo PG không được scrub / deep-scrub kịp thời](../cases/ceph/deep-scrub-late.md)
+- [PG degraded / undersized, recovery chậm](../cases/ceph/pg-degraded-recovery.md)
+- [Slow ops / blocked requests (Ceph chậm, IO bị chặn)](../cases/ceph/slow-ops.md)
+- [Thêm OSD hoặc node mới làm chậm production](../cases/ceph/add-osd-throttle.md)

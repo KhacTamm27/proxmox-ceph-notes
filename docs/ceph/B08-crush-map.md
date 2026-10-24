@@ -2,32 +2,34 @@
 
 [← Mục lục](../../README.md) · Ceph · 19 lệnh
 
-[← B7 OSD daemon and performance (admin socket)](../ceph/B07-osd-daemon-and-performance-admin-socket.md) · [B9 Pools →](../ceph/B09-pools.md)
+Ký hiệu: `[chỉ đọc]` chỉ xem trạng thái, không thay đổi hệ thống; `⚠ NGUY HIỂM` phá hủy hoặc ảnh hưởng dịch vụ; không ghi chú gì là lệnh có thay đổi cấu hình hoặc trạng thái, đọc kỹ trước khi chạy.
 
-## View
+[← B7 Daemon OSD và hiệu năng (admin socket)](../ceph/B07-osd-daemon-and-performance-admin-socket.md) · [B9 Pool →](../ceph/B09-pools.md)
+
+## Xem (View)
 
 ```bash
-# Cây phân cấp CRUSH | CRUSH hierarchy
+# [chỉ đọc] Cây phân cấp CRUSH | CRUSH hierarchy
 # từ khóa: crush cây host rack
 ceph osd crush tree
 
-# Các device class | Device classes
+# [chỉ đọc] Các device class | Device classes
 # từ khóa: device class ssd hdd
 ceph osd crush class ls
 
-# Profile tunables của CRUSH | Tunables profile
+# [chỉ đọc] Profile tunables của CRUSH | Tunables profile
 # từ khóa: tunables crush
 ceph osd crush tunables show
 ```
 
-## Rules
+## Rule (Rules)
 
 ```bash
-# Liệt kê rule CRUSH | List rules
+# [chỉ đọc] Liệt kê rule CRUSH | List rules
 # từ khóa: crush rule
 ceph osd crush rule ls
 
-# Chi tiết một rule CRUSH | Rule detail
+# [chỉ đọc] Chi tiết một rule CRUSH | Rule detail
 # từ khóa: crush rule chi tiết
 ceph osd crush rule dump <rule>
 
@@ -44,7 +46,7 @@ ceph osd crush rule create-erasure <rule> <profile>
 ceph osd crush rule rm <rule>
 ```
 
-## Buckets
+## Bucket (Buckets)
 
 ```bash
 # Tạo bucket CRUSH | Create bucket
@@ -68,14 +70,14 @@ ceph osd crush rename-bucket <old> <new>
 ceph osd crush remove <name>
 ```
 
-## Map file
+## File map (Map file)
 
 ```bash
-# Xuất CRUSH map đã biên dịch | Export compiled map
+# [chỉ đọc] Xuất CRUSH map đã biên dịch | Export compiled map
 # từ khóa: crush map export backup
 ceph osd getcrushmap -o crush.bin
 
-# Giải mã CRUSH map ra text | Decompile
+# [chỉ đọc] Giải mã CRUSH map ra text | Decompile
 # từ khóa: crush decompile
 crushtool -d crush.bin -o crush.txt
 
@@ -83,11 +85,11 @@ crushtool -d crush.bin -o crush.txt
 # từ khóa: crush compile
 crushtool -c crush.txt -o crush.new
 
-# Kiểm tra mapping lỗi | Validate mappings
+# [chỉ đọc] Kiểm tra mapping lỗi | Validate mappings
 # từ khóa: crush test mapping
 crushtool -i crush.bin --test --rule <n> --num-rep 3 --show-bad-mappings
 
-# Mô phỏng phân bố dữ liệu | Simulate distribution
+# [chỉ đọc] Mô phỏng phân bố dữ liệu | Simulate distribution
 # từ khóa: crush mô phỏng phân bố
 crushtool -i crush.bin --test --rule <n> --num-rep 3 --show-utilization
 

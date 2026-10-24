@@ -1,26 +1,28 @@
-# B9 · Pools
+# B9 · Pool
 
-[← Mục lục](../../README.md) · Ceph · 18 lệnh
+[← Mục lục](../../README.md) · Ceph · 18 lệnh · tên gốc: Pools
 
-[← B8 CRUSH map](../ceph/B08-crush-map.md) · [B10 Placement groups →](../ceph/B10-placement-groups.md)
+Ký hiệu: `[chỉ đọc]` chỉ xem trạng thái, không thay đổi hệ thống; `⚠ NGUY HIỂM` phá hủy hoặc ảnh hưởng dịch vụ; không ghi chú gì là lệnh có thay đổi cấu hình hoặc trạng thái, đọc kỹ trước khi chạy.
 
-## View
+[← B8 CRUSH map](../ceph/B08-crush-map.md) · [B10 Placement group (PG) →](../ceph/B10-placement-groups.md)
+
+## Xem (View)
 
 ```bash
-# Pool kèm các thiết lập | Pools with settings
+# [chỉ đọc] Pool kèm các thiết lập | Pools with settings
 # từ khóa: pool danh sách chi tiết size min_size
 ceph osd pool ls detail
 
-# Toàn bộ thiết lập của pool | All settings of a pool
+# [chỉ đọc] Toàn bộ thiết lập của pool | All settings of a pool
 # từ khóa: pool cấu hình
 ceph osd pool get <pool> all
 
-# IO client và recovery theo pool | Client and recovery IO per pool
+# [chỉ đọc] IO client và recovery theo pool | Client and recovery IO per pool
 # từ khóa: pool io recovery
 ceph osd pool stats
 ```
 
-## Create
+## Tạo mới (Create)
 
 ```bash
 # Tạo pool | Create pool
@@ -32,7 +34,7 @@ ceph osd pool create <pool> <pg_num>
 ceph osd pool application enable <pool> rbd
 ```
 
-## Settings
+## Thiết lập (Settings)
 
 ```bash
 # Số bản sao của pool | Replica count
@@ -60,27 +62,27 @@ ceph osd pool set <pool> target_size_ratio 0.9
 ceph osd pool set <pool> nodelete true
 ```
 
-## Autoscale
+## Tự co giãn PG (Autoscale)
 
 ```bash
-# Xem autoscaler đề xuất PG | PG autoscaler view
+# [chỉ đọc] Xem autoscaler đề xuất PG | PG autoscaler view
 # từ khóa: autoscale pg số pg
 ceph osd pool autoscale-status
 ```
 
-## Quota
+## Hạn mức (quota) (Quota)
 
 ```bash
 # Đặt quota cho pool | Set quota
 # từ khóa: quota pool giới hạn
 ceph osd pool set-quota <pool> max_bytes <n>
 
-# Xem quota của pool | Show quota
+# [chỉ đọc] Xem quota của pool | Show quota
 # từ khóa: quota pool
 ceph osd pool get-quota <pool>
 ```
 
-## Rename
+## Đổi tên (Rename)
 
 ```bash
 # Đổi tên pool | Rename pool
@@ -88,7 +90,7 @@ ceph osd pool get-quota <pool>
 ceph osd pool rename <old> <new>
 ```
 
-## Delete
+## Xóa (Delete)
 
 ```bash
 # Cho phép xóa pool | Allow deletion
@@ -100,10 +102,15 @@ ceph config set mon mon_allow_pool_delete true
 ceph osd pool delete <pool> <pool> --yes-i-really-really-mean-it
 ```
 
-## Usage
+## Mức sử dụng (Usage)
 
 ```bash
-# Số object và dung lượng theo pool | Objects and bytes per pool
+# [chỉ đọc] Số object và dung lượng theo pool | Objects and bytes per pool
 # từ khóa: dung lượng pool object
 rados df
 ```
+
+## Case và runbook dùng lệnh trong nhóm này
+
+- [Storage dùng chung giữa hai cluster Proxmox gây xung đột lock/VMID](../cases/pve/pve-storage-shared-clusters.md)
+- [Cảnh báo too many / too few PGs, chỉnh pg_num](../cases/ceph/pg-count.md)

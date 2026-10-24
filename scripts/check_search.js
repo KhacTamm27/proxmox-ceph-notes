@@ -14,7 +14,8 @@ Object.values(DATA).forEach(bs => bs.forEach(b => b.subs.forEach(s => s.items.fo
 }))));
 const GUIDES = load('guides.json').map(g => ({...g, md: fs.readFileSync(path.join(ROOT, g.file), 'utf8')}));
 const engine = createSearch(load('synonyms.json'));
-const index = createIndex(engine, {DATA, CASES: load('cases.json'), SCRIPTS: load('scripts.json'), TRIAGE: load('triage.json'), GUIDES});
+const index = createIndex(engine, {DATA, CASES: load('cases.json'), SCRIPTS: load('scripts.json'), TRIAGE: load('triage.json'), GUIDES,
+  TOPICS: load('topics.json'), LABELS: load('labels_vi.json')});
 
 const queries = process.argv.slice(2);
 if (queries.length) {

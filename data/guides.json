@@ -7,6 +7,10 @@
   "updated": "2026-10-24",
   "summary": "Theo dõi ops/s, băng thông và tỉ lệ lỗi theo từng S3 user và bucket trên Ceph RGW. Exporter đọc usage log qua Admin Ops API, Prometheus lưu và cảnh báo, Grafana hiển thị. Gồm mô hình lab, luồng hoạt động, script triển khai tự động, các điểm cần double check, lỗi thường gặp, thay đổi cấu hình, thêm luật cảnh báo và sửa dashboard.",
   "tags": "s3 rgw radosgw usage log usage exporter radosgw_usage_exporter prometheus grafana dashboard alert cảnh báo giám sát monitoring metric ops/s băng thông tỉ lệ lỗi user bucket owner admin ops api docker promtool rule luật",
+  "topics": [
+   "rgw",
+   "monitor"
+  ],
   "file": "docs/guides/s3-rgw-usage-monitoring.md",
   "attachments": [
    "tools/s3-rgw-usage/s3gw-prepare.sh",

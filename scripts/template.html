@@ -157,6 +157,19 @@ details.case ol li{padding:7px 0}
 .guide-toc li{break-inside:avoid;margin:2px 0}
 .guide-toc li.sub{list-style:circle;margin-left:14px;font-size:13px}
 @media(max-width:620px){.guide-toc{columns:1}}
+.topic-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.topic-row .navlabel{font-size:12px;color:var(--muted);margin-right:2px}
+.chip[aria-pressed=true]{border-color:var(--brand);background:var(--brand);color:#fff}
+.tag{display:inline-block;margin-left:6px;padding:0 6px;border-radius:999px;font-size:11px;font-weight:650;vertical-align:1px;white-space:nowrap}
+.tag.ro{background:var(--ceph-soft);color:var(--ceph)}
+.tag.danger{background:var(--warning);color:var(--danger)}
+.uses{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.uses a,.also a{color:var(--brand);text-decoration:none}
+.uses a:hover,.also a:hover,.cref:hover{text-decoration:underline}
+.also{font-size:12px;color:var(--muted);margin-left:6px}
+.cref{margin-left:6px;font-size:12px;color:var(--brand);text-decoration:none}
+.subname small{color:var(--muted);font-weight:500;margin-left:6px}
+.browse-branches{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px}
 </style>
 </head>
 <body>
@@ -191,9 +204,10 @@ details.case ol li{padding:7px 0}
       <input id="q" type="search" placeholder="Ví dụ: mất quorum, OSD latency, LACP, ceph -s..." aria-label="Tìm lệnh, case, runbook và script">
       <span class="search-hint">/ để tìm</span>
     </div>
-    <div class="search-help"><span>Tìm đồng thời trong lệnh, mô tả, từ khóa, case và hướng dẫn.</span><span>Nhấn Esc để xóa nội dung tìm kiếm.</span></div>
+    <div class="search-help"><span>Tìm đồng thời trong lệnh, mô tả, từ khóa, case, bài viết và hướng dẫn. Chọn chủ đề để thu hẹp.</span><span>Nhấn Esc để xóa nội dung tìm kiếm.</span></div>
   </div>
   <div class="quick-searches" id="chips" aria-label="Từ khóa gợi ý"></div>
+  <div class="topic-row" id="topics" aria-label="Lọc theo chủ đề"><span class="navlabel">Chủ đề:</span></div>
 </section>
 <main class="pagewrap">
 <section class="start-section" aria-labelledby="start-heading">
@@ -234,7 +248,11 @@ const DATA=/*__DATA__*/null;
 const REPO="/*__REPO__*/";const SLUGS=/*__SLUGS__*/{};const CASES=/*__CASES__*/[];const TRIAGE=/*__TRIAGE__*/[];const SCRIPTS=/*__SCRIPTS__*/[];
 const SYNONYMS=/*__SYNONYMS__*/[];
 const GUIDES=/*__GUIDES__*/[];
-const ENGINE=createSearch(SYNONYMS),INDEX=createIndex(ENGINE,{DATA,CASES,SCRIPTS,TRIAGE,GUIDES});
+const TOPICS=/*__TOPICS__*/{},LABELS=/*__LABELS__*/{};
+const ENGINE=createSearch(SYNONYMS),INDEX=createIndex(ENGINE,{DATA,CASES,SCRIPTS,TRIAGE,GUIDES,TOPICS,LABELS});
+const BN=b=>(LABELS.branches||{})[b.id]||b.name,SN=n=>(LABELS.subs||{})[n]||n;
+const CASE_BY_ID=Object.fromEntries(CASES.map(c=>[c.id,c])),TOPIC_NAME=Object.fromEntries((TOPICS.topics||[]).map(t=>[t.id,t.name]));
+let TOPIC=null;
 const $=s=>document.querySelector(s);
 const map=$('#map'),wires=$('#wires'),root=$('#root'),q=$('#q');
 let raf=0;
@@ -263,6 +281,14 @@ function setOpen(sec,open){
   const btn=sec.querySelector('.bhead'),body=sec.querySelector('.bbody');
   body.hidden=!open;btn.setAttribute('aria-expanded',String(open));
 }
+function badges(it){return it.d?[el('span','tag danger','nguy hiểm')]:it.r?[el('span','tag ro','chỉ đọc')]:[]}
+function usesEl(it){
+  const u=(it.u||[]).filter(id=>CASE_BY_ID[id]);if(!u.length)return null;
+  const sp=el('span','uses','Dùng trong: ');
+  u.slice(0,3).forEach((id,i)=>{if(i)sp.append(' · ');const c=CASE_BY_ID[id],t=c.title.length>60?c.title.slice(0,57)+'…':c.title;const a=el('a',null,t);a.href='#case-'+id;a.title=c.title;sp.append(a)});
+  if(u.length>3)sp.append(' và '+(u.length-3)+' mục khác');
+  return sp;
+}
 function build(side,branches,holder,title){
   const h=document.createElement('p');h.className='sidehead';h.textContent=title;holder.appendChild(h);
   branches.forEach(b=>{
@@ -270,15 +296,15 @@ function build(side,branches,holder,title){
     const sec=document.createElement('section');sec.className='branch '+side;sec.dataset.side=side;
     const btn=document.createElement('button');btn.type='button';btn.className='bhead';btn.setAttribute('aria-expanded','false');
     const id=document.createElement('span');id.className='bid';id.textContent=b.id;
-    const nm=document.createElement('span');nm.className='bname';nm.textContent=b.name;
+    const nm=document.createElement('span');nm.className='bname';nm.textContent=BN(b);if(BN(b)!==b.name)nm.title=b.name;
     const ct=document.createElement('span');ct.className='bcount';ct.textContent=n;
-    const sb=document.createElement('span');sb.className='bsubs';sb.textContent=b.subs.map(s=>s.name).join(' · ');
+    const sb=document.createElement('span');sb.className='bsubs';sb.textContent=b.subs.map(s=>SN(s.name)).join(' · ');
     btn.append(id,nm,sb,ct);
     sec.id=b.id;
     const body=document.createElement('div');body.className='bbody';body.hidden=true;
     b.subs.forEach(s=>{
       const sub=document.createElement('div');sub.className='sub';
-      const t=document.createElement('div');t.className='subname';t.textContent=s.name;sub.appendChild(t);
+      const t=document.createElement('div');t.className='subname';t.textContent=SN(s.name);if(SN(s.name)!==s.name)t.append(el('small',null,s.name));sub.appendChild(t);
       const ul=document.createElement('ul');
       s.items.forEach(it=>{
         const li=document.createElement('li');if(it.d)li.className='danger';
@@ -287,7 +313,9 @@ function build(side,branches,holder,title){
         c.addEventListener('click',()=>copy(c,it.c));
         c.addEventListener('keydown',e=>{if(e.key==='Enter')copy(c,it.c)});
         const w=document.createElement('span');w.className='why';w.textContent=it.p;
-        if(it.v){const vv=document.createElement('span');vv.className='vi';vv.textContent=it.v;li.append(c,vv,w)}else li.append(c,w);ul.appendChild(li);
+        li.append(c,...badges(it));
+        if(it.v){const vv=document.createElement('span');vv.className='vi';vv.textContent=it.v;li.append(vv,w)}else li.append(w);
+        const u=usesEl(it);if(u)li.append(u);ul.appendChild(li);
       });
       sub.appendChild(ul);body.appendChild(sub);
     });
@@ -300,8 +328,9 @@ build('left',DATA.left,$('#left'),'Proxmox VE · '+DATA.left.length+' nhóm');
 build('right',DATA.right,$('#right'),'Ceph · '+DATA.right.length+' nhóm');
 $('#expand').addEventListener('click',()=>{document.querySelectorAll('.branch:not([hidden])').forEach(s=>setOpen(s,true));draw()});
 $('#collapse').addEventListener('click',()=>{document.querySelectorAll('.branch').forEach(s=>setOpen(s,false));draw()});
-q.addEventListener('input',()=>{
-  const v=q.value.trim(),r=v?INDEX.query(v):null,found=r&&new Set(r.commands.map(x=>x.it));
+const inTopic=id=>!TOPIC||((TOPICS.branches||{})[id]||[]).includes(TOPIC);
+function refresh(){
+  const v=q.value.trim(),r=(v||TOPIC)?INDEX.query(v,TOPIC):null,found=r&&new Set(r.commandHits.map(x=>x.it));
   renderResults(v,r);
   document.querySelectorAll('.branch').forEach(sec=>{
     let any=false;
@@ -310,11 +339,21 @@ q.addEventListener('input',()=>{
       sub.querySelectorAll('li').forEach(li=>{const ok=!v||found.has(li.item);li.hidden=!ok;if(ok)subAny=true});
       sub.hidden=!subAny;if(subAny)any=true;
     });
-    sec.hidden=!!v&&!any;
-    setOpen(sec,!!v&&any);
+    sec.hidden=!inTopic(sec.id)||(!!v&&!any);
+    setOpen(sec,!!v&&any&&inTopic(sec.id));
   });
+  document.querySelectorAll('#jump a.jl').forEach(a=>{a.hidden=!inTopic(a.hash.slice(1))});
+  const u=new URL(location.href);
+  v?u.searchParams.set('q',v):u.searchParams.delete('q');TOPIC?u.searchParams.set('topic',TOPIC):u.searchParams.delete('topic');
+  history.replaceState(null,'',u);
   draw();
-});
+}
+q.addEventListener('input',refresh);
+function setTopic(id){
+  TOPIC=TOPIC===id?null:id;
+  document.querySelectorAll('#topics .chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.topic===TOPIC)));
+  refresh();
+}
 window.addEventListener('resize',draw);
 window.addEventListener('scroll',draw,{passive:true});
 if(window.ResizeObserver)new ResizeObserver(draw).observe(map);
@@ -329,7 +368,8 @@ CASES.forEach(c=>{
   const p1=el('p');p1.append(el('b',null,rb?'Mục tiêu: ':'Triệu chứng: '),rb?c.goal:c.symptoms);
   const p2=el('p');p2.append(el('b',null,rb?'Điều kiện trước khi làm: ':'Nguyên nhân hay gặp: '),rb?c.prereq:c.causes);
   const ol=el('ol');
-  c.steps.forEach(st=>{const li=el('li',null,st.t);(st.cmds||[]).forEach(x=>li.append(cmdEl(x)));
+  c.steps.forEach(st=>{const li=el('li',null,st.t);(st.cmds||[]).forEach((x,i)=>{li.append(cmdEl(x));const ref=(st.refs||[])[i];
+      if(ref){const a=el('a','cref',ref);a.href='#'+ref;a.title='Xem nhóm lệnh '+ref+' trong thư viện';li.append(a)}});
     (st.files||[]).forEach(f=>{li.append(el('div','fpath',f.path));const fb=el('button','pbtn','Copy file');fb.type='button';fb.addEventListener('click',()=>copy(fb,f.code));const fp=el('pre','code');fp.append(el('code',null,f.code));li.append(fb,fp)});
     ol.append(li)});
   const nt=el('p','note','Lưu ý: '+c.notes);
@@ -419,16 +459,18 @@ function renderTriage(hit){
 function renderResults(v,r){
   res.replaceChildren();
   const shown=r&&new Set([...r.cases.map(x=>'case-'+x.c.id),...r.scripts.map(x=>'script-'+x.s.id),...r.guides.map(x=>'guide-'+x.g.id)]);
-  casesEl.querySelectorAll('details.case').forEach(d=>{d.hidden=!!v&&!shown.has(d.id)});
-  if(!v){res.hidden=true;return}
-  if(!r.terms.length){
+  casesEl.querySelectorAll('details.case').forEach(d=>{d.hidden=!!r&&!shown.has(d.id)});
+  if(!r){res.hidden=true;return}
+  if(!r.terms.length&&!r.browse){
     res.append(el('p','results-empty','Nhập một từ khóa có ý nghĩa, ví dụ “storage chậm”, “VM crash”, “OSD latency” hoặc một tên lệnh.'));
     res.hidden=false;return;
   }
   const hits=r.commands,ch=r.cases.map(x=>x.c),sh=r.scripts.map(x=>x.s),gd=r.guides.map(x=>x.g),guided=r.triage;
   const head=el('div','rhead');
-  head.append(el('span',null,'Kết quả: '+guided.length+' hướng dẫn chẩn đoán, '+hits.length+' lệnh, '+ch.length+' case/runbook, '+gd.length+' bài viết, '+sh.length+' script'));
-  if(hits.length||ch.length||sh.length||gd.length||guided.length){
+  const tn=TOPIC?' trong chủ đề “'+TOPIC_NAME[TOPIC]+'”':'';
+  head.append(el('span',null,r.browse?'Chủ đề “'+TOPIC_NAME[TOPIC]+'”: '+ch.length+' case/runbook, '+gd.length+' bài viết, '+sh.length+' script. Gõ từ khóa để tìm lệnh trong chủ đề này.'
+    :'Kết quả'+tn+': '+guided.length+' hướng dẫn chẩn đoán, '+hits.length+' lệnh, '+ch.length+' case/runbook, '+gd.length+' bài viết, '+sh.length+' script'));
+  if(!r.browse&&(hits.length||ch.length||sh.length||gd.length||guided.length)){
     const pb=el('button','pbtn','Copy prompt cho Claude');pb.type='button';
     pb.addEventListener('click',()=>copy(pb,mkPrompt('"'+q.value.trim()+'"','',hits.slice(0,15).map(h=>h.it.c))));
     head.append(pb);
@@ -436,16 +478,24 @@ function renderResults(v,r){
   const syn=r.terms.filter(t=>t.alts.length>1).map(t=>ENGINE.label(t.raw)+' → '+t.alts.filter(a=>a!==t.raw).slice(0,4).map(ENGINE.label).join(', '));
   res.append(head);
   if(syn.length)res.append(el('p','note synonyms','Tìm cả từ đồng nghĩa: '+syn.join(' · ')));
+  if(r.browse){
+    const bl=el('div','browse-branches');
+    [...DATA.left,...DATA.right].filter(b=>inTopic(b.id)).forEach(b=>{const a=el('a','chip',b.id+' · '+BN(b));a.href='#'+b.id;bl.append(a)});
+    res.append(el('b',null,'Nhóm lệnh'),bl);
+  }
   if(!hits.length&&!ch.length&&!sh.length&&!gd.length&&!guided.length){
     res.append(el('p','results-empty','Chưa tìm thấy nội dung phù hợp. Thử từ khóa ngắn hơn hoặc tìm bằng cả tiếng Việt và tiếng Anh.'));
   }
-  ch.slice(0,12).forEach(c=>{const a=el('a','rcase',(c.kind==='runbook'?'Runbook: ':c.scope==='pve'?'Case Proxmox: ':'Case Ceph: ')+c.title);a.href='#case-'+c.id;res.append(a)});
-  if(ch.length>12)res.append(el('p','note','Còn '+(ch.length-12)+' case/runbook ít liên quan hơn, xem trong các tab Case và Runbook.'));
+  const lim=r.browse?ch.length:12;
+  ch.slice(0,lim).forEach(c=>{const a=el('a','rcase',(c.kind==='runbook'?'Runbook: ':c.scope==='pve'?'Case Proxmox: ':'Case Ceph: ')+c.title);a.href='#case-'+c.id;res.append(a)});
+  if(ch.length>lim)res.append(el('p','note','Còn '+(ch.length-lim)+' case/runbook ít liên quan hơn, xem trong các tab Case và Runbook.'));
   gd.forEach(g=>{const a=el('a','rcase','Bài viết: '+g.title);a.href='#guide-'+g.id;res.append(a)});
   sh.forEach(s=>{const a=el('a','rcase','Script: '+s.title);a.href='#script-'+s.id;res.append(a)});
-  hits.slice(0,30).forEach(({b,it})=>{
-    const row=el('div','rrow');const a=el('a',null,b.id);a.href='#'+b.id;
-    const box=el('div');box.append(cmdEl(it.c),el('span','vi',it.v||it.p));
+  hits.slice(0,30).forEach(({b,it,also})=>{
+    const row=el('div','rrow');const a=el('a',null,b.id);a.href='#'+b.id;a.title=BN(b);
+    const box=el('div');box.append(cmdEl(it.c),...badges(it));
+    if(also&&also.length){const sp=el('span','also','cũng ở ');also.forEach((id,i)=>{if(i)sp.append(', ');const x=el('a',null,id);x.href='#'+id;sp.append(x)});box.append(sp)}
+    box.append(el('span','vi',it.v||it.p));const u=usesEl(it);if(u)box.append(u);
     row.append(a,box);res.append(row);
   });
   if(hits.length>30)res.append(el('p','note','Còn '+(hits.length-30)+' lệnh nữa, thu hẹp từ khóa để xem.'));
@@ -459,10 +509,13 @@ function renderResults(v,r){
 ['VM crash','VM không start','storage chậm','mất quorum','OSD latency','network LACP','VLAN trunk','RGW 503','scrub lỗi','storage đầy','kiểm tra host'].forEach(x=>{
   const b=el('button','chip',x);b.type='button';
   b.addEventListener('click',()=>{q.value=x;q.dispatchEvent(new Event('input'))});$('#chips').append(b)});
+(TOPICS.topics||[]).forEach(t=>{
+  const b=el('button','chip',t.name);b.type='button';b.dataset.topic=t.id;b.setAttribute('aria-pressed','false');
+  b.addEventListener('click',()=>setTopic(t.id));$('#topics').append(b)});
 const jump=$('#jump');
 [['Proxmox',DATA.left],['Ceph',DATA.right]].forEach(([n,arr])=>{
   jump.append(el('span','jump-label',n));
-  arr.forEach(b=>{const a=el('a','jl',b.name);a.href='#'+b.id;a.title=b.id+' · '+b.name;jump.append(a)});
+  arr.forEach(b=>{const a=el('a','jl',BN(b));a.href='#'+b.id;a.title=b.id+' · '+b.name;jump.append(a)});
 });
 function openHash(){
   const id=decodeURIComponent(location.hash.slice(1));if(!id)return;
@@ -476,6 +529,7 @@ function openHash(){
   if(id.startsWith('case-')){const cc=CASES.find(c=>'case-'+c.id===id);show(cc&&cc.kind==='runbook'?'run':cc&&cc.scope==='pve'?'pve':'ceph');const d=document.getElementById(id);if(d){d.hidden=false;d.open=true;d.scrollIntoView({block:'start'})}return}
   show('map');
   const sec=document.getElementById(id);if(!sec||!sec.classList.contains('branch'))return;
+  if(!inTopic(id))setTopic(TOPIC);  // nhóm đang bị bộ lọc chủ đề ẩn: bỏ lọc để mở được
   setOpen(sec,true);draw();sec.scrollIntoView({block:'center'});
 }
 window.addEventListener('hashchange',openHash);
@@ -486,8 +540,9 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&document.activeElement===q){q.value='';q.dispatchEvent(new Event('input'));q.blur()}
   if(e.key==='Enter'&&document.activeElement===q&&q.value.trim()){res.scrollIntoView({block:'start',behavior:'smooth'})}
 });
-const qp=new URLSearchParams(location.search).get('q');
-if(qp){q.value=qp;q.dispatchEvent(new Event('input'))}
+const sp=new URLSearchParams(location.search),qp=sp.get('q'),tp=sp.get('topic');
+if(qp)q.value=qp;
+if(tp&&TOPIC_NAME[tp])setTopic(tp);else if(qp)refresh();
 const commandCount=[...DATA.left,...DATA.right].reduce((n,b)=>n+b.subs.reduce((m,s)=>m+s.items.length,0),0);
 $('#stat-commands').textContent=commandCount;
 $('#stat-cases').textContent=CASES.filter(c=>c.kind!=='runbook').length;

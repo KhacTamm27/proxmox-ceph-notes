@@ -1,25 +1,27 @@
-# B13 · RGW and S3 (radosgw-admin)
+# B13 · RGW và S3 (radosgw-admin)
 
-[← Mục lục](../../README.md) · Ceph · 33 lệnh
+[← Mục lục](../../README.md) · Ceph · 33 lệnh · tên gốc: RGW and S3 (radosgw-admin)
 
-[← B12 RBD (VM disks)](../ceph/B12-rbd-vm-disks.md) · [B14 CephFS →](../ceph/B14-cephfs.md)
+Ký hiệu: `[chỉ đọc]` chỉ xem trạng thái, không thay đổi hệ thống; `⚠ NGUY HIỂM` phá hủy hoặc ảnh hưởng dịch vụ; không ghi chú gì là lệnh có thay đổi cấu hình hoặc trạng thái, đọc kỹ trước khi chạy.
 
-## Service
+[← B12 RBD (đĩa VM)](../ceph/B12-rbd-vm-disks.md) · [B14 CephFS →](../ceph/B14-cephfs.md)
+
+## Dịch vụ (Service)
 
 ```bash
-# Trạng thái daemon RGW | RGW daemon state
+# [chỉ đọc] Trạng thái daemon RGW | RGW daemon state
 # từ khóa: rgw service s3 503 treo
 systemctl status ceph-radosgw@rgw.<name>
 ```
 
-## Users
+## User (Users)
 
 ```bash
-# Liệt kê user S3 | List users
+# [chỉ đọc] Liệt kê user S3 | List users
 # từ khóa: user s3 danh sách
 radosgw-admin user list
 
-# Chi tiết user và key | User detail and keys
+# [chỉ đọc] Chi tiết user và key | User detail and keys
 # từ khóa: user key suspended quota 403
 radosgw-admin user info --uid=<uid>
 
@@ -40,7 +42,7 @@ radosgw-admin user suspend --uid=<uid> / radosgw-admin user enable --uid=<uid>
 radosgw-admin user rm --uid=<uid> --purge-data
 ```
 
-## Keys
+## Khóa (Keys)
 
 ```bash
 # Tạo key S3 mới | New S3 key
@@ -60,7 +62,7 @@ radosgw-admin key rm --uid=<uid> --access-key=<key>
 radosgw-admin subuser create --uid=<uid> --subuser=<uid>:<sub> --access=full
 ```
 
-## Quota
+## Hạn mức (quota) (Quota)
 
 ```bash
 # Đặt quota cho user | Set user quota
@@ -76,22 +78,22 @@ radosgw-admin quota set --quota-scope=bucket --uid=<uid> --max-size=<bytes>
 radosgw-admin quota enable --quota-scope=user --uid=<uid>
 ```
 
-## Buckets
+## Bucket (Buckets)
 
 ```bash
-# Liệt kê bucket | List buckets
+# [chỉ đọc] Liệt kê bucket | List buckets
 # từ khóa: bucket danh sách
 radosgw-admin bucket list
 
-# Bucket của một user | Buckets of a user
+# [chỉ đọc] Bucket của một user | Buckets of a user
 # từ khóa: bucket user
 radosgw-admin bucket list --uid=<uid>
 
-# Dung lượng, số object, số shard của bucket | Bucket size, objects, shards
+# [chỉ đọc] Dung lượng, số object, số shard của bucket | Bucket size, objects, shards
 # từ khóa: bucket dung lượng quota shard
 radosgw-admin bucket stats --bucket=<bucket>
 
-# Bucket vượt giới hạn shard (nguyên nhân large omap) | Objects per shard and fill status
+# [chỉ đọc] Bucket vượt giới hạn shard (nguyên nhân large omap) | Objects per shard and fill status
 # từ khóa: large omap shard bucket index rgw
 radosgw-admin bucket limit check
 
@@ -104,14 +106,14 @@ radosgw-admin bucket check --bucket=<bucket>
 radosgw-admin bucket rm --bucket=<bucket> --purge-objects
 ```
 
-## Reshard
+## Chia lại shard (Reshard)
 
 ```bash
-# Các reshard đang chờ | Queued reshards
+# [chỉ đọc] Các reshard đang chờ | Queued reshards
 # từ khóa: reshard hàng đợi
 radosgw-admin reshard list
 
-# Trạng thái reshard của bucket | Reshard state
+# [chỉ đọc] Trạng thái reshard của bucket | Reshard state
 # từ khóa: reshard trạng thái
 radosgw-admin reshard status --bucket=<bucket>
 
@@ -120,18 +122,18 @@ radosgw-admin reshard status --bucket=<bucket>
 radosgw-admin bucket reshard --bucket=<bucket> --num-shards=<n>
 ```
 
-## Usage
+## Mức sử dụng (Usage)
 
 ```bash
-# Xem log sử dụng | Usage log
+# [chỉ đọc] Xem log sử dụng | Usage log
 # từ khóa: usage băng thông thống kê
 radosgw-admin usage show --uid=<uid>
 ```
 
-## Lifecycle
+## Vòng đời object (Lifecycle)
 
 ```bash
-# Trạng thái lifecycle | Lifecycle status
+# [chỉ đọc] Trạng thái lifecycle | Lifecycle status
 # từ khóa: lifecycle vòng đời xóa tự động
 radosgw-admin lc list
 
@@ -140,10 +142,10 @@ radosgw-admin lc list
 radosgw-admin lc process
 ```
 
-## GC
+## Dọn rác (GC) (GC)
 
 ```bash
-# Rác đang chờ dọn | Pending garbage
+# [chỉ đọc] Rác đang chờ dọn | Pending garbage
 # từ khóa: gc rác dung lượng không giảm
 radosgw-admin gc list --include-all
 
@@ -152,34 +154,42 @@ radosgw-admin gc list --include-all
 radosgw-admin gc process
 ```
 
-## Topology
+## Cấu trúc zone (Topology)
 
 ```bash
-# Cấu hình zone | Zone config
+# [chỉ đọc] Cấu hình zone | Zone config
 # từ khóa: zone multisite
 radosgw-admin zone get
 
-# Cấu hình zonegroup | Zonegroup config
+# [chỉ đọc] Cấu hình zonegroup | Zonegroup config
 # từ khóa: zonegroup multisite
 radosgw-admin zonegroup get
 
-# Liệt kê realm | Realms
+# [chỉ đọc] Liệt kê realm | Realms
 # từ khóa: realm multisite
 radosgw-admin realm list
 
-# Period hiện tại | Current period
+# [chỉ đọc] Period hiện tại | Current period
 # từ khóa: period multisite
 radosgw-admin period get
 
-# Trạng thái đồng bộ multisite | Multisite sync state
+# [chỉ đọc] Trạng thái đồng bộ multisite | Multisite sync state
 # từ khóa: sync multisite đồng bộ chậm
 radosgw-admin sync status
 ```
 
-## Index pool
+## Pool index (Index pool)
 
 ```bash
-# Các key trong object index (kiểm tra large omap) | Keys in an index object (large omap check)
+# [chỉ đọc] Các key trong object index (kiểm tra large omap) | Keys in an index object (large omap check)
 # từ khóa: large omap index bucket
 rados -p <index-pool> listomapkeys <object>
 ```
+
+## Case và runbook dùng lệnh trong nhóm này
+
+- [RGW/S3 trả 503 hoặc timeout, upload lỗi](../cases/ceph/rgw-503.md)
+- [Xem lại Access Key và Secret Key của user S3](../cases/ceph/rgw-view-s3-keys.md)
+- [RGW/S3 trả 403 (AccessDenied, SignatureDoesNotMatch, QuotaExceeded)](../cases/ceph/rgw-403.md)
+- [Large omap objects (thường do bucket index RGW)](../cases/ceph/large-omap.md)
+- [Cluster đầy khẩn cấp: ghi bị chặn (OSD_FULL), backfill_toofull](../cases/ceph/cluster-full-emergency.md)

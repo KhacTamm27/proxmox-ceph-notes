@@ -1,30 +1,32 @@
-# B15 · Authentication (cephx)
+# B15 · Xác thực (cephx)
 
-[← Mục lục](../../README.md) · Ceph · 6 lệnh
+[← Mục lục](../../README.md) · Ceph · 6 lệnh · tên gốc: Authentication (cephx)
 
-[← B14 CephFS](../ceph/B14-cephfs.md) · [B16 Benchmarks and low-level rados →](../ceph/B16-benchmarks-and-low-level-rados.md)
+Ký hiệu: `[chỉ đọc]` chỉ xem trạng thái, không thay đổi hệ thống; `⚠ NGUY HIỂM` phá hủy hoặc ảnh hưởng dịch vụ; không ghi chú gì là lệnh có thay đổi cấu hình hoặc trạng thái, đọc kỹ trước khi chạy.
 
-## List
+[← B14 CephFS](../ceph/B14-cephfs.md) · [B16 Benchmark và rados cấp thấp →](../ceph/B16-benchmarks-and-low-level-rados.md)
+
+## Liệt kê (List)
 
 ```bash
-# Toàn bộ key và quyền | All keys and caps
+# [chỉ đọc] Toàn bộ key và quyền | All keys and caps
 # từ khóa: auth key quyền cephx
 ceph auth ls
 ```
 
-## Show
+## Xem (Show)
 
 ```bash
-# Một key và quyền của nó | One key and caps
+# [chỉ đọc] Một key và quyền của nó | One key and caps
 # từ khóa: auth key client
 ceph auth get client.<name>
 
-# In ra secret của key | Print secret only
+# [chỉ đọc] In ra secret của key | Print secret only
 # từ khóa: secret key
 ceph auth print-key client.<name>
 ```
 
-## Create
+## Tạo mới (Create)
 
 ```bash
 # Tạo key cho client | Create client key
@@ -32,7 +34,7 @@ ceph auth print-key client.<name>
 ceph auth get-or-create client.<name> mon 'allow r' osd 'allow rwx pool=<pool>'
 ```
 
-## Change
+## Thay đổi (Change)
 
 ```bash
 # Đổi quyền của key | Change caps
@@ -40,7 +42,7 @@ ceph auth get-or-create client.<name> mon 'allow r' osd 'allow rwx pool=<pool>'
 ceph auth caps client.<name> mon 'allow r' osd 'allow rw pool=<pool>'
 ```
 
-## Delete
+## Xóa (Delete)
 
 ```bash
 # ⚠ NGUY HIỂM: Xóa key (nguy hiểm) | Remove key (destructive)

@@ -1,10 +1,12 @@
-# B16 · Benchmarks and low-level rados
+# B16 · Benchmark và rados cấp thấp
 
-[← Mục lục](../../README.md) · Ceph · 12 lệnh
+[← Mục lục](../../README.md) · Ceph · 12 lệnh · tên gốc: Benchmarks and low-level rados
 
-[← B15 Authentication (cephx)](../ceph/B15-authentication-cephx.md) · [B17 Upgrade and compatibility →](../ceph/B17-upgrade-and-compatibility.md)
+Ký hiệu: `[chỉ đọc]` chỉ xem trạng thái, không thay đổi hệ thống; `⚠ NGUY HIỂM` phá hủy hoặc ảnh hưởng dịch vụ; không ghi chú gì là lệnh có thay đổi cấu hình hoặc trạng thái, đọc kỹ trước khi chạy.
 
-## Bench
+[← B15 Xác thực (cephx)](../ceph/B15-authentication-cephx.md) · [B17 Nâng cấp và tương thích →](../ceph/B17-upgrade-and-compatibility.md)
+
+## Đo hiệu năng (Bench)
 
 ```bash
 # Benchmark ghi | Write benchmark
@@ -24,18 +26,18 @@ rados bench -p <pool> 30 rand
 rados -p <pool> cleanup
 ```
 
-## Objects
+## Object (Objects)
 
 ```bash
-# Liệt kê pool | List pools
+# [chỉ đọc] Liệt kê pool | List pools
 # từ khóa: pool danh sách
 rados lspools
 
-# Liệt kê object (pool lớn sẽ chậm) | List objects (large pools: slow)
+# [chỉ đọc] Liệt kê object (pool lớn sẽ chậm) | List objects (large pools: slow)
 # từ khóa: object danh sách
 rados -p <pool> ls
 
-# Kích thước và thời gian của object | Object size and mtime
+# [chỉ đọc] Kích thước và thời gian của object | Object size and mtime
 # từ khóa: object stat
 rados -p <pool> stat <object>
 
@@ -55,11 +57,11 @@ rados -p <pool> rm <object>
 ## Omap
 
 ```bash
-# Đếm key omap của object nghi lớn | Omap keys of an object
+# [chỉ đọc] Đếm key omap của object nghi lớn | Omap keys of an object
 # từ khóa: large omap object
 rados -p <pool> listomapkeys <object>
 
-# Key và giá trị omap | Omap key and values
+# [chỉ đọc] Key và giá trị omap | Omap key and values
 # từ khóa: omap large omap
 rados -p <pool> listomapvals <object>
 ```

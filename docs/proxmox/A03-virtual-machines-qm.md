@@ -1,34 +1,36 @@
-# A3 · Virtual machines (qm)
+# A3 · Máy ảo (qm)
 
-[← Mục lục](../../README.md) · Proxmox host · 39 lệnh
+[← Mục lục](../../README.md) · Proxmox host · 39 lệnh · tên gốc: Virtual machines (qm)
 
-[← A2 Cluster and corosync](../proxmox/A02-cluster-and-corosync.md) · [A4 Containers (pct) and templates →](../proxmox/A04-containers-pct-and-templates.md)
+Ký hiệu: `[chỉ đọc]` chỉ xem trạng thái, không thay đổi hệ thống; `⚠ NGUY HIỂM` phá hủy hoặc ảnh hưởng dịch vụ; không ghi chú gì là lệnh có thay đổi cấu hình hoặc trạng thái, đọc kỹ trước khi chạy.
 
-## Inspect
+[← A2 Cluster và corosync](../proxmox/A02-cluster-and-corosync.md) · [A4 Container (pct) và template →](../proxmox/A04-containers-pct-and-templates.md)
+
+## Xem thông tin (Inspect)
 
 ```bash
-# Liệt kê các VM trên node | List VMs on node
+# [chỉ đọc] Liệt kê các VM trên node | List VMs on node
 # từ khóa: danh sách vm máy ảo vmid liệt kê
 qm list
 
-# Trạng thái chi tiết của VM | Detailed VM status
+# [chỉ đọc] Trạng thái chi tiết của VM | Detailed VM status
 # từ khóa: vm trạng thái ram cpu disk io
 qm status <vmid> --verbose
 
-# Xem cấu hình VM | VM config
+# [chỉ đọc] Xem cấu hình VM | VM config
 # từ khóa: cấu hình vm lock đĩa network
 qm config <vmid>
 
-# Xem thay đổi cấu hình đang chờ áp dụng | Pending config changes
+# [chỉ đọc] Xem thay đổi cấu hình đang chờ áp dụng | Pending config changes
 # từ khóa: pending chờ reboot thay đổi chưa áp dụng
 qm pending <vmid>
 
-# Xem dòng lệnh KVM sẽ chạy cho VM | Show KVM command line
+# [chỉ đọc] Xem dòng lệnh KVM sẽ chạy cho VM | Show KVM command line
 # từ khóa: kvm qemu command line gỡ lỗi không start
 qm showcmd <vmid> --pretty
 ```
 
-## Power
+## Bật/tắt (Power)
 
 ```bash
 # Bật VM | Start
@@ -56,7 +58,7 @@ qm reset <vmid>
 qm suspend <vmid> / qm resume <vmid>
 ```
 
-## Create
+## Tạo mới (Create)
 
 ```bash
 # Tạo VM mới | Create VM
@@ -76,7 +78,7 @@ qm template <vmid>
 qm destroy <vmid> --purge
 ```
 
-## Config
+## Cấu hình (Config)
 
 ```bash
 # Đổi RAM và số CPU của VM | Change CPU and RAM
@@ -111,7 +113,7 @@ qm unlock <vmid>
 # từ khóa: snapshot chụp trạng thái
 qm snapshot <vmid> <name>
 
-# Liệt kê snapshot của VM | List snapshots
+# [chỉ đọc] Liệt kê snapshot của VM | List snapshots
 # từ khóa: snapshot danh sách
 qm listsnapshot <vmid>
 
@@ -124,7 +126,7 @@ qm rollback <vmid> <name>
 qm delsnapshot <vmid> <name>
 ```
 
-## Migration
+## Di chuyển (migrate) (Migration)
 
 ```bash
 # Live migration VM sang node khác | Live migration
@@ -139,7 +141,7 @@ qm migrate <vmid> <node> --online --with-local-disks
 ## Guest agent
 
 ```bash
-# Kiểm tra guest agent có phản hồi | Check agent
+# [chỉ đọc] Kiểm tra guest agent có phản hồi | Check agent
 # từ khóa: guest agent qemu-guest-agent backup freeze lỗi
 qm agent <vmid> ping
 
@@ -147,7 +149,7 @@ qm agent <vmid> ping
 # từ khóa: chạy lệnh trong vm agent exec
 qm guest exec <vmid> -- <cmd>
 
-# Lấy IP của VM qua guest agent | Guest IPs
+# [chỉ đọc] Lấy IP của VM qua guest agent | Guest IPs
 # từ khóa: ip vm địa chỉ agent tìm của mac address interface
 qm guest cmd <vmid> network-get-interfaces
 ```
@@ -171,7 +173,7 @@ qm sendkey <vmid> ctrl-alt-delete
 ## Cloud-init
 
 ```bash
-# Xem user-data cloud-init được sinh ra | Show generated user-data
+# [chỉ đọc] Xem user-data cloud-init được sinh ra | Show generated user-data
 # từ khóa: cloud-init cloudinit user-data
 qm cloudinit dump <vmid> user
 
@@ -180,7 +182,7 @@ qm cloudinit dump <vmid> user
 qm set <vmid> --ciuser <u> --sshkeys <file> --ipconfig0 ip=dhcp
 ```
 
-## Import
+## Nhập (import) (Import)
 
 ```bash
 # Thêm nguồn import từ ESXi (PVE 8.2 trở lên) | Add ESXi import source (PVE 8.2+)
@@ -199,3 +201,22 @@ qm importdisk <vmid> <disk-file> <storage>
 # từ khóa: convert vmdk raw chuyển đổi định dạng đĩa
 qemu-img convert -f vmdk -O raw <src.vmdk> <dst.raw>
 ```
+
+## Case và runbook dùng lệnh trong nhóm này
+
+- [VM bị lock (backup/snapshot), không start hoặc migrate được](../cases/pve/vm-locked.md)
+- [Console VM qua proxy không kết nối (màn hình đen, 401, 403, 404, 502, WebSocket đứt)](../cases/pve/console-proxy-fail.md)
+- [Proxmox ZFS replication: cấu hình và kiểm thử khôi phục VM](../runbooks/rb-pve-zfs-replication.md)
+- [P2V Linux/Ubuntu: chuyển disk vật lý thành VM trên Proxmox](../runbooks/rb-p2v-linux.md)
+- [P2V Windows: Disk2vhd, import VHDX và cài driver Proxmox](../runbooks/rb-p2v-windows.md)
+- [V2V Hyper-V sang Proxmox bằng StarWind V2V Converter](../runbooks/rb-v2v-hyperv.md)
+- [V2V VMware ESXi sang Proxmox bằng StarWind V2V Converter](../runbooks/rb-v2v-esxi.md)
+- [Storage dùng chung giữa hai cluster Proxmox gây xung đột lock/VMID](../cases/pve/pve-storage-shared-clusters.md)
+- [Cấu hình mạng Proxmox: OVS/Linux bridge, bond, LACP và VLAN trunk](../cases/pve/pve-network-bridge-bond-vlan.md)
+- [Migrate VM thất bại](../cases/pve/migrate-fail.md)
+- [VM không start được](../cases/pve/vm-wont-start.md)
+- [Di chuyển VM giữa hai cluster Proxmox bằng remote migration](../runbooks/rb-pve-cross-cluster-migrate.md)
+- [VM treo IO do image RBD (watcher, lock, blocklist)](../cases/ceph/rbd-hang.md)
+- [Một node chết hẳn (hỏng phần cứng): khôi phục dịch vụ](../cases/pve/node-dead-recovery.md)
+- [Backup vzdump lỗi hoặc treo](../cases/pve/backup-fail.md)
+- [local-lvm (thin pool) đầy](../cases/pve/lvm-thin-full.md)

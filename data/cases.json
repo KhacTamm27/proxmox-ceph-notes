@@ -3,6 +3,9 @@
   "id": "osd-down-flapping",
   "title": "OSD down hoặc up/down liên tục (flapping)",
   "tags": "ceph osd down flapping rớt osd heartbeat",
+  "topics": [
+   "ceph"
+  ],
   "symptoms": "ceph -s báo \"N osds down\", OSD lúc up lúc down, log có \"wrongly marked me down\" hoặc heartbeat_check no reply.",
   "causes": "Tiến trình OSD crash, đĩa lỗi, host thiếu RAM (OOM killer), card mạng lỗi hoặc MTU không khớp làm mất heartbeat.",
   "steps": [
@@ -57,6 +60,9 @@
   "id": "pg-inconsistent",
   "title": "PG inconsistent / scrub errors",
   "tags": "ceph pg inconsistent scrub error hỏng dữ liệu repair",
+  "topics": [
+   "ceph"
+  ],
   "symptoms": "HEALTH_ERR, \"pg x.y is active+clean+inconsistent\", \"N scrub errors\".",
   "causes": "Một bản sao của object khác các bản còn lại (bad sector, lỗi đĩa, lỗi bộ nhớ) bị deep-scrub phát hiện.",
   "steps": [
@@ -95,6 +101,10 @@
   "id": "clock-skew",
   "title": "Clock skew trên MON (lệch giờ)",
   "tags": "ceph clock skew lệch giờ mất đồng bộ giờ ntp chrony mon",
+  "topics": [
+   "ceph",
+   "host"
+  ],
   "symptoms": "HEALTH_WARN \"clock skew detected on mon.X\", MON mất quorum chập chờn.",
   "causes": "Đồng hồ các node lệch quá ngưỡng (mặc định 0.05 giây), NTP/chrony không chạy hoặc không tới được nguồn giờ.",
   "steps": [
@@ -134,6 +144,9 @@
   "id": "pve-quorum-lost",
   "title": "Cluster Proxmox mất quorum",
   "tags": "proxmox pve quorum mất quorum corosync cluster not ready read-only không start vm split brain expected votes",
+  "topics": [
+   "cluster"
+  ],
   "symptoms": "GUI báo \"cluster not ready - no quorum\", /etc/pve chuyển read-only, không start được VM, node hiện đỏ.",
   "causes": "Mất liên lạc giữa các node (mạng, switch, firewall chặn UDP 5405-5412), quá nửa số node tắt, hoặc cluster 2 node thiếu QDevice.",
   "steps": [
@@ -178,6 +191,10 @@
   "scope": "pve",
   "title": "Storage dùng chung giữa hai cluster Proxmox gây xung đột lock/VMID",
   "tags": "proxmox pve storage dùng chung hai cluster two clusters multiple cluster cluster boundary lock vmid conflict shared shared storage nfs ceph pool lun tách node",
+  "topics": [
+   "storage",
+   "cluster"
+  ],
   "symptoms": "VM start/migrate hoặc thao tác storage thất bại bất thường; cùng một NFS export, LUN hoặc Ceph pool đang được cấu hình cho hai cluster Proxmox độc lập; VMID có thể trùng.",
   "causes": "Storage locking của Proxmox chỉ phối hợp trong phạm vi một cluster, không hoạt động xuyên ranh giới hai cluster. Hai cluster cùng truy cập storage có thể đồng thời thao tác lên cùng dữ liệu và phát sinh xung đột VMID.",
   "steps": [
@@ -228,6 +245,9 @@
   "id": "nearfull-full",
   "title": "Ceph nearfull / full / pool đầy",
   "tags": "ceph nearfull full đầy disk dung lượng backfillfull osd đầy",
+  "topics": [
+   "ceph"
+  ],
   "symptoms": "HEALTH_WARN \"N osd(s) nearfull\", HEALTH_ERR \"full osd(s)\", client không ghi được, backfill dừng.",
   "causes": "Dung lượng toàn cluster cạn, hoặc dữ liệu phân bố lệch làm một vài OSD đầy trước.",
   "steps": [
@@ -272,6 +292,9 @@
   "id": "slow-ops",
   "title": "Slow ops / blocked requests (Ceph chậm, IO bị chặn)",
   "tags": "ceph slow ops blocked requests chậm treo latency io osd db rocksdb metadata bluefs spillover compact for",
+  "topics": [
+   "ceph"
+  ],
   "symptoms": "HEALTH_WARN \"N slow ops\", VM đơ hoặc IO chậm, \"requests are blocked\".",
   "causes": "Một OSD hoặc đĩa chậm, mạng nghẽn, recovery/scrub chiếm tải giờ cao điểm.",
   "steps": [
@@ -336,6 +359,10 @@
   "id": "osd-replace-disk",
   "title": "Thay đĩa OSD hỏng",
   "tags": "ceph osd thay đĩa hỏng disk replace smart pveceph rebuild",
+  "topics": [
+   "ceph",
+   "host"
+  ],
   "symptoms": "OSD down kéo dài, SMART báo lỗi hoặc dmesg có I/O error, cần thay đĩa vật lý.",
   "causes": "Đĩa hết tuổi thọ hoặc bad sector.",
   "steps": [
@@ -383,6 +410,10 @@
   "scope": "ceph",
   "title": "Ceph cảnh báo OSD device có nguy cơ hỏng",
   "tags": "ceph osd devicehealth device health device_health_toomany disk sắp hỏng disk failure predicted failure SMART health metrics tuổi thọ đĩa out",
+  "topics": [
+   "ceph",
+   "host"
+  ],
   "symptoms": "Ceph báo device health hoặc thiết bị có dự đoán tuổi thọ thấp; một OSD vẫn up nhưng SMART/NVMe metrics xấu hoặc thiết bị bị đánh dấu out do dự đoán lỗi.",
   "causes": "Chỉ số SMART/NVMe cho thấy lỗi media, độ mòn cao hoặc Ceph devicehealth dự đoán thiết bị có thể hỏng. Cơ chế self-heal có thể tự đánh dấu OSD out nếu được bật và vượt ngưỡng.",
   "steps": [
@@ -439,6 +470,10 @@
   "id": "node-maintenance",
   "title": "Bảo trì hoặc reboot một node Proxmox + Ceph",
   "tags": "reboot bảo trì node maintenance noout migrate nâng cấp kernel khởi động lại tắt",
+  "topics": [
+   "cluster",
+   "host"
+  ],
   "symptoms": "Cần reboot node để nâng cấp kernel hoặc thay phần cứng mà không làm gián đoạn VM và không kích hoạt rebalance.",
   "causes": "Khi node tắt, OSD của nó down; sau 10 phút Ceph tự out và bắt đầu rebalance không cần thiết nếu không đặt noout.",
   "steps": [
@@ -484,6 +519,9 @@
   "id": "pg-degraded-recovery",
   "title": "PG degraded / undersized, recovery chậm",
   "tags": "ceph pg degraded undersized misplaced recovery chậm backfill thiếu replica",
+  "topics": [
+   "ceph"
+  ],
   "symptoms": "HEALTH_WARN \"Degraded data redundancy\", \"N pgs undersized/degraded\", \"objects misplaced\", recovery chạy lâu.",
   "causes": "Mất OSD hoặc node, vừa thêm OSD mới, hoặc recovery bị giới hạn quá thấp.",
   "steps": [
@@ -523,6 +561,10 @@
   "id": "large-omap",
   "title": "Large omap objects (thường do bucket index RGW)",
   "tags": "ceph large omap objects rgw bucket index shard reshard cảnh báo",
+  "topics": [
+   "rgw",
+   "ceph"
+  ],
   "symptoms": "HEALTH_WARN \"N large omap objects\".",
   "causes": "Bucket có quá nhiều object trên ít shard của index (hoặc omap lớn ở pool khác).",
   "steps": [
@@ -558,6 +600,9 @@
   "id": "rgw-503",
   "title": "RGW/S3 trả 503 hoặc timeout, upload lỗi",
   "tags": "rgw s3 503 timeout upload lỗi radosgw không phản hồi bucket",
+  "topics": [
+   "rgw"
+  ],
   "symptoms": "Client S3 nhận 503/timeout, upload thất bại, RGW phản hồi chậm.",
   "causes": "Daemon RGW treo hoặc crash, pool RGW đầy hoặc có slow ops, PG inactive trên pool index/data.",
   "steps": [
@@ -597,6 +642,9 @@
   "id": "mon-down",
   "title": "MON down, ceph -s treo hoặc mất quorum Ceph",
   "tags": "ceph mon down quorum mất quorum ceph -s treo monitor đầy disk",
+  "topics": [
+   "ceph"
+  ],
   "symptoms": "ceph -s đứng treo hoặc báo \"1/3 mons down\", \"mon.X is down\".",
   "causes": "Daemon MON dừng, ổ chứa /var/lib/ceph đầy (MON store phình), lệch giờ, mạng giữa các MON.",
   "steps": [
@@ -635,6 +683,9 @@
   "id": "vm-locked",
   "title": "VM bị lock (backup/snapshot), không start hoặc migrate được",
   "tags": "proxmox vm lock locked backup snapshot unlock qm không start migrate treo can't file is",
+  "topics": [
+   "vm"
+  ],
   "symptoms": "Báo \"VM is locked (backup)\" hoặc \"(snapshot)\", không start, stop, migrate hoặc xóa được.",
   "causes": "Tác vụ backup hoặc snapshot bị ngắt giữa chừng (mất mạng, node reboot, task bị kill) và để lại khóa.",
   "steps": [
@@ -672,6 +723,9 @@
   "id": "pve-gui-logout",
   "title": "GUI Proxmox bị đăng xuất liên tục hoặc không đăng nhập được",
   "tags": "proxmox gui web logout đăng xuất session ticket pveproxy không đăng nhập lệch giờ invalid permission denied 401 login",
+  "topics": [
+   "access"
+  ],
   "symptoms": "GUI bị đá ra sau một thời gian ngắn, báo \"permission denied\" hoặc \"invalid ticket\", trang tải chậm hoặc treo.",
   "causes": "Giờ lệch giữa node và máy dùng trình duyệt (hoặc giữa các node) làm ticket không hợp lệ; pveproxy hoặc pvedaemon treo; cluster mất quorum.",
   "steps": [
@@ -709,6 +763,10 @@
   "id": "pve-disk-full",
   "title": "Node Proxmox đầy ổ root, dịch vụ lỗi",
   "tags": "proxmox đầy ổ root disk full log journal /var/log no space left on device hết dung lượng",
+  "topics": [
+   "host",
+   "storage"
+  ],
   "symptoms": "\"No space left on device\", dịch vụ không start, không ghi được /etc/pve, GUI lỗi.",
   "causes": "Log (journal, ceph) phình to, backup hoặc ISO nằm trên local, file tạm.",
   "steps": [
@@ -749,6 +807,9 @@
   "scope": "ceph",
   "title": "OSD không lên sau reboot",
   "tags": "ceph osd không start sau reboot ceph-volume lvm activate không thấy đĩa failed start-limit-hit down",
+  "topics": [
+   "ceph"
+  ],
   "symptoms": "Sau reboot một số OSD vẫn down, systemctl báo failed hoặc start-limit-hit.",
   "causes": "LVM chưa activate, đĩa đổi tên thiết bị hoặc không còn nhận, service chạm giới hạn số lần restart.",
   "steps": [
@@ -788,6 +849,10 @@
   "scope": "ceph",
   "title": "VM treo IO do image RBD (watcher, lock, blocklist)",
   "tags": "ceph rbd vm treo io lock watcher blocklist image không mở được is locked map failed",
+  "topics": [
+   "ceph",
+   "vm"
+  ],
   "symptoms": "VM đơ hoặc không start vì đĩa RBD, lỗi \"image is locked\", \"timeout\" khi mở image.",
   "causes": "Client cũ (node đã chết) còn giữ lock hoặc watcher, client bị blocklist, hoặc pool đang chậm.",
   "steps": [
@@ -825,6 +890,9 @@
   "scope": "ceph",
   "title": "Cảnh báo PG không được scrub / deep-scrub kịp thời",
   "tags": "ceph scrub deep-scrub not scrubbed in time noscrub quên gỡ cảnh báo pg",
+  "topics": [
+   "ceph"
+  ],
   "symptoms": "HEALTH_WARN \"N pgs not deep-scrubbed in time\" hoặc \"not scrubbed in time\".",
   "causes": "Quên gỡ flag noscrub sau bảo trì, cửa sổ scrub quá hẹp, cluster bận hoặc số scrub đồng thời thấp.",
   "steps": [
@@ -863,6 +931,9 @@
   "scope": "ceph",
   "title": "Cảnh báo too many / too few PGs, chỉnh pg_num",
   "tags": "ceph pg number too many pgs per osd too few autoscale pg_num pool",
+  "topics": [
+   "ceph"
+  ],
   "symptoms": "HEALTH_WARN \"too many PGs per OSD\" hoặc \"pool has too few/many pgs\".",
   "causes": "Số PG của pool không hợp với số OSD hiện có (thêm hoặc bớt OSD, tạo nhiều pool).",
   "steps": [
@@ -893,6 +964,10 @@
   "scope": "ceph",
   "title": "Mạng Ceph: MTU không khớp, nghẽn hoặc rớt gói",
   "tags": "ceph mạng network mtu jumbo rớt gói heartbeat slow ops osd flapping switch bond",
+  "topics": [
+   "ceph",
+   "network"
+  ],
   "symptoms": "Slow ops hoặc OSD flapping chỉ liên quan một vài node, ping thường được nhưng IO lớn bị treo.",
   "causes": "MTU 9000 cấu hình không đồng nhất trên NIC, bridge, bond và switch; cổng switch lỗi; bond hash không đều.",
   "steps": [
@@ -931,6 +1006,9 @@
   "kind": "case",
   "title": "Cấu hình mạng Proxmox: OVS/Linux bridge, bond, LACP và VLAN trunk",
   "tags": "proxmox pve network networking mạng bridge linux bridge ovs openvswitch bond bond-mode bond_mode active-backup balance-rr balance-xor broadcast 802.3ad lacp trunk vlan allow vlan-aware bridge-vids switch port-channel nic teaming cấu hình mạng mất vm không có đổi ip ip quản trị",
+  "topics": [
+   "network"
+  ],
   "symptoms": "VM/CT mất mạng hoặc không nhận VLAN; host mất IP quản trị sau khi sửa /etc/network/interfaces; bond chỉ chạy một link hoặc LACP không lên; VLAN tag/trunk không thông suốt.",
   "causes": "Nhầm OVS với Linux bridge; cấu hình bond không khớp mode ở switch; thiếu VLAN allowed trên switch/bridge; nhầm VLAN tag của host interface với VLAN trunk cho VM; MTU không đồng nhất; dùng bond-primary cùng mode 802.3ad.",
   "steps": [
@@ -1056,6 +1134,9 @@
   "scope": "ceph",
   "title": "RGW/S3 trả 403 (AccessDenied, SignatureDoesNotMatch, QuotaExceeded)",
   "tags": "rgw s3 403 access denied signature quota exceeded suspended key sai lệch giờ bucket policy",
+  "topics": [
+   "rgw"
+  ],
   "symptoms": "Client S3 nhận 403 dù cluster khỏe: AccessDenied, SignatureDoesNotMatch hoặc QuotaExceeded.",
   "causes": "Sai access/secret key, user bị suspend, vượt quota, bucket policy hoặc ACL chặn, giờ client lệch quá nhiều so với server.",
   "steps": [
@@ -1091,6 +1172,9 @@
   "scope": "ceph",
   "title": "Xem lại Access Key và Secret Key của user S3",
   "tags": "ceph rgw s3 xem lại access key secret key credentials thông tin đăng nhập user mất key",
+  "topics": [
+   "rgw"
+  ],
   "symptoms": "Cần tra lại Access Key/Secret Key để cấu hình client S3 hoặc kiểm tra lỗi xác thực.",
   "causes": "Thông tin key không còn trong cấu hình ứng dụng, cần xác nhận key đang gắn với user RGW nào.",
   "steps": [
@@ -1132,6 +1216,9 @@
   "scope": "ceph",
   "title": "Thêm OSD hoặc node mới làm chậm production",
   "tags": "ceph thêm osd node mới rebalance backfill chậm io client throttle mở rộng",
+  "topics": [
+   "ceph"
+  ],
   "symptoms": "Sau khi thêm OSD hoặc node, VM chậm, nhiều PG backfilling, objects misplaced.",
   "causes": "Rebalance và backfill chiếm IO đĩa và mạng cùng lúc với tải client.",
   "steps": [
@@ -1164,6 +1251,10 @@
   "scope": "pve",
   "title": "Migrate VM thất bại",
   "tags": "proxmox migrate vm thất bại live migration lỗi local disk cpu cdrom iso storage aborted không được",
+  "topics": [
+   "vm",
+   "upgrade"
+  ],
   "symptoms": "Migrate báo lỗi, treo ở một phần trăm nào đó, hoặc không cho chọn node đích.",
   "causes": "Đĩa nằm trên local storage, ISO local gắn vào VM, storage không có ở node đích, khác thế hệ CPU với CPU type host, VM đang bị lock, mạng migrate chậm.",
   "steps": [
@@ -1201,6 +1292,9 @@
   "scope": "pve",
   "title": "VM không start được",
   "tags": "proxmox vm không start khởi động lỗi timeout quota storage không đủ ram qm start failed kvm exit code task error bật được chạy",
+  "topics": [
+   "vm"
+  ],
   "symptoms": "qm start báo lỗi, task lỗi, VM dừng ngay sau khi bật.",
   "causes": "Cluster mất quorum, storage chứa đĩa không available, thiếu RAM trên node, VM bị lock, file cấu hình trỏ tới đĩa hoặc thiết bị không tồn tại.",
   "steps": [
@@ -1244,6 +1338,10 @@
   "scope": "pve",
   "title": "Node hoặc VM hiện dấu hỏi (unknown), GUI không cập nhật",
   "tags": "proxmox unknown dấu hỏi pvestatd gui không cập nhật storage nfs treo node xám",
+  "topics": [
+   "cluster",
+   "monitor"
+  ],
   "symptoms": "Trong GUI node, VM hoặc storage hiện dấu (?) xám, số liệu không cập nhật dù VM vẫn chạy.",
   "causes": "pvestatd bị treo, thường vì một storage từ xa (NFS, CIFS, PBS) không phản hồi.",
   "steps": [
@@ -1274,6 +1372,9 @@
   "scope": "pve",
   "title": "HA: VM không tự chạy lại trên node khác, trạng thái error hoặc fence",
   "tags": "proxmox ha high availability fence error freeze node chết vm không tự chạy lại watchdog",
+  "topics": [
+   "cluster"
+  ],
   "symptoms": "Node chết nhưng VM HA không tự khởi động ở node khác, hoặc VM HA ở trạng thái error, freeze, fence.",
   "causes": "Mất quorum, storage không dùng chung, watchdog không hoạt động, VM từng start lỗi nên HA đặt về error.",
   "steps": [
@@ -1312,6 +1413,9 @@
   "scope": "pve",
   "title": "Backup vzdump lỗi hoặc treo",
   "tags": "proxmox backup vzdump lỗi treo guest agent freeze storage đầy pbs lock fs-freeze job errors thất bại",
+  "topics": [
+   "backup"
+  ],
   "symptoms": "Job backup báo lỗi, chạy rất lâu, hoặc để lại VM bị lock.",
   "causes": "Storage backup đầy hoặc mất kết nối, guest agent không phản hồi khi freeze, VM bị lock, hai job chồng nhau.",
   "steps": [
@@ -1354,6 +1458,9 @@
   "scope": "pve",
   "title": "local-lvm (thin pool) đầy",
   "tags": "proxmox lvm thin pool đầy local-lvm out of space metadata io error fstrim snapshot data hết dung lượng",
+  "topics": [
+   "storage"
+  ],
   "symptoms": "local-lvm gần 100%, VM bị I/O error hoặc treo, log có \"thin pool ... out of space\".",
   "causes": "Data hoặc metadata của thin pool đầy do snapshot tích tụ, đĩa cấp phát vượt dung lượng thật (overprovision).",
   "steps": [
@@ -1392,6 +1499,9 @@
   "scope": "ceph",
   "title": "PG down, peering kẹt hoặc unfound objects (mất nhiều OSD)",
   "tags": "ceph pg down peering incomplete unfound objects mất dữ liệu osd lost mark_unfound_lost stuck inactive",
+  "topics": [
+   "ceph"
+  ],
   "symptoms": "HEALTH_ERR, \"N pgs down\", pg ở trạng thái down+peering, IO vào một số object bị treo; hoặc \"N unfound\" (objects unfound).",
   "causes": "Nhiều OSD cùng chứa bản sao của một PG bị mất lần lượt (OSD thứ nhất chết, chưa kịp chép dữ liệu mới thì OSD thứ hai chết), peering bị chặn vì chờ OSD đã down.",
   "steps": [
@@ -1443,6 +1553,9 @@
   "scope": "ceph",
   "title": "BLUEFS_SPILLOVER: metadata RocksDB tràn sang đĩa chậm",
   "tags": "ceph bluefs spillover db wal ssd nvme hdd metadata tràn rocksdb chậm cảnh báo bluestore",
+  "topics": [
+   "ceph"
+  ],
   "symptoms": "HEALTH_WARN \"BlueFS spillover detected on N OSD(s)\", latency của các OSD HDD tăng.",
   "causes": "Phân vùng DB/WAL trên SSD/NVMe quá nhỏ so với dung lượng OSD (hoặc omap tăng nhiều, ví dụ bucket index RGW) nên metadata phải ghi xuống đĩa dữ liệu chậm.",
   "steps": [
@@ -1494,6 +1607,9 @@
   "scope": "ceph",
   "title": "Cluster đầy khẩn cấp: ghi bị chặn (OSD_FULL), backfill_toofull",
   "tags": "ceph full osd_full cluster đầy không ghi được backfill_toofull recovery toofull đầy khẩn cấp gc snapshot",
+  "topics": [
+   "ceph"
+  ],
   "symptoms": "HEALTH_ERR \"full osd(s)\", VM không ghi được, PG có backfill_toofull hoặc recovery_toofull nên recovery không chạy.",
   "causes": "Một hoặc vài OSD vượt ngưỡng full (mặc định 95%) do dữ liệu tăng nhanh hoặc phân bố lệch; Ceph chặn ghi để tránh hỏng dữ liệu. Snapshot và rác RGW chưa gc cũng giữ dung lượng.",
   "steps": [
@@ -1552,6 +1668,10 @@
   "scope": "ceph",
   "title": "Latency OSD cao, IOPS thấp do SSD consumer (không có PLP)",
   "tags": "ceph latency cao iops thấp ssd consumer plp power loss protection nvme enterprise commit latency chậm vm",
+  "topics": [
+   "ceph",
+   "host"
+  ],
   "symptoms": "ceph osd perf cho commit/apply latency hàng chục đến hàng trăm ms ở một số OSD, VM chậm, thỉnh thoảng slow ops, benchmark cho IOPS rất thấp.",
   "causes": "Ceph ghi đồng bộ (sync write). SSD consumer không có bảo vệ mất điện (PLP) không cache được ghi đồng bộ nên latency rất cao và tụt mạnh khi tải liên tục.",
   "steps": [
@@ -1599,6 +1719,10 @@
   "scope": "ceph",
   "title": "Nâng cấp Ceph trên Proxmox (ví dụ Reef lên Squid)",
   "tags": "ceph upgrade nâng cấp reef squid quincy mon mgr osd require-osd-release noout proxmox ceph.list repository",
+  "topics": [
+   "ceph",
+   "upgrade"
+  ],
   "symptoms": "Cần nâng cấp phiên bản Ceph mà không làm gián đoạn VM; sau nâng cấp có cảnh báo require-osd-release.",
   "causes": "Nâng cấp Ceph phải đi đúng thứ tự: MON rồi MGR rồi OSD, và phải chốt require-osd-release sau cùng.",
   "steps": [
@@ -1669,6 +1793,10 @@
   "scope": "pve",
   "title": "Corosync link chập chờn, retransmit, node tự reboot (HA watchdog)",
   "tags": "proxmox corosync flapping retransmit knet link down token cluster reboot watchdog fence mất quorum bond lacp mạng cluster riêng",
+  "topics": [
+   "cluster",
+   "network"
+  ],
   "symptoms": "Log corosync có \"Retransmit List\", knet link down/up, \"Token has not been received\"; cluster mất quorum rồi phục hồi; các node có HA tự reboot cùng lúc.",
   "causes": "Mạng corosync bị trễ hoặc rớt gói: dùng chung đường với lưu lượng Ceph/backup/replication, đặt link corosync trên bond (failover của bond cộng với phục hồi link của corosync), MTU lệch hoặc switch lỗi.",
   "steps": [
@@ -1717,6 +1845,9 @@
   "scope": "pve",
   "title": "Xóa node hỏng và join lại cùng tên (node ma xám trong GUI)",
   "tags": "proxmox xóa node delnode node ma xám gui join lại cùng tên hostname reinstall updatecerts /etc/pve/nodes known_hosts",
+  "topics": [
+   "cluster"
+  ],
   "symptoms": "Đã pvecm delnode nhưng node vẫn hiện xám trong GUI; cài lại node cùng tên không join được hoặc báo lỗi SSH/chứng chỉ.",
   "causes": "Cluster giữ lại thư mục cấu hình của node đã xóa trong /etc/pve/nodes; chứng chỉ và khóa SSH cũ trùng tên.",
   "steps": [
@@ -1771,6 +1902,9 @@
   "scope": "pve",
   "title": "Lỗi cfs-lock \"got lock request timeout\" (pmxcfs, HA, replication)",
   "tags": "proxmox cfs-lock got lock request timeout pmxcfs pve-cluster /etc/pve ha replication pvescheduler authkey lỗi lock cluster",
+  "topics": [
+   "cluster"
+  ],
   "symptoms": "Log có \"cfs-lock ... error: got lock request timeout\" (từ pvescheduler, pvestatd, ha-crm), tác vụ HA/replication/backup lỗi, GUI báo unknown.",
   "causes": "Hệ thống file cụm (pmxcfs) không xin được khóa: thường là triệu chứng của cluster mất đồng bộ, corosync/mạng có vấn đề, hoặc pmxcfs trên một node bị treo.",
   "steps": [
@@ -1819,6 +1953,10 @@
   "scope": "pve",
   "title": "Nâng cấp Proxmox VE 8 lên 9 trong cluster có Ceph",
   "tags": "proxmox nâng cấp upgrade pve 8 9 pve8to9 debian trixie ceph squid cluster full-upgrade reboot",
+  "topics": [
+   "upgrade",
+   "cluster"
+  ],
   "symptoms": "Cần nâng cấp cluster Proxmox đang chạy production (có Ceph, HA) mà không gián đoạn dịch vụ.",
   "causes": "Nâng cấp bản chính có thứ tự bắt buộc và phải làm từng node, nếu sai thứ tự có thể kẹt gói hoặc mất tính tương thích với Ceph.",
   "steps": [
@@ -1876,6 +2014,10 @@
   "scope": "pve",
   "title": "Một node chết hẳn (hỏng phần cứng): khôi phục dịch vụ",
   "tags": "proxmox node chết hỏng phần cứng khôi phục vm không ha move config qemu-server ceph degraded mất node",
+  "topics": [
+   "cluster",
+   "host"
+  ],
   "symptoms": "Một node mất hoàn toàn (không bật lại được), VM trên node đó ngừng, GUI hiện node đỏ, Ceph báo OSD down và PG degraded.",
   "causes": "Hỏng phần cứng, nguồn, mainboard. Cluster còn quorum nhưng cần đưa dịch vụ lên node khác.",
   "steps": [
@@ -1919,6 +2061,9 @@
   "scope": "ceph",
   "title": "Cờ bảo trì Ceph còn sót sau bảo trì (noout, noscrub, norecover...)",
   "tags": "ceph flags còn sót quên gỡ noout nobackfill norecover norebalance noscrub nodeep-scrub health warn flag(s) set unset bảo trì",
+  "topics": [
+   "ceph"
+  ],
   "symptoms": "HEALTH_WARN \"noout,nobackfill,norecover,norebalance,noscrub,nodeep-scrub flag(s) set\", PG không recover, cảnh báo scrub quá hạn.",
   "causes": "Quên bỏ các cờ đã đặt trước khi bảo trì hoặc nâng cấp. Khi còn noout, OSD chết thật cũng không được out để recover, còn norecover và nobackfill làm dữ liệu giữ trạng thái degraded.",
   "steps": [
@@ -1955,6 +2100,9 @@
   "scope": "pve",
   "title": "Node dừng: HA khởi động lại đồng loạt VM làm tràn RAM (domino)",
   "tags": "proxmox ha fencing domino tràn ram overload vm đồng loạt khởi động node dead sập hệ thống ha-manager tắt ha trước khi bảo trì",
+  "topics": [
+   "cluster"
+  ],
   "symptoms": "Một node dừng hoặc bị fence, VM của nó tự bật lại trên các host còn lại, RAM các host đầy, hệ thống chậm hoặc sập lan sang node khác.",
   "causes": "Cơ chế fencing đánh dấu node dead rồi migrate hoặc khởi động lại VM trên host khác. VM đang dừng không dùng tài nguyên, nhưng khi nhiều VM bật đồng loạt thì RAM bị chiếm ngay, các host còn lại không đủ chỗ.",
   "steps": [
@@ -1987,6 +2135,10 @@
   "scope": "ceph",
   "title": "CephFS: MDS failover khi restart hoặc nâng cấp (max_mds lớn hơn 1)",
   "tags": "ceph cephfs mds failover restart nâng cấp max_mds standby active rank ceph fs status",
+  "topics": [
+   "ceph",
+   "upgrade"
+  ],
   "symptoms": "Restart ceph-mds.target hoặc nâng cấp làm CephFS gián đoạn ngắn, trạng thái MDS tạm là replay, reconnect hoặc rejoin.",
   "causes": "Node đang giữ rank active của CephFS sẽ failover sang standby khi MDS restart. Gián đoạn ngắn là bình thường. Với max_mds lớn hơn 1 (nhiều rank active) cần cẩn thận hơn.",
   "steps": [
@@ -2025,6 +2177,9 @@
   "scope": "pve",
   "title": "PBS hỏng hoặc tắt: dựng PBS mới nhận lại Datastore S3 (adopt) và restore",
   "tags": "proxmox pbs backup server hỏng cháy tắt dựng lại s3 datastore adopt overwrite in-use marker restore vm cache mã hóa key encryption",
+  "topics": [
+   "backup"
+  ],
   "symptoms": "Máy PBS cũ lỗi phần cứng, cháy, hoặc chủ động tắt, cần khôi phục dữ liệu backup đang nằm trên bucket S3.",
   "causes": "Dữ liệu backup nằm trên S3 nên còn nguyên, chỉ mất lớp quản lý và local cache của PBS cũ. PBS mới cần nhận lại (adopt) bucket đó.",
   "steps": [
@@ -2063,6 +2218,10 @@
   "scope": "ceph",
   "title": "Nâng cấp Ceph Quincy 17.2.8 → Reef 18.2.8 → Squid 19.2.4 trên PVE 8.4 (3 node, có CephFS)",
   "tags": "runbook nâng cấp upgrade ceph quincy reef squid pve 8.4 3 node hyper-converged cephfs mds mon mgr osd flags",
+  "topics": [
+   "ceph",
+   "upgrade"
+  ],
   "goal": "Nâng Ceph hai bước liên tiếp (Quincy lên Reef, rồi Reef lên Squid) trên cluster 3 node hyper-converged (mỗi node có MON, MGR, OSD, MDS), PVE giữ nguyên 8.4. Ghi chú gốc dừng ở PVE 8.4 + Squid 19.2.4; bước tiếp theo là pve8to9.",
   "prereq": "ceph -s = HEALTH_OK, toàn bộ OSD up/in, quorum MON đủ 3/3. Degraded phải về 0 mới nâng cấp; scrub, deep-scrub, backfilling chỉ cần theo dõi và ghi baseline (không bắt buộc dừng) miễn là không HEALTH_ERR và tốc độ ổn định. Ghi lại rank MDS nào đang active ở node nào để dự đoán failover. Làm tuần tự Node1 rồi Node2 rồi Node3, không nâng hai node cùng lúc.",
   "steps": [
@@ -2182,6 +2341,10 @@
   "scope": "pve",
   "title": "Bảo trì production: tắt HA và đặt cờ bảo trì Ceph trước khi tắt node",
   "tags": "runbook bảo trì maintenance production tắt ha pve-ha-lrm pve-ha-crm ceph flags noout nobackfill norecover norebalance noscrub nodeep-scrub manage global flags",
+  "topics": [
+   "cluster",
+   "ceph"
+  ],
   "goal": "Tắt hoặc reboot node trong môi trường production mà không kích hoạt fencing/HA di chuyển VM đồng loạt, và không để Ceph backfill/recovery không cần thiết.",
   "prereq": "Kiểm tra sức khỏe Ceph trước (ceph -s). Tránh thao tác khi đang có cảnh báo Warn hoặc Err nếu chưa được cấp trên cho phép.",
   "steps": [
@@ -2257,6 +2420,9 @@
   "scope": "pve",
   "title": "PBS: tạo Datastore S3 với local cache ZFS và backup từ PVE",
   "tags": "runbook pbs proxmox backup server s3 datastore local cache zfs endpoint path style bucket backup dedup restore adopt migration longvan long vân",
+  "topics": [
+   "backup"
+  ],
   "goal": "Dùng một bucket S3 (nhà cung cấp S3-compatible) làm datastore của PBS 4.x, có vùng đệm local cache trên ZFS, rồi thêm vào PVE và backup thử.",
   "prereq": "PBS 4.x đã cài. Có thông tin xác thực S3 được lưu an toàn (không đưa key vào command/log/tài liệu). Có một SSD hoặc mảng ZFS làm cache. Datastore S3 hiện là tech preview.",
   "steps": [
@@ -2295,6 +2461,9 @@
   "scope": "pve",
   "title": "Nâng cấp một node Proxmox VE từ 5.4 lên 8.x (qua 6, 7, 8) kèm ZFS",
   "tags": "runbook nâng cấp upgrade proxmox 5.4 6 7 8 stretch buster bullseye bookworm single node zfs rpool zpool import upgrade apt dist-upgrade",
+  "topics": [
+   "upgrade"
+  ],
   "goal": "Nâng một node đơn Proxmox rất cũ (5.4, Debian stretch) lên 8.x theo chuỗi 5 lên 6 lên 7 lên 8, rồi import lại các zpool dữ liệu.",
   "prereq": "Xác định chính xác đĩa boot (đơn hoặc ZFS RAID1), lưu WWN/SN để nếu hỏng có thể cài mới OS và import lại zpool. Backup /etc/network/interfaces, /etc/pve/, /etc/hosts. Ghi lại tên các zfs pool. Nên chạy bộ kiểm tra có sẵn của từng bản (pve5to6, pve6to7, pve7to8 --full) trước mỗi bước (gợi ý bổ sung, ghi chú gốc chưa có).",
   "steps": [
@@ -2378,6 +2547,9 @@
   "scope": "pve",
   "title": "SAN iSCSI + Shared LVM cho cluster Proxmox, và mở rộng dung lượng online (pvmove)",
   "tags": "runbook san iscsi lvm shared targetcli open-iscsi lun volume group pvmove vgextend mở rộng dung lượng block storage resize",
+  "topics": [
+   "storage"
+  ],
   "goal": "Cho 3 node Proxmox cùng đăng nhập một LUN iSCSI và dùng chung một Volume Group (Shared LVM) để chia volume cho VM; sau đó mở rộng dung lượng không mất dữ liệu, không downtime.",
   "prereq": "Một máy storage làm iSCSI target, 3 node Proxmox truy cập được tới nó. Mô hình: các node, iSCSI initiator, iSCSI target, LUN, Shared LVM, mỗi LV là một đĩa VM.",
   "steps": [
@@ -2483,6 +2655,9 @@
   "scope": "pve",
   "title": "NAS NFS làm storage dùng chung cho cluster Proxmox",
   "tags": "runbook nas nfs storage dùng chung exports nfs-kernel-server showmount mount share qcow2",
+  "topics": [
+   "storage"
+  ],
   "goal": "Cho 3 node Proxmox mount chung một thư mục xuất từ NFS server, chứa trực tiếp file .qcow2 hoặc .raw của VM. Dễ triển khai, phù hợp lab hoặc tải vừa phải.",
   "prereq": "Một máy đóng vai NFS server, các node Proxmox truy cập được tới nó.",
   "steps": [
@@ -2525,6 +2700,9 @@
   "kind": "case",
   "title": "LUN iSCSI mới hoặc Volume Group không hiện trên một số node (Shared LVM)",
   "tags": "iscsi lun không thấy vg shared lvm rescan pvscan vgscan session rớt san proxmox node không nhận mở rộng",
+  "topics": [
+   "storage"
+  ],
   "symptoms": "Sau khi thêm LUN hoặc mở rộng VG, một số node không thấy thiết bị hoặc không thấy VG, pvesm status báo storage lỗi.",
   "causes": "Node chưa rescan iSCSI, session iSCSI bị rớt, hoặc cache LVM trên node đó chưa được làm tươi.",
   "steps": [
@@ -2559,6 +2737,9 @@
   "kind": "case",
   "title": "Storage NFS offline hoặc không thêm được vào Proxmox",
   "tags": "nfs storage offline không mount showmount exportfs nfs-common firewall proxmox không thêm được nas",
+  "topics": [
+   "storage"
+  ],
   "symptoms": "Storage NFS hiện dấu hỏi hoặc offline, không thêm được vào Datacenter > Storage, lệnh pvesm status chậm hoặc treo.",
   "causes": "Node thiếu nfs-common, export không cho phép subnet của node, tường lửa chặn, hoặc NFS server đã dừng.",
   "steps": [
@@ -2598,6 +2779,9 @@
   "kind": "case",
   "title": "PBS S3: ENOENT hoặc Permission denied với cache, không thấy backup",
   "tags": "pbs s3 enoent permission denied cache chown backup datastore nested không thấy backup overwrite in-use marker",
+  "topics": [
+   "backup"
+  ],
   "symptoms": "Tạo hoặc mount datastore S3 báo ENOENT hoặc Permission denied, backup lỗi, hoặc PBS mới không thấy bản backup cũ.",
   "causes": "Thư mục cache không thuộc user backup, cache lồng trong datastore local, hoặc chưa bật Overwrite in-use marker khi nhận lại bucket cũ.",
   "steps": [
@@ -2630,6 +2814,9 @@
   "scope": "pve",
   "title": "Cấu hình Nginx proxy console cho VM Proxmox (noVNC qua portal)",
   "tags": "runbook console proxy nginx novnc vncproxy vncwebsocket websocket portal vmid node tiền tố prefix cổng port rewrite paste sub_filter ssl 8006 remote console",
+  "topics": [
+   "access"
+  ],
   "goal": "Cho kỹ thuật hoặc khách hàng thao tác console VM ngay trên portal hoặc trang quản lý dịch vụ mà không phải mở thẳng giao diện Proxmox. Portal gửi URL kèm tiền tố tới Nginx proxy, Nginx bỏ tiền tố, rewrite đường dẫn API rồi chuyển xuống đúng node Proxmox (cổng 8006); mỗi node ứng với một cổng riêng trên proxy.",
   "prereq": "Một server Ubuntu cài Nginx, có ít nhất một NIC định tuyến thông tới mạng quản trị (MGT) của cluster Proxmox; chứng chỉ SSL cho domain proxy; một user Proxmox riêng cho portal (không dùng root) có quyền console.",
   "diagrams": [
@@ -2742,6 +2929,9 @@
   "scope": "pve",
   "title": "Gỡ lỗi console: lấy ticket qua API, áp cookie, mở URL chuẩn rồi kiểm tra bằng F12",
   "tags": "runbook console ticket api access ticket pveauthcookie cookie f12 devtools url chuẩn vncproxy vncwebsocket 401 403 502 gỡ lỗi proxy portal curl csrf",
+  "topics": [
+   "access"
+  ],
   "goal": "Kiểm tra từng chặng của đường console (Proxmox, proxy, trình duyệt) mà không cần portal: tự lấy ticket đăng nhập, áp vào trình duyệt, mở URL chuẩn qua proxy và dùng DevTools (F12) để thấy chặng nào lỗi.",
   "prereq": "Một user Proxmox có quyền console (ví dụ portal@pve); biết IP node, cổng proxy, tiền tố node và VMID. Lưu ý root@pam có thể đã bị tắt đăng nhập trên cluster, khi đó dùng user riêng. API token dùng cho script gọi API, thường không thay được cookie đăng nhập của trình duyệt nên không dùng được cho bước này.",
   "diagrams": [
@@ -2804,6 +2994,9 @@
   "kind": "case",
   "title": "Console VM qua proxy không kết nối (màn hình đen, 401, 403, 404, 502, WebSocket đứt)",
   "tags": "console proxy nginx novnc không kết nối màn hình đen 401 403 404 502 websocket vncwebsocket 101 ticket pveauthcookie portal remote console lỗi",
+  "topics": [
+   "access"
+  ],
   "symptoms": "Bấm Remote Console trên portal chỉ thấy màn hình đen, báo không kết nối, hoặc F12 > Network thấy vncproxy hoặc vncwebsocket lỗi (401, 403, 404, 502, không lên 101).",
   "causes": "Ticket hết hạn hoặc sai realm, user portal thiếu quyền console, tiền tố vmid/node không khớp server block, Nginx không tới được node cổng 8006, thiếu header WebSocket, hoặc chứng chỉ SSL hết hạn.",
   "steps": [
@@ -2846,6 +3039,10 @@
   "kind": "case",
   "title": "PVE host hỏng đĩa boot, không có backup cấu hình: kiểm kê và dựng lại node",
   "tags": "proxmox pve host node hỏng disk boot cài lại reinstall không có backup config mất cấu hình network ceph osd mon mgr mds rebuild cluster",
+  "topics": [
+   "host",
+   "cluster"
+  ],
   "symptoms": "Node Proxmox không khởi động do hỏng ổ boot, không có bản backup cấu hình node; VM hoặc dịch vụ Ceph trên node cần được khôi phục.",
   "causes": "Cài lại hệ điều hành làm mất cấu hình cục bộ của node. Trạng thái VM và dữ liệu Ceph có thể vẫn còn trên storage hoặc các ổ dữ liệu, nhưng phải kiểm kê trước khi gỡ node hay khởi tạo lại ổ.",
   "steps": [
@@ -2899,6 +3096,9 @@
   "scope": "pve",
   "title": "ZFS: chọn RAID/vdev và tạo pool cho Proxmox",
   "tags": "zfs raid vdev mirror raidz raidz1 raidz2 raidz3 raid10 draid chọn topology dung lượng dự phòng tạo pool zpool create storage proxmox",
+  "topics": [
+   "storage"
+  ],
   "goal": "Chọn bố cục ZFS phù hợp workload VM/CT, tạo pool mới an toàn và thêm pool làm storage trong Proxmox VE.",
   "prereq": "Đây là thao tác tạo pool mới, sẽ khởi tạo các disk đã chọn. Có backup độc lập nếu disk từng chứa dữ liệu. Ghi lại model, dung lượng, serial/WWN, sector size và workload; ưu tiên disk cùng dung lượng, loại và độ bền.",
   "steps": [
@@ -2942,6 +3142,9 @@
   "scope": "pve",
   "title": "ZFS RAIDZ: mở rộng vdev bằng cách gắn thêm disk",
   "tags": "zfs raidz expansion raidz_expansion zpool attach thêm disk tăng dung lượng pool raidz1 raidz2 proxmox openzfs 2.3",
+  "topics": [
+   "storage"
+  ],
   "goal": "Mở rộng một RAIDZ vdev hiện có bằng tính năng RAIDZ expansion của OpenZFS khi hệ thống và pool hỗ trợ.",
   "prereq": "Cần OpenZFS 2.3 trở lên và feature raidz_expansion khả dụng trên pool; xác nhận chính xác phiên bản module đang chạy trên node. Có backup kiểm chứng được, cửa sổ bảo trì phù hợp và disk mới có dung lượng ít nhất bằng disk nhỏ nhất trong vdev.",
   "steps": [
@@ -2988,6 +3191,9 @@
   "scope": "pve",
   "title": "ZFS: thêm hoặc gỡ L2ARC cache và hot spare",
   "tags": "zfs l2arc cache spare hot spare zpool add remove disk dự phòng tăng tốc cache autoreplace",
+  "topics": [
+   "storage"
+  ],
   "goal": "Quản lý thiết bị cache đọc L2ARC hoặc hot spare cho ZFS pool mà không nhầm với disk dữ liệu, SLOG hay backup.",
   "prereq": "Pool phải khỏe, có backup phù hợp và đã xác định chính xác thiết bị theo serial/WWN. Thiết bị spare nên đủ lớn để thay disk cần bảo vệ. Xác nhận loại vdev và cách bỏ thiết bị theo phiên bản OpenZFS trước khi thao tác.",
   "steps": [
@@ -3033,6 +3239,10 @@
   "scope": "pve",
   "title": "Proxmox boot ZFS mirror: kiểm tra trước khi thay disk rpool",
   "tags": "zfs rpool root boot disk mirror thay disk lỗi replace bootloader efi grub proxmox-boot-tool disk boot zpool replace",
+  "topics": [
+   "storage",
+   "host"
+  ],
   "goal": "Thu thập thông tin và chuẩn bị an toàn cho việc thay disk trong rpool mirror của Proxmox VE.",
   "prereq": "Cần xác định node, PVE version, trạng thái rpool, boot mode (UEFI/Legacy), bootloader (proxmox-boot-tool/GRUB), partition layout và chính xác disk cũ/mới. Tài liệu PDF nguồn chỉ có phần giới thiệu và ảnh không trích được lệnh thay thế; vì vậy runbook này cố ý dừng trước các lệnh ghi/xóa.",
   "steps": [
@@ -3080,6 +3290,10 @@
   "scope": "pve",
   "title": "Proxmox ZFS replication: cấu hình và kiểm thử khôi phục VM",
   "tags": "proxmox pve zfs replication replicate pvesr sao chép VM node đích target schedule RPO failover recovery",
+  "topics": [
+   "storage",
+   "cluster"
+  ],
   "goal": "Cấu hình replication ZFS định kỳ giữa các node trong cùng cluster PVE và kiểm thử khả năng khôi phục mà không tạo VM trùng hoặc gây split-brain.",
   "prereq": "Các node đã join cùng cluster và có quorum. Mỗi node có ZFS pool khỏe; storage ID phải được khai báo nhất quán, storage đích khả dụng và đủ dung lượng. Có backup riêng: replication không thay thế backup và không sao chép trạng thái RAM của VM.",
   "steps": [
@@ -3124,6 +3338,10 @@
   "scope": "pve",
   "title": "P2V Linux/Ubuntu: chuyển disk vật lý thành VM trên Proxmox",
   "tags": "p2v linux ubuntu physical to virtual chuyển máy vật lý sang vm dd raw ssh qm importdisk boot uefi bios migration",
+  "topics": [
+   "upgrade",
+   "vm"
+  ],
   "goal": "Tạo bản disk image nhất quán của máy Linux vật lý, import vào Proxmox VE và xác nhận VM mới boot/hoạt động trước khi dừng máy nguồn.",
   "prereq": "Có backup đã thử khôi phục, VMID/storage đích và dung lượng tối thiểu bằng kích thước disk nguồn. Ưu tiên shutdown máy nguồn hoặc boot rescue để disk không bị ghi trong lúc copy; dừng/quiesce ứng dụng theo quy trình riêng.",
   "steps": [
@@ -3168,6 +3386,10 @@
   "scope": "pve",
   "title": "P2V Windows: Disk2vhd, import VHDX và cài driver Proxmox",
   "tags": "p2v windows physical server pc disk2vhd vhdx vhd importdisk virtio driver sata uefi efi bcd chuyển máy vật lý",
+  "topics": [
+   "upgrade",
+   "vm"
+  ],
   "goal": "Chuyển một máy Windows vật lý sang VM Proxmox bằng VHD/VHDX, giữ máy nguồn và kiểm thử bản sao trước khi cutover.",
   "prereq": "Backup máy nguồn và ứng dụng đã kiểm tra. Kiểm kê dung lượng, partition/volume hệ thống và dữ liệu; biết BIOS Legacy hay UEFI. Suspend/decrypt BitLocker theo chính sách và giữ recovery key ngoại tuyến an toàn. Có đủ dung lượng tạm cho image.",
   "steps": [
@@ -3217,6 +3439,10 @@
   "scope": "pve",
   "title": "V2V Hyper-V sang Proxmox bằng StarWind V2V Converter",
   "tags": "v2v hyper-v hyperv microsoft starwind converter proxmox pve vhdx gen2 uefi ovmf virtio migrate vm",
+  "topics": [
+   "upgrade",
+   "vm"
+  ],
   "goal": "Chuyển VM từ Hyper-V sang Proxmox, giữ nguyên bản nguồn và kiểm thử VM đích trước khi chuyển dịch vụ.",
   "prereq": "Xác nhận phiên bản StarWind V2V và PVE tương thích; có backup độc lập, dung lượng đích và cửa sổ cutover. Kiểm kê Generation 1/2, BIOS/UEFI, disk/checkpoint và ứng dụng. Dùng credential an toàn, không ghi password/token vào tài liệu hoặc log.",
   "steps": [
@@ -3260,6 +3486,10 @@
   "scope": "pve",
   "title": "V2V VMware ESXi sang Proxmox bằng StarWind V2V Converter",
   "tags": "v2v vmware esxi vmfs vsan starwind converter proxmox pve vmdk zfs raw ovmf migration",
+  "topics": [
+   "upgrade",
+   "vm"
+  ],
   "goal": "Chuyển VM từ ESXi sang Proxmox bằng converter, kiểm thử trong môi trường cô lập và giữ nguyên nguồn để rollback.",
   "prereq": "Xác minh tương thích của đúng phiên bản StarWind V2V với phiên bản PVE hiện tại trên tài liệu nhà cung cấp; không dựa vào ghi chú tương thích PVE 9.x đã cũ. Có backup, kiểm kê snapshot/disk/firmware và dung lượng ZFS đích đủ cho image cùng headroom vận hành.",
   "steps": [
@@ -3309,6 +3539,10 @@
   "scope": "pve",
   "title": "Di chuyển VM giữa hai cluster Proxmox bằng remote migration",
   "tags": "proxmox pve remote-migrate remote migration live migrate di chuyển vm giữa 2 cluster cross cluster api token fingerprint linked clone target storage bridge",
+  "topics": [
+   "upgrade",
+   "vm"
+  ],
   "goal": "Di chuyển VM giữa hai cluster PVE độc lập bằng remote migration, kiểm soát quyền API, mapping network/storage và cutover.",
   "prereq": "Xác nhận phiên bản PVE hai đầu hỗ trợ remote migration và mọi điều kiện của qm manual; có backup restore-point, quyền quản trị phù hợp, route/port cần thiết, mapping bridge/VLAN/storage và cửa sổ cutover. API token chỉ cấp quyền tối thiểu ở cluster đích; lưu secret ngoài shell history, ticket, chat và repo.",
   "steps": [
@@ -3363,6 +3597,9 @@
   "scope": "pve",
   "title": "Xóa node Proxmox khỏi cluster an toàn (VM, HA và Ceph)",
   "tags": "proxmox pve remove node xóa node pvecm delnode cluster ceph osd mon mgr mds migrate workload",
+  "topics": [
+   "cluster"
+  ],
   "goal": "Gỡ một node PVE khỏi cluster sau khi đã xử lý workload, HA và mọi dịch vụ Ceph gắn với node đó.",
   "prereq": "Có quorum ổn định, backup mới và change plan được duyệt. Phân biệt node đang hoạt động với node đã chết; cách gỡ Ceph OSD/MON/MGR/MDS phụ thuộc vai trò và tình trạng dữ liệu. Không dùng checklist này để xóa node chỉ nhằm xử lý lỗi tạm thời.",
   "steps": [

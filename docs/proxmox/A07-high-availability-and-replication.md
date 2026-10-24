@@ -1,22 +1,24 @@
-# A7 · High availability and replication
+# A7 · HA và replication
 
-[← Mục lục](../../README.md) · Proxmox host · 14 lệnh
+[← Mục lục](../../README.md) · Proxmox host · 14 lệnh · tên gốc: High availability and replication
 
-[← A6 Backup and restore](../proxmox/A06-backup-and-restore.md) · [A8 Network →](../proxmox/A08-network.md)
+Ký hiệu: `[chỉ đọc]` chỉ xem trạng thái, không thay đổi hệ thống; `⚠ NGUY HIỂM` phá hủy hoặc ảnh hưởng dịch vụ; không ghi chú gì là lệnh có thay đổi cấu hình hoặc trạng thái, đọc kỹ trước khi chạy.
 
-## Status
+[← A6 Backup và khôi phục](../proxmox/A06-backup-and-restore.md) · [A8 Mạng →](../proxmox/A08-network.md)
+
+## Trạng thái (Status)
 
 ```bash
-# Trạng thái CRM, LRM và từng tài nguyên HA | CRM, LRM and resource states
+# [chỉ đọc] Trạng thái CRM, LRM và từng tài nguyên HA | CRM, LRM and resource states
 # từ khóa: ha trạng thái fence error freeze
 ha-manager status
 
-# Xem các tài nguyên HA đã cấu hình | Configured HA resources
+# [chỉ đọc] Xem các tài nguyên HA đã cấu hình | Configured HA resources
 # từ khóa: ha cấu hình
 ha-manager config
 ```
 
-## Resources
+## Tài nguyên HA (Resources)
 
 ```bash
 # Đưa VM vào HA | Add VM to HA
@@ -32,7 +34,7 @@ ha-manager set vm:<vmid> --state disabled
 ha-manager remove vm:<vmid>
 ```
 
-## Groups
+## Nhóm (Groups)
 
 ```bash
 # Tạo nhóm HA (PVE 8) | Create HA group (PVE 8)
@@ -40,7 +42,7 @@ ha-manager remove vm:<vmid>
 ha-manager groupadd <group> --nodes node1:2,node2:1
 ```
 
-## Move
+## Di chuyển (Move)
 
 ```bash
 # Live migrate VM đang trong HA | Live migrate an HA VM
@@ -52,7 +54,7 @@ ha-manager migrate vm:<vmid> <node>
 ha-manager relocate vm:<vmid> <node>
 ```
 
-## Maintenance
+## Bảo trì (Maintenance)
 
 ```bash
 # Bật chế độ bảo trì node (PVE 8.2 trở lên) | Maintenance mode (PVE 8.2+)
@@ -64,10 +66,10 @@ ha-manager crm-command node-maintenance enable <node>
 ha-manager crm-command node-maintenance disable <node>
 ```
 
-## Services
+## Dịch vụ (Services)
 
 ```bash
-# Trạng thái các daemon HA | HA daemons
+# [chỉ đọc] Trạng thái các daemon HA | HA daemons
 # từ khóa: ha crm lrm service
 systemctl status pve-ha-crm pve-ha-lrm
 ```
@@ -75,11 +77,11 @@ systemctl status pve-ha-crm pve-ha-lrm
 ## Replication
 
 ```bash
-# Liệt kê job replication | Replication jobs
+# [chỉ đọc] Liệt kê job replication | Replication jobs
 # từ khóa: replication sao chép zfs job
 pvesr list
 
-# Trạng thái replication | Replication state
+# [chỉ đọc] Trạng thái replication | Replication state
 # từ khóa: replication lỗi trạng thái
 pvesr status
 
@@ -87,3 +89,14 @@ pvesr status
 # từ khóa: tạo replication zfs lịch
 pvesr create-local-job <vmid>-<n> <target-node> --schedule "*/15"
 ```
+
+## Case và runbook dùng lệnh trong nhóm này
+
+- [HA: VM không tự chạy lại trên node khác, trạng thái error hoặc fence](../cases/pve/ha-no-restart.md)
+- [Một node chết hẳn (hỏng phần cứng): khôi phục dịch vụ](../cases/pve/node-dead-recovery.md)
+- [Node dừng: HA khởi động lại đồng loạt VM làm tràn RAM (domino)](../cases/pve/ha-domino.md)
+- [Bảo trì production: tắt HA và đặt cờ bảo trì Ceph trước khi tắt node](../runbooks/rb-prod-maintenance.md)
+- [PVE host hỏng đĩa boot, không có backup cấu hình: kiểm kê và dựng lại node](../cases/pve/pve-host-rebuild-no-config-backup.md)
+- [Di chuyển VM giữa hai cluster Proxmox bằng remote migration](../runbooks/rb-pve-cross-cluster-migrate.md)
+- [Xóa node Proxmox khỏi cluster an toàn (VM, HA và Ceph)](../runbooks/rb-pve-remove-node.md)
+- [Proxmox ZFS replication: cấu hình và kiểm thử khôi phục VM](../runbooks/rb-pve-zfs-replication.md)

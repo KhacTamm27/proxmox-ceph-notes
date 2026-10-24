@@ -1,10 +1,12 @@
-# B5 · OSD flags and maintenance
+# B5 · Cờ OSD và bảo trì
 
-[← Mục lục](../../README.md) · Ceph · 15 lệnh
+[← Mục lục](../../README.md) · Ceph · 15 lệnh · tên gốc: OSD flags and maintenance
 
-[← B4 OSD status](../ceph/B04-osd-status.md) · [B6 OSD lifecycle and devices →](../ceph/B06-osd-lifecycle-and-devices.md)
+Ký hiệu: `[chỉ đọc]` chỉ xem trạng thái, không thay đổi hệ thống; `⚠ NGUY HIỂM` phá hủy hoặc ảnh hưởng dịch vụ; không ghi chú gì là lệnh có thay đổi cấu hình hoặc trạng thái, đọc kỹ trước khi chạy.
 
-## Flags
+[← B4 Trạng thái OSD](../ceph/B04-osd-status.md) · [B6 Vòng đời OSD và thiết bị →](../ceph/B06-osd-lifecycle-and-devices.md)
+
+## Cờ (Flags)
 
 ```bash
 # Không tự đánh dấu OSD out (bật trước khi bảo trì, nhớ tắt sau) | Do not mark OSDs out
@@ -32,7 +34,7 @@ ceph osd set noscrub / ceph osd set nodeep-scrub
 ceph osd set pause / ceph osd unset pause
 ```
 
-## Per subtree
+## Theo nhánh (subtree) (Per subtree)
 
 ```bash
 # Đặt noout cho riêng một host hoặc chassis | Flag one CRUSH node
@@ -44,19 +46,19 @@ ceph osd set-group noout <host-or-chassis>
 ceph osd unset-group noout <host-or-chassis>
 ```
 
-## Safety
+## Kiểm tra an toàn (Safety)
 
 ```bash
-# Kiểm tra dừng OSD này có mất tính sẵn sàng không | Safe to stop without losing availability
+# [chỉ đọc] Kiểm tra dừng OSD này có mất tính sẵn sàng không | Safe to stop without losing availability
 # từ khóa: dừng osd an toàn bảo trì
 ceph osd ok-to-stop <osd-id>
 
-# Kiểm tra xóa OSD này có mất dữ liệu không | Safe to destroy without data loss
+# [chỉ đọc] Kiểm tra xóa OSD này có mất dữ liệu không | Safe to destroy without data loss
 # từ khóa: thay đĩa xóa osd an toàn
 ceph osd safe-to-destroy <osd-id>
 ```
 
-## State
+## Trạng thái (State)
 
 ```bash
 # Đánh dấu OSD out để di dời dữ liệu, hoặc in để đưa lại | Mark out or in
@@ -68,7 +70,7 @@ ceph osd out <osd-id> / ceph osd in <osd-id>
 ceph osd down <osd-id>
 ```
 
-## Weight
+## Trọng số (Weight)
 
 ```bash
 # Giảm tạm trọng số OSD (0 đến 1) | Temporary weight (0 to 1)
@@ -83,3 +85,19 @@ ceph osd crush reweight osd.<id> <weight>
 # từ khóa: nearfull cân bằng tự động
 ceph osd reweight-by-utilization
 ```
+
+## Case và runbook dùng lệnh trong nhóm này
+
+- [OSD down hoặc up/down liên tục (flapping)](../cases/ceph/osd-down-flapping.md)
+- [Bảo trì hoặc reboot một node Proxmox + Ceph](../cases/pve/node-maintenance.md)
+- [Nâng cấp Ceph trên Proxmox (ví dụ Reef lên Squid)](../cases/ceph/ceph-upgrade-pve.md)
+- [Một node chết hẳn (hỏng phần cứng): khôi phục dịch vụ](../cases/pve/node-dead-recovery.md)
+- [Cờ bảo trì Ceph còn sót sau bảo trì (noout, noscrub, norecover...)](../cases/ceph/maintenance-flags-left.md)
+- [Nâng cấp Ceph Quincy 17.2.8 → Reef 18.2.8 → Squid 19.2.4 trên PVE 8.4 (3 node, có CephFS)](../runbooks/rb-ceph-upgrade-quincy-reef-squid.md)
+- [Bảo trì production: tắt HA và đặt cờ bảo trì Ceph trước khi tắt node](../runbooks/rb-prod-maintenance.md)
+- [Thêm OSD hoặc node mới làm chậm production](../cases/ceph/add-osd-throttle.md)
+- [Slow ops / blocked requests (Ceph chậm, IO bị chặn)](../cases/ceph/slow-ops.md)
+- [Thay đĩa OSD hỏng](../cases/ceph/osd-replace-disk.md)
+- [Ceph cảnh báo OSD device có nguy cơ hỏng](../cases/ceph/osd-device-health-warning.md)
+- [Ceph nearfull / full / pool đầy](../cases/ceph/nearfull-full.md)
+- [Cluster đầy khẩn cấp: ghi bị chặn (OSD_FULL), backfill_toofull](../cases/ceph/cluster-full-emergency.md)

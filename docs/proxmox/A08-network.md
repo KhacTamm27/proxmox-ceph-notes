@@ -1,25 +1,27 @@
-# A8 · Network
+# A8 · Mạng
 
-[← Mục lục](../../README.md) · Proxmox host · 23 lệnh
+[← Mục lục](../../README.md) · Proxmox host · 23 lệnh · tên gốc: Network
 
-[← A7 High availability and replication](../proxmox/A07-high-availability-and-replication.md) · [A9 Firewall →](../proxmox/A09-firewall.md)
+Ký hiệu: `[chỉ đọc]` chỉ xem trạng thái, không thay đổi hệ thống; `⚠ NGUY HIỂM` phá hủy hoặc ảnh hưởng dịch vụ; không ghi chú gì là lệnh có thay đổi cấu hình hoặc trạng thái, đọc kỹ trước khi chạy.
 
-## Interfaces
+[← A7 HA và replication](../proxmox/A07-high-availability-and-replication.md) · [A9 Tường lửa →](../proxmox/A09-firewall.md)
+
+## Interface (Interfaces)
 
 ```bash
-# Xem địa chỉ IP ngắn gọn | Addresses, brief
+# [chỉ đọc] Xem địa chỉ IP ngắn gọn | Addresses, brief
 # từ khóa: ip địa chỉ interface xem node quản trị mac
 ip -br a
 
-# Chi tiết interface, VLAN, bond | Link details, VLAN, bond
+# [chỉ đọc] Chi tiết interface, VLAN, bond | Link details, VLAN, bond
 # từ khóa: interface vlan bond chi tiết
 ip -d link show <if>
 
-# Bộ đếm lỗi và gói của interface | Interface counters
+# [chỉ đọc] Bộ đếm lỗi và gói của interface | Interface counters
 # từ khóa: lỗi mạng drop rớt gói error counter
 ip -s link show <if>
 
-# Bảng định tuyến | Routing table
+# [chỉ đọc] Bảng định tuyến | Routing table
 # từ khóa: route định tuyến gateway
 ip r
 ```
@@ -27,11 +29,11 @@ ip r
 ## Bridge
 
 ```bash
-# Các cổng của bridge | Bridge ports
+# [chỉ đọc] Các cổng của bridge | Bridge ports
 # từ khóa: bridge cổng
 bridge link
 
-# Bảng VLAN trên bridge | VLAN table
+# [chỉ đọc] Bảng VLAN trên bridge | VLAN table
 # từ khóa: vlan bridge
 bridge vlan show
 ```
@@ -39,15 +41,15 @@ bridge vlan show
 ## Bond
 
 ```bash
-# Trạng thái bond và LACP | Bond and LACP state
+# [chỉ đọc] Trạng thái bond và LACP | Bond and LACP state
 # từ khóa: bond lacp active-backup lỗi bond link down
 cat /proc/net/bonding/bond0
 ```
 
-## Config
+## Cấu hình (Config)
 
 ```bash
-# Xem cấu hình mạng | Network config
+# [chỉ đọc] Xem cấu hình mạng | Network config
 # từ khóa: cấu hình mạng interfaces đổi ip node ip quản trị gateway sửa ip vmbr0 bond vlan
 cat /etc/network/interfaces
 
@@ -59,32 +61,32 @@ ifreload -a
 ## NIC
 
 ```bash
-# Tốc độ, duplex, trạng thái link | Speed, duplex, link
+# [chỉ đọc] Tốc độ, duplex, trạng thái link | Speed, duplex, link
 # từ khóa: tốc độ link duplex nic cổng 1g 10g up down
 ethtool <if>
 
-# Thống kê lỗi card mạng trên host OSD | NIC statistics, errors, drops
+# [chỉ đọc] Thống kê lỗi card mạng trên host OSD | NIC statistics, errors, drops
 # từ khóa: nic lỗi mạng drop crc flapping
 ethtool -S <if>
 
-# Driver và firmware của card mạng | Driver and firmware
+# [chỉ đọc] Driver và firmware của card mạng | Driver and firmware
 # từ khóa: driver firmware nic
 ethtool -i <if>
 
-# Các tính năng offload của card mạng | Offload features
+# [chỉ đọc] Các tính năng offload của card mạng | Offload features
 # từ khóa: offload tso gso
 ethtool -k <if>
 ```
 
-## MTU test
+## Kiểm tra MTU (MTU test)
 
 ```bash
-# Kiểm tra MTU 9000 thông suốt đầu cuối | Verify MTU 9000 end to end
+# [chỉ đọc] Kiểm tra MTU 9000 thông suốt đầu cuối | Verify MTU 9000 end to end
 # từ khóa: mtu jumbo ping lệch mtu mạng ceph
 ping -M do -s 8972 <ip>
 ```
 
-## Throughput
+## Băng thông (Throughput)
 
 ```bash
 # Đo băng thông giữa hai máy | Bandwidth test
@@ -92,34 +94,34 @@ ping -M do -s 8972 <ip>
 iperf3 -s / iperf3 -c <ip> -P 4
 ```
 
-## Sockets
+## Cổng đang mở (Sockets)
 
 ```bash
-# Các cổng đang lắng nghe | Listening ports
+# [chỉ đọc] Các cổng đang lắng nghe | Listening ports
 # từ khóa: cổng port listen dịch vụ
 ss -tulpn
 ```
 
-## Capture
+## Bắt gói (Capture)
 
 ```bash
-# Bắt gói tin theo host | Packet capture
+# [chỉ đọc] Bắt gói tin theo host | Packet capture
 # từ khóa: bắt gói tcpdump capture
 tcpdump -i <if> -nn host <ip>
 ```
 
-## Path
+## Đường đi mạng (Path)
 
 ```bash
-# Đường đi và tỉ lệ mất gói | Path and loss
+# [chỉ đọc] Đường đi và tỉ lệ mất gói | Path and loss
 # từ khóa: đường đi mất gói traceroute
 mtr <ip>
 ```
 
-## Neighbors
+## Thiết bị lân cận (Neighbors)
 
 ```bash
-# Xem switch hàng xóm qua LLDP (nếu có lldpd) | LLDP switch neighbors (if lldpd)
+# [chỉ đọc] Xem switch hàng xóm qua LLDP (nếu có lldpd) | LLDP switch neighbors (if lldpd)
 # từ khóa: lldp switch cổng
 lldpcli show neighbors
 ```
@@ -127,7 +129,7 @@ lldpcli show neighbors
 ## OVS
 
 ```bash
-# Cấu trúc Open vSwitch (nếu dùng) | Open vSwitch layout (if used)
+# [chỉ đọc] Cấu trúc Open vSwitch (nếu dùng) | Open vSwitch layout (if used)
 # từ khóa: ovs openvswitch
 ovs-vsctl show
 ```
@@ -135,15 +137,25 @@ ovs-vsctl show
 ## QoS
 
 ```bash
-# Thống kê hàng đợi gói của interface | Queue discipline stats
+# [chỉ đọc] Thống kê hàng đợi gói của interface | Queue discipline stats
 # từ khóa: qdisc queue drop
 tc -s qdisc show dev <if>
 
-# Quy tắc đánh dấu DSCP | DSCP marking rules
+# [chỉ đọc] Quy tắc đánh dấu DSCP | DSCP marking rules
 # từ khóa: dscp qos mangle
 iptables -t mangle -S
 
-# Xem toàn bộ quy tắc nftables | nftables rules
+# [chỉ đọc] Xem toàn bộ quy tắc nftables | nftables rules
 # từ khóa: nftables firewall rule
 nft list ruleset
 ```
+
+## Case và runbook dùng lệnh trong nhóm này
+
+- [Cấu hình mạng Proxmox: OVS/Linux bridge, bond, LACP và VLAN trunk](../cases/pve/pve-network-bridge-bond-vlan.md)
+- [Mạng Ceph: MTU không khớp, nghẽn hoặc rớt gói](../cases/ceph/network-mtu.md)
+- [Corosync link chập chờn, retransmit, node tự reboot (HA watchdog)](../cases/pve/corosync-flapping.md)
+- [OSD down hoặc up/down liên tục (flapping)](../cases/ceph/osd-down-flapping.md)
+- [Slow ops / blocked requests (Ceph chậm, IO bị chặn)](../cases/ceph/slow-ops.md)
+- [Latency OSD cao, IOPS thấp do SSD consumer (không có PLP)](../cases/ceph/osd-latency-consumer-ssd.md)
+- [Cấu hình Nginx proxy console cho VM Proxmox (noVNC qua portal)](../runbooks/rb-console-proxy-nginx.md)

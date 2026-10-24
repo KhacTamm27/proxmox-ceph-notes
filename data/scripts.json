@@ -4,6 +4,11 @@
   "file": "pve_check.py",
   "title": "Kiểm tra tổng hợp host, storage và network/VLAN toàn cluster",
   "tags": "script proxmox pve cluster inventory kiểm tra host node hostname nodeid ip datastore storage dung lượng network vlan bridge vlan-aware csv",
+  "topics": [
+   "host",
+   "network",
+   "storage"
+  ],
   "goal": "Tổng hợp node/host, datastore cluster, trạng thái và dung lượng datastore theo từng node, cùng interface VLAN và bridge VLAN-aware để kiểm tra cấu hình toàn cluster. Xuất kết quả ra màn hình và các file CSV.",
   "usage": [
    {
@@ -18,6 +23,9 @@
   "file": "list_vlan_tags.sh",
   "title": "Liệt kê VLAN tag/trunks đang dùng trên toàn cluster",
   "tags": "script proxmox pve vlan tag trunk trunks vlan id vm ct qemu lxc cluster network mạng kiểm tra cấu hình",
+  "topics": [
+   "network"
+  ],
   "goal": "Tổng hợp các VLAN ID có tag hoặc trunks trong cấu hình VM/CT trên mọi node Proxmox, giúp kiểm tra VLAN nào đang được sử dụng trước khi cấu hình switch hoặc bridge.",
   "usage": [
    {
@@ -32,6 +40,9 @@
   "file": "list_up_ports.sh",
   "title": "Liệt kê cổng mạng vật lý đang UP (1Gb / 10Gb) trên mọi node cluster",
   "tags": "script mạng nic card mạng port cổng up link tốc độ speed 10gb 1gb 25gb ssh cluster kiểm tra cáp sfp rớt tốc độ đứt cáp ethtool",
+  "topics": [
+   "network"
+  ],
   "goal": "Kiểm tra nhanh card mạng vật lý nào đang UP và đạt tốc độ nào trên từng node của cluster (đọc danh sách node và IP từ /etc/pve/.members), để phát hiện cổng rớt tốc độ, đứt cáp hoặc cắm nhầm cổng.",
   "usage": [
    {
@@ -58,6 +69,9 @@
   "file": "ha-menu.sh",
   "title": "Menu Stop / Start / Status HA (pve-ha-lrm, pve-ha-crm) trên toàn cluster",
   "tags": "script ha stop start status lrm crm pve-ha-lrm pve-ha-crm bảo trì maintenance tắt ha bật ha menu cluster fence domino quorum ssh",
+  "topics": [
+   "cluster"
+  ],
   "goal": "Tắt hoặc bật HA đồng loạt trên mọi node online đúng thứ tự khi bảo trì production (stop LRM trước rồi CRM; start CRM trước, chờ bầu master, rồi LRM) thay vì gõ tay từng node. Tương ứng bước tắt HA trong runbook bảo trì production.",
   "usage": [
    {

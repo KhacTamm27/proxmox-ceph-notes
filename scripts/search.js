@@ -86,29 +86,41 @@ function guideOutline(md){
 }
 
 // Dựng chỉ mục cho lệnh, case/runbook, script, bài viết và triage; query() trả kết quả đã xếp hạng.
-function createIndex(engine,{DATA,CASES,SCRIPTS,TRIAGE,GUIDES=[]}){
-  const SIDE={left:'proxmox pve',right:'ceph'};
+// TOPICS.branches: chủ đề của từng nhóm lệnh; case/script/bài viết tự khai báo topics. LABELS: tên tiếng Việt.
+function createIndex(engine,{DATA,CASES,SCRIPTS,TRIAGE,GUIDES=[],TOPICS={},LABELS={}}){
+  const SIDE={left:'proxmox pve',right:'ceph'},BT=TOPICS.branches||{},LB=LABELS.branches||{},LS=LABELS.subs||{};
   const commands=[];
   Object.entries(DATA).forEach(([side,branches])=>branches.forEach(b=>b.subs.forEach(s=>s.items.forEach(it=>{
-    commands.push({b,s,it,doc:engine.prepare([[it.c,8],[it.v,5],[it.p,4],[it.k,3],[s.name+' '+b.name,2],[SIDE[side],1]])});
+    commands.push({b,s,it,topics:BT[b.id]||[],doc:engine.prepare([[it.c,8],[it.v,5],[it.p,4],[it.k,3],
+      [[s.name,LS[s.name],b.name,LB[b.id]].filter(Boolean).join(' '),2],[SIDE[side],1]])});
   }))));
   const SCOPE={pve:'proxmox pve',ceph:'ceph'};
-  const cases=CASES.map((c,index)=>({c,index,doc:engine.prepare([
+  const cases=CASES.map((c,index)=>({c,index,topics:c.topics||[],doc:engine.prepare([
     [c.title,8],[c.tags,4],[c.symptoms||c.goal,3],
     [[c.causes,c.prereq,(c.quick_reference||[]).map(x=>x.title+' '+x.text).join(' ')].filter(Boolean).join(' '),1],
     [c.steps.flatMap(st=>st.cmds||[]).join(' '),1],[SCOPE[c.scope]+(c.kind==='runbook'?' runbook':' case'),1]])}));
-  const scripts=SCRIPTS.map((s,index)=>({s,index,doc:engine.prepare([
+  const scripts=SCRIPTS.map((s,index)=>({s,index,topics:s.topics||[],doc:engine.prepare([
     [s.title,8],[s.tags,4],[s.goal,3],[s.notes+' '+s.usage.map(u=>u.c+' '+u.d).join(' ')+' script',1]])}));
-  const guides=GUIDES.map((g,index)=>({g,index,toc:guideOutline(g.md),doc:null}));
+  const guides=GUIDES.map((g,index)=>({g,index,topics:g.topics||[],toc:guideOutline(g.md),doc:null}));
   guides.forEach(x=>{x.doc=engine.prepare([[x.g.title,8],[x.g.tags,4],[x.g.summary,3],
     [x.toc.map(t=>t.text).join(' '),2],[(SCOPE[x.g.scope]||'')+' bài viết guide',1],[x.g.md,1]])});
   const rank=(list,terms)=>list.map(x=>({...x,score:engine.score(x.doc,terms)})).filter(x=>x.score>0)
     .sort((a,b)=>b.score-a.score||(a.index||0)-(b.index||0));
-  function query(q){
-    const terms=engine.parse(q);
+  // Một lệnh có thể nằm ở nhiều nhóm (B18 gom lại lệnh của nhóm khác): kết quả chỉ hiện một lần, kèm các nhóm còn lại.
+  function dedupe(list){
+    const seen=new Map(),out=[];
+    list.forEach(x=>{const k=x.it.c;if(seen.has(k)){const y=seen.get(k);if(x.b.id!==y.b.id&&!y.also.includes(x.b.id))y.also.push(x.b.id)}else{const y={...x,also:[]};seen.set(k,y);out.push(y)}});
+    return out;
+  }
+  function query(q,topic){
+    const terms=engine.parse(q||''),inTopic=x=>!topic||x.topics.includes(topic);
+    if(!terms.length&&topic)  // chỉ chọn chủ đề, chưa gõ gì: liệt kê toàn bộ case/bài viết/script của chủ đề đó
+      return {terms,browse:true,commandHits:[],commands:[],cases:cases.filter(inTopic),scripts:scripts.filter(inTopic),guides:guides.filter(inTopic),triage:[]};
+    const hits=rank(commands.filter(inTopic),terms);
     const triage=terms.length<2?[]:TRIAGE.map(item=>({item,score:engine.triageHits(item.title+' '+item.aliases,terms)}))
       .filter(h=>h.score>=2).sort((a,b)=>b.score-a.score);
-    return {terms,commands:rank(commands,terms),cases:rank(cases,terms),scripts:rank(scripts,terms),guides:rank(guides,terms),triage};
+    return {terms,commandHits:hits,commands:dedupe(hits),cases:rank(cases.filter(inTopic),terms),
+      scripts:rank(scripts.filter(inTopic),terms),guides:rank(guides.filter(inTopic),terms),triage};
   }
   return {commands,cases,scripts,guides,query};
 }

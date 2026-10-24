@@ -25,6 +25,19 @@ vi = json.loads((ROOT / "data/vi.json").read_text(encoding="utf-8"))
 cases = json.loads((ROOT / "data/cases.json").read_text(encoding="utf-8"))
 triage = json.loads((ROOT / "data/triage.json").read_text(encoding="utf-8"))
 synonyms = json.loads((ROOT / "data/synonyms.json").read_text(encoding="utf-8"))
+topics = json.loads((ROOT / "data/topics.json").read_text(encoding="utf-8"))
+labels = json.loads((ROOT / "data/labels_vi.json").read_text(encoding="utf-8"))
+TOPIC_IDS = {t["id"] for t in topics["topics"]}
+
+
+def bname(b):
+    """Tên nhóm hiển thị (tiếng Việt nếu có). Tên file .md vẫn theo tên gốc để không gãy link."""
+    return labels["branches"].get(b["id"]) or b["name"]
+
+
+def sub_heading(name):
+    v = labels["subs"].get(name)
+    return f"{v} ({name})" if v and v != name else name
 SIDES = {"left": ("proxmox", "Proxmox host"), "right": ("ceph", "Ceph")}
 
 
@@ -91,30 +104,93 @@ for f in sorted((ROOT / "docs/guides").glob("*.md")):
         print(f"CẢNH BÁO: {rel} chưa khai báo trong data/guides.json nên không hiện trên mindmap và ô tìm kiếm.")
 SCOPE_LABEL = {"ceph": "Ceph", "pve": "Proxmox cluster"}
 
+# ---- chủ đề: nhóm lệnh khai báo trong topics.json, case/script/bài viết tự khai báo trường topics ----
+for side, branches in data.items():
+    for b in branches:
+        if not set(topics["branches"].get(b["id"], [])) & TOPIC_IDS:
+            print(f"CẢNH BÁO: nhóm {b['id']} chưa có chủ đề trong data/topics.json (branches).")
+for fname, lst in (("cases.json", cases), ("scripts.json", scr_list), ("guides.json", guides)):
+    for x in lst:
+        bad = [t for t in x.get("topics", []) if t not in TOPIC_IDS]
+        if not x.get("topics") or bad:
+            print(f"CẢNH BÁO: data/{fname}, mục '{x['id']}' thiếu topics hoặc có chủ đề không tồn tại: {bad or '[]'}")
+
+
+# ---- liên kết lệnh <-> case: so lệnh trong các bước của case với thư viện lệnh ----
+def case_link(c, base):
+    return f"{base}runbooks/{c['id']}.md" if c.get("kind") == "runbook" else f"{base}cases/{c['scope']}/{c['id']}.md"
+
+
+patterns = []
+for side, branches in data.items():
+    for b in branches:
+        for sub in b["subs"]:
+            for it in sub["items"]:
+                it["u"] = []
+                for alt in it["c"].split(" / "):
+                    alt = re.sub(r"\s*\[[^\]]*\]", "", alt).strip()
+                    rx = "".join(r"\S+" if part.startswith("<") else re.escape(part) for part in re.split(r"(<[^>]+>)", alt))
+                    patterns.append((re.compile("^" + rx + r"(?=$|\s|\|)"), len(re.sub(r"<[^>]+>", "", alt)), b["id"], it, alt))
+
+
+def lookup(cmd):
+    x = cmd.split("  #")[0].strip()
+    best = max((p for p in patterns if p[0].match(x)), key=lambda p: p[1], default=None)
+    if not best and len(x.split()) >= 2:
+        # Lệnh trong case là phần đầu của lệnh thư viện (thư viện có thêm cờ): qm status <vmid> -> qm status <vmid> --verbose
+        best = min((p for p in patterns if p[4].startswith(x + " ")), key=lambda p: p[1], default=None)
+    return best
+
+
+linked = total_case_cmds = 0
+for c in cases:
+    for st in c["steps"]:
+        st["refs"] = []
+        for cmd in st.get("cmds", []):
+            total_case_cmds += 1
+            hit = lookup(cmd)
+            st["refs"].append(hit[2] if hit else None)
+            if hit:
+                linked += 1
+                if c["id"] not in hit[3]["u"]:
+                    hit[3]["u"].append(c["id"])
+case_by_id = {c["id"]: c for c in cases}
+
 # ---- từng file .md ----
 for side, branches in data.items():
     folder, label = SIDES[side]
     for i, b in enumerate(branches):
-        out = [f"# {b['id']} · {b['name']}", "",
-               f"[← Mục lục](../../README.md) · {label} · {count(b)} lệnh", ""]
+        orig = f" · tên gốc: {b['name']}" if bname(b) != b["name"] else ""
+        out = [f"# {b['id']} · {bname(b)}", "",
+               f"[← Mục lục](../../README.md) · {label} · {count(b)} lệnh{orig}", "",
+               "Ký hiệu: `[chỉ đọc]` chỉ xem trạng thái, không thay đổi hệ thống; `⚠ NGUY HIỂM` phá hủy hoặc ảnh hưởng dịch vụ; "
+               "không ghi chú gì là lệnh có thay đổi cấu hình hoặc trạng thái, đọc kỹ trước khi chạy.", ""]
         nav = []
         if i > 0:
             pb = branches[i - 1]
-            nav.append(f"[← {pb['id']} {pb['name']}](../{slugs[pb['id']]})")
+            nav.append(f"[← {pb['id']} {bname(pb)}](../{slugs[pb['id']]})")
         if i < len(branches) - 1:
             nb = branches[i + 1]
-            nav.append(f"[{nb['id']} {nb['name']} →](../{slugs[nb['id']]})")
+            nav.append(f"[{nb['id']} {bname(nb)} →](../{slugs[nb['id']]})")
         if nav:
             out += [" · ".join(nav), ""]
         for s in b["subs"]:
-            out += [f"## {s['name']}", "", "```bash"]
+            out += [f"## {sub_heading(s['name'])}", "", "```bash"]
             for it in s["items"]:
-                tag = "⚠ NGUY HIỂM: " if it["d"] else ""
+                tag = "⚠ NGUY HIỂM: " if it["d"] else "[chỉ đọc] " if it.get("r") else ""
                 if it.get("v"):
                     out += [f"# {tag}{it['v']} | {it['p']}", f"# từ khóa: {it['k']}", it["c"], ""]
                 else:
                     out += [f"# {tag}{it['p']}", it["c"], ""]
             out[-1] = "```"
+            out.append("")
+        used = []
+        for s in b["subs"]:
+            for it in s["items"]:
+                used += [u for u in it["u"] if u not in used]
+        if used:
+            out += ["## Case và runbook dùng lệnh trong nhóm này", ""]
+            out += [f"- [{case_by_id[u]['title']}]({case_link(case_by_id[u], '../')})" for u in used]
             out.append("")
         (ROOT / "docs" / slugs[b["id"]]).write_text("\n".join(out).rstrip() + "\n", encoding="utf-8")
 
@@ -213,21 +289,23 @@ for side, branches in data.items():
     folder, label = SIDES[side]
     r += [f"## {label}", "", "| ID | Nhóm | Lệnh | Gồm |", "|---|---|---:|---|"]
     for b in branches:
-        subs = ", ".join(s["name"] for s in b["subs"])
-        r.append(f"| {b['id']} | [{b['name']}](docs/{slugs[b['id']]}) | {count(b)} | {subs} |")
+        subs = ", ".join(labels["subs"].get(s["name"]) or s["name"] for s in b["subs"])
+        r.append(f"| {b['id']} | [{bname(b)}](docs/{slugs[b['id']]}) | {count(b)} | {subs} |")
     r.append("")
 r += ["## Thêm tài liệu mới: đặt ở đâu", "",
       "Chọn loại theo nội dung, mỗi loại có một chỗ cố định nên mindmap, ô tìm kiếm và README tự cập nhật sau khi build:", "",
       "| Nội dung mới | Đặt vào | Ghi chú |",
       "|---|---|---|",
-      "| Một lệnh tra cứu | `data/commands.json` (nhóm, nhóm con) và `data/vi.json` (mô tả tiếng Việt, từ khóa) | Lệnh phá hủy/ảnh hưởng dịch vụ đặt `d: true` |",
-      "| Một sự cố: triệu chứng, nguyên nhân, các bước xử lý | `data/cases.json` (`scope`: `pve` hoặc `ceph`) | Ghi câu lỗi gốc vào `symptoms` để tìm được bằng cách dán lỗi |",
+      "| Một lệnh tra cứu | `data/commands.json` (nhóm, nhóm con) và `data/vi.json` (mô tả tiếng Việt, từ khóa) | Lệnh phá hủy/ảnh hưởng dịch vụ đặt `d: true`; lệnh chỉ xem, không thay đổi gì đặt `r: true` |",
+      "| Một sự cố: triệu chứng, nguyên nhân, các bước xử lý | `data/cases.json` (`scope`: `pve` hoặc `ceph`, `topics`) | Ghi câu lỗi gốc vào `symptoms` để tìm được bằng cách dán lỗi |",
       "| Quy trình thao tác từng bước (nâng cấp, chuyển đổi, cấu hình) | `data/cases.json` với `kind: runbook` | Có `goal` và `prereq` |",
       "| Script tiện ích một file | mã nguồn trong `tools/`, thông tin trong `data/scripts.json` | |",
       "| Bài viết dài: mô hình, cơ chế, triển khai, double check, lỗi thường gặp, tùy biến | `docs/guides/<id>.md` và khai báo trong `data/guides.json`; file đi kèm (script, dashboard, cấu hình) để trong `tools/<id>/` | Bắt đầu từ mẫu `docs/guides/_TEMPLATE.md`; mục lục tự tách từ heading `##` và `###` |",
       "| Hướng dẫn chẩn đoán ban đầu theo mô tả tự nhiên | `data/triage.json` | Chỉ dùng lệnh chỉ đọc |", "",
       "Giúp người khác tìm được bài mới:", "",
       "- `tags` ghi cả cách nói tiếng Việt, thuật ngữ tiếng Anh và câu lỗi gốc người dùng hay gõ.",
+      "- `topics` (case, runbook, script, bài viết) chọn 1 đến 3 chủ đề trong `data/topics.json` để hiện đúng khi lọc theo chủ đề; nhóm lệnh mới khai báo chủ đề ở `branches` trong cùng file.",
+      "- Nhóm hoặc nhóm con mới: thêm tên tiếng Việt vào `data/labels_vi.json` (giữ tên gốc trong `commands.json` vì tên file `.md` sinh từ tên gốc).",
       "- Từ đồng nghĩa dùng chung (ví dụ `khởi động lại` = `reboot` = `restart`) thêm vào `data/synonyms.json`, không cần chép vào từng mục.",
       "- Thêm 1 đến 2 câu tìm mẫu vào `data/search_tests.json` (`top_case`, `top_command` hoặc `top_guide`) để build cảnh báo nếu sau này bài bị tụt khỏi kết quả.",
       "- Không ghi khóa, mật khẩu hoặc token thật vào repo.", "",
@@ -248,6 +326,8 @@ html = (tpl.replace("/*__SEARCH_JS__*/", search_js)
            .replace("/*__CASES__*/[]", json.dumps(cases, ensure_ascii=False).replace("</", "<\\/"))
            .replace("/*__TRIAGE__*/[]", json.dumps(triage, ensure_ascii=False).replace("</", "<\\/"))
            .replace("/*__SCRIPTS__*/[]", json.dumps(scr_list, ensure_ascii=False).replace("</", "<\\/"))
+           .replace("/*__TOPICS__*/{}", json.dumps(topics, ensure_ascii=False))
+           .replace("/*__LABELS__*/{}", json.dumps(labels, ensure_ascii=False))
            .replace("/*__GUIDES__*/[]", json.dumps(guides, ensure_ascii=False).replace("</", "<\\/")))
 (ROOT / "docs/index.html").write_text(html, encoding="utf-8")
 prototype_tpl = (ROOT / "prototype/template.html").read_text(encoding="utf-8")
@@ -260,7 +340,8 @@ nce = sum(c["scope"] == "ceph" and c.get("kind") != "runbook" for c in cases)
 npv = sum(c["scope"] == "pve" and c.get("kind") != "runbook" for c in cases)
 print(
     f"ok: {len(slugs)} file .md, {nce + npv} case ({nce} Ceph, {npv} Proxmox), "
-    f"{nrb} runbook, {len(scr_list)} script, {len(guides)} bài viết, {total} lệnh, Việt hóa {covered}/{total}"
+    f"{nrb} runbook, {len(scr_list)} script, {len(guides)} bài viết, {total} lệnh, Việt hóa {covered}/{total}, "
+    f"{linked}/{total_case_cmds} lệnh trong case liên kết được với thư viện"
     .encode("utf-8", errors="replace").decode("utf-8")
 )
 

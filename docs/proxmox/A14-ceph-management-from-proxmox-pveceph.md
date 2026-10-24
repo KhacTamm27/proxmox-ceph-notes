@@ -1,10 +1,12 @@
-# A14 · Ceph management from Proxmox (pveceph)
+# A14 · Quản lý Ceph từ Proxmox (pveceph)
 
-[← Mục lục](../../README.md) · Proxmox host · 16 lệnh
+[← Mục lục](../../README.md) · Proxmox host · 16 lệnh · tên gốc: Ceph management from Proxmox (pveceph)
 
-[← A13 Tasks, logs and API](../proxmox/A13-tasks-logs-and-api.md)
+Ký hiệu: `[chỉ đọc]` chỉ xem trạng thái, không thay đổi hệ thống; `⚠ NGUY HIỂM` phá hủy hoặc ảnh hưởng dịch vụ; không ghi chú gì là lệnh có thay đổi cấu hình hoặc trạng thái, đọc kỹ trước khi chạy.
 
-## Install
+[← A13 Task, log và API](../proxmox/A13-tasks-logs-and-api.md)
+
+## Cài đặt (Install)
 
 ```bash
 # Cài gói Ceph | Install Ceph packages
@@ -55,7 +57,7 @@ pveceph osd destroy <osd-id> --cleanup
 ## Pool
 
 ```bash
-# Liệt kê pool | List pools
+# [chỉ đọc] Liệt kê pool | List pools
 # từ khóa: pool danh sách
 pveceph pool ls
 
@@ -84,7 +86,7 @@ pveceph mds create
 pveceph fs create --name <fs> --add-storage
 ```
 
-## Services
+## Dịch vụ (Services)
 
 ```bash
 # Bật hoặc dừng dịch vụ Ceph trên node | Start or stop Ceph services on node
@@ -92,10 +94,14 @@ pveceph fs create --name <fs> --add-storage
 pveceph start / pveceph stop
 ```
 
-## Cleanup
+## Dọn dẹp (Cleanup)
 
 ```bash
 # ⚠ NGUY HIỂM: Xóa cấu hình Ceph khỏi node (nguy hiểm) | Remove Ceph config from node (destructive)
 # từ khóa: gỡ ceph purge
 pveceph purge
 ```
+
+## Case và runbook dùng lệnh trong nhóm này
+
+- [Thay đĩa OSD hỏng](../cases/ceph/osd-replace-disk.md)

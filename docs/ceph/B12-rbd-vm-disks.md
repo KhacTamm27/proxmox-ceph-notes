@@ -1,33 +1,35 @@
-# B12 · RBD (VM disks)
+# B12 · RBD (đĩa VM)
 
-[← Mục lục](../../README.md) · Ceph · 26 lệnh
+[← Mục lục](../../README.md) · Ceph · 26 lệnh · tên gốc: RBD (VM disks)
 
-[← B11 Recovery, scrub and config tuning](../ceph/B11-recovery-scrub-and-config-tuning.md) · [B13 RGW and S3 (radosgw-admin) →](../ceph/B13-rgw-and-s3-radosgw-admin.md)
+Ký hiệu: `[chỉ đọc]` chỉ xem trạng thái, không thay đổi hệ thống; `⚠ NGUY HIỂM` phá hủy hoặc ảnh hưởng dịch vụ; không ghi chú gì là lệnh có thay đổi cấu hình hoặc trạng thái, đọc kỹ trước khi chạy.
 
-## List
+[← B11 Recovery, scrub và tinh chỉnh cấu hình](../ceph/B11-recovery-scrub-and-config-tuning.md) · [B13 RGW và S3 (radosgw-admin) →](../ceph/B13-rgw-and-s3-radosgw-admin.md)
+
+## Liệt kê (List)
 
 ```bash
-# Liệt kê image kèm dung lượng | Images with size
+# [chỉ đọc] Liệt kê image kèm dung lượng | Images with size
 # từ khóa: image đĩa vm rbd danh sách
 rbd ls -l -p <pool>
 ```
 
-## Info
+## Thông tin (Info)
 
 ```bash
-# Chi tiết một image | Image details
+# [chỉ đọc] Chi tiết một image | Image details
 # từ khóa: image thông tin
 rbd info <pool>/<image>
 
-# Dung lượng cấp phát và thực dùng | Provisioned vs used
+# [chỉ đọc] Dung lượng cấp phát và thực dùng | Provisioned vs used
 # từ khóa: đầy thin provisioned dung lượng thực
 rbd du -p <pool>
 
-# Ai đang mở image (watcher), để tìm client treo | Watchers (who has it open)
+# [chỉ đọc] Ai đang mở image (watcher), để tìm client treo | Watchers (who has it open)
 # từ khóa: rbd treo client lock watcher hang
 rbd status <pool>/<image>
 
-# Các lock của image | Image locks
+# [chỉ đọc] Các lock của image | Image locks
 # từ khóa: lock treo vm không start
 rbd lock ls <pool>/<image>
 ```
@@ -35,7 +37,7 @@ rbd lock ls <pool>/<image>
 ## Snapshot
 
 ```bash
-# Liệt kê snapshot của image | List snapshots
+# [chỉ đọc] Liệt kê snapshot của image | List snapshots
 # từ khóa: snapshot
 rbd snap ls <pool>/<image>
 
@@ -56,7 +58,7 @@ rbd snap protect <pool>/<image>@<snap>
 rbd snap rm <pool>/<image>@<snap>
 ```
 
-## Clone
+## Nhân bản (Clone)
 
 ```bash
 # Clone từ snapshot | Clone from snapshot
@@ -68,7 +70,7 @@ rbd clone <pool>/<image>@<snap> <pool>/<clone>
 rbd flatten <pool>/<clone>
 ```
 
-## Copy
+## Sao chép (Copy)
 
 ```bash
 # Sao chép image | Copy image
@@ -88,7 +90,7 @@ rbd import <file> <pool>/<image>
 rbd export-diff <pool>/<image> <file>
 ```
 
-## Resize
+## Đổi kích thước (Resize)
 
 ```bash
 # Đổi kích thước image | Resize image
@@ -96,7 +98,7 @@ rbd export-diff <pool>/<image> <file>
 rbd resize --size <MiB> <pool>/<image>
 ```
 
-## Space
+## Dung lượng (Space)
 
 ```bash
 # Thu hồi vùng toàn số 0 | Reclaim zeroed space
@@ -104,10 +106,10 @@ rbd resize --size <MiB> <pool>/<image>
 rbd sparsify <pool>/<image>
 ```
 
-## Trash
+## Thùng rác (Trash)
 
 ```bash
-# Nội dung thùng rác của pool | Trash contents
+# [chỉ đọc] Nội dung thùng rác của pool | Trash contents
 # từ khóa: trash thùng rác
 rbd trash ls -p <pool>
 
@@ -124,7 +126,7 @@ rbd trash restore -p <pool> <image-id>
 rbd trash purge -p <pool>
 ```
 
-## Delete
+## Xóa (Delete)
 
 ```bash
 # ⚠ NGUY HIỂM: Xóa image (nguy hiểm) | Delete image (destructive)
@@ -132,15 +134,15 @@ rbd trash purge -p <pool>
 rbd rm <pool>/<image>
 ```
 
-## Perf
+## Hiệu năng (Perf)
 
 ```bash
-# Tốc độ IO theo từng image | Per-image IO rates
+# [chỉ đọc] Tốc độ IO theo từng image | Per-image IO rates
 # từ khóa: io image vm nặng tìm vm ồn
 rbd perf image iostat -p <pool>
 ```
 
-## Bench
+## Đo hiệu năng (Bench)
 
 ```bash
 # Benchmark image | Image benchmark
@@ -148,10 +150,14 @@ rbd perf image iostat -p <pool>
 rbd bench --io-type write --io-size 4K --io-threads 16 <pool>/<image>
 ```
 
-## Mapping
+## Ánh xạ (Mapping)
 
 ```bash
 # Map image vào kernel (khi gỡ lỗi) | Kernel map (troubleshooting)
 # từ khóa: map unmap kernel gỡ lỗi
 rbd map <pool>/<image> / rbd unmap <dev>
 ```
+
+## Case và runbook dùng lệnh trong nhóm này
+
+- [VM treo IO do image RBD (watcher, lock, blocklist)](../cases/ceph/rbd-hang.md)

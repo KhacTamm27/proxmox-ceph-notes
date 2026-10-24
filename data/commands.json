@@ -10,17 +10,20 @@
       {
        "c": "pveversion -v",
        "p": "PVE and package versions",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "hostnamectl",
        "p": "Hostname, OS",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "uname -r",
        "p": "Running kernel",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -30,7 +33,8 @@
       {
        "c": "uptime",
        "p": "Uptime and load",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -40,17 +44,20 @@
       {
        "c": "timedatectl",
        "p": "Time zone and sync state",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "chronyc tracking",
        "p": "NTP offset",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "chronyc sources -v",
        "p": "NTP sources",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -60,12 +67,14 @@
       {
        "c": "systemctl --failed",
        "p": "Failed units",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "systemctl status pve-cluster pvedaemon pveproxy pvestatd pve-firewall pvescheduler",
        "p": "Core PVE services",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -75,7 +84,8 @@
       {
        "c": "pvenode config get",
        "p": "Node config",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "pvenode startall",
@@ -100,7 +110,8 @@
       {
        "c": "pvenode cert info",
        "p": "Certificate details",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "pvecm updatecerts --force",
@@ -125,7 +136,8 @@
       {
        "c": "pve8to9 --full",
        "p": "Pre-upgrade checker (PVE 8 to 9)",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -135,12 +147,14 @@
       {
        "c": "proxmox-boot-tool status",
        "p": "Boot setup status",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "proxmox-boot-tool kernel list",
        "p": "Installed kernels",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "proxmox-boot-tool kernel pin <version>",
@@ -161,17 +175,20 @@
       {
        "c": "pvecm status",
        "p": "Quorum, votes, links",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "pvecm nodes",
        "p": "Cluster members",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "corosync-quorumtool -s",
        "p": "Quorum details",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -181,17 +198,20 @@
       {
        "c": "corosync-cfgtool -s",
        "p": "KNET link status per node",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "corosync-cfgtool -n",
        "p": "Node and link list",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "corosync-cmapctl runtime.members",
        "p": "Runtime member info",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -201,12 +221,14 @@
       {
        "c": "journalctl -u corosync -f",
        "p": "Follow corosync log",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "journalctl -u pve-cluster -f",
        "p": "Follow pmxcfs log",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -216,7 +238,8 @@
       {
        "c": "cat /etc/pve/corosync.conf",
        "p": "Cluster config",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -282,27 +305,32 @@
       {
        "c": "qm list",
        "p": "List VMs on node",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "qm status <vmid> --verbose",
        "p": "Detailed VM status",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "qm config <vmid>",
        "p": "VM config",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "qm pending <vmid>",
        "p": "Pending config changes",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "qm showcmd <vmid> --pretty",
        "p": "Show KVM command line",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -412,7 +440,8 @@
       {
        "c": "qm listsnapshot <vmid>",
        "p": "List snapshots",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "qm rollback <vmid> <name>",
@@ -447,7 +476,8 @@
       {
        "c": "qm agent <vmid> ping",
        "p": "Check agent",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "qm guest exec <vmid> -- <cmd>",
@@ -457,7 +487,8 @@
       {
        "c": "qm guest cmd <vmid> network-get-interfaces",
        "p": "Guest IPs",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -487,7 +518,8 @@
       {
        "c": "qm cloudinit dump <vmid> user",
        "p": "Show generated user-data",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "qm set <vmid> --ciuser <u> --sshkeys <file> --ipconfig0 ip=dhcp",
@@ -533,17 +565,20 @@
       {
        "c": "pct list",
        "p": "List containers",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "pct status <ctid>",
        "p": "Status",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "pct config <ctid>",
        "p": "Config",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -658,7 +693,8 @@
       {
        "c": "pveam available",
        "p": "Available templates",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "pveam download <storage> <template>",
@@ -679,12 +715,14 @@
       {
        "c": "pvesm status",
        "p": "All storages and usage",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "pvesm list <storage>",
        "p": "Volumes on a storage",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -694,7 +732,8 @@
       {
        "c": "cat /etc/pve/storage.cfg",
        "p": "Storage definitions",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "pvesm add <type> <id> ...",
@@ -719,12 +758,14 @@
       {
        "c": "pvesm scan nfs <server>",
        "p": "Discover NFS exports",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "pvesm scan iscsi <portal>",
        "p": "Discover iSCSI targets",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -734,7 +775,8 @@
       {
        "c": "pvesm path <volume-id>",
        "p": "Resolve volume path",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "pvesm alloc <storage> <vmid> <name> <size>",
@@ -790,7 +832,8 @@
       {
        "c": "pvesh get /cluster/backup",
        "p": "List backup jobs",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -800,12 +843,14 @@
       {
        "c": "proxmox-backup-client list --repository <user@realm@host:datastore>",
        "p": "List backup groups",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "proxmox-backup-client snapshot list --repository <repo>",
        "p": "List snapshots",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "proxmox-backup-client backup <name>.pxar:<path> --repository <repo>",
@@ -825,7 +870,8 @@
       {
        "c": "proxmox-backup-manager datastore list",
        "p": "List datastores",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -840,27 +886,32 @@
       {
        "c": "proxmox-backup-manager verify-job list",
        "p": "Verify jobs",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "proxmox-backup-manager prune-job list",
        "p": "Prune jobs",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "proxmox-backup-manager sync-job list",
        "p": "Sync jobs",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "proxmox-backup-manager disk list",
        "p": "Disks on PBS host",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "proxmox-backup-manager user list",
        "p": "PBS users",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     }
@@ -876,12 +927,14 @@
       {
        "c": "ha-manager status",
        "p": "CRM, LRM and resource states",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ha-manager config",
        "p": "Configured HA resources",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -951,7 +1004,8 @@
       {
        "c": "systemctl status pve-ha-crm pve-ha-lrm",
        "p": "HA daemons",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -961,12 +1015,14 @@
       {
        "c": "pvesr list",
        "p": "Replication jobs",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "pvesr status",
        "p": "Replication state",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "pvesr create-local-job <vmid>-<n> <target-node> --schedule \"*/15\"",
@@ -987,22 +1043,26 @@
       {
        "c": "ip -br a",
        "p": "Addresses, brief",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ip -d link show <if>",
        "p": "Link details, VLAN, bond",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ip -s link show <if>",
        "p": "Interface counters",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ip r",
        "p": "Routing table",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1012,12 +1072,14 @@
       {
        "c": "bridge link",
        "p": "Bridge ports",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "bridge vlan show",
        "p": "VLAN table",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1027,7 +1089,8 @@
       {
        "c": "cat /proc/net/bonding/bond0",
        "p": "Bond and LACP state",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1037,7 +1100,8 @@
       {
        "c": "cat /etc/network/interfaces",
        "p": "Network config",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ifreload -a",
@@ -1052,22 +1116,26 @@
       {
        "c": "ethtool <if>",
        "p": "Speed, duplex, link",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ethtool -S <if>",
        "p": "NIC statistics, errors, drops",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ethtool -i <if>",
        "p": "Driver and firmware",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ethtool -k <if>",
        "p": "Offload features",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1077,7 +1145,8 @@
       {
        "c": "ping -M do -s 8972 <ip>",
        "p": "Verify MTU 9000 end to end",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1097,7 +1166,8 @@
       {
        "c": "ss -tulpn",
        "p": "Listening ports",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1107,7 +1177,8 @@
       {
        "c": "tcpdump -i <if> -nn host <ip>",
        "p": "Packet capture",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1117,7 +1188,8 @@
       {
        "c": "mtr <ip>",
        "p": "Path and loss",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1127,7 +1199,8 @@
       {
        "c": "lldpcli show neighbors",
        "p": "LLDP switch neighbors (if lldpd)",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1137,7 +1210,8 @@
       {
        "c": "ovs-vsctl show",
        "p": "Open vSwitch layout (if used)",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1147,17 +1221,20 @@
       {
        "c": "tc -s qdisc show dev <if>",
        "p": "Queue discipline stats",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "iptables -t mangle -S",
        "p": "DSCP marking rules",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "nft list ruleset",
        "p": "nftables rules",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     }
@@ -1173,12 +1250,14 @@
       {
        "c": "pve-firewall status",
        "p": "Firewall state",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "pve-firewall localnet",
        "p": "Detected local networks",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1193,7 +1272,8 @@
       {
        "c": "cat /etc/pve/firewall/cluster.fw",
        "p": "Cluster-level rules",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1219,12 +1299,14 @@
       {
        "c": "lsblk -o NAME,SIZE,TYPE,MODEL,SERIAL,MOUNTPOINT",
        "p": "Block devices",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "blkid",
        "p": "UUIDs and filesystems",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1234,7 +1316,8 @@
       {
        "c": "df -h",
        "p": "Filesystem usage",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1244,12 +1327,14 @@
       {
        "c": "nvme list",
        "p": "NVMe devices",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "nvme smart-log /dev/nvme0",
        "p": "NVMe health and wear",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1259,7 +1344,8 @@
       {
        "c": "smartctl -a /dev/<dev>",
        "p": "SMART data",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1269,12 +1355,14 @@
       {
        "c": "pvs / vgs / lvs",
        "p": "LVM overview",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "lvs -o +devices",
        "p": "LVs with backing devices",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1284,17 +1372,20 @@
       {
        "c": "zpool status",
        "p": "Pool health",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "zpool list",
        "p": "Pool capacity",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "zfs list",
        "p": "Datasets",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1304,12 +1395,14 @@
       {
        "c": "iostat -x 1",
        "p": "Device latency and utilization",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "iotop -o",
        "p": "Processes doing IO",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1355,12 +1448,14 @@
       {
        "c": "lscpu",
        "p": "CPU model and topology",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "numactl -H",
        "p": "NUMA layout",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1370,12 +1465,14 @@
       {
        "c": "free -h",
        "p": "RAM usage",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "dmidecode -t memory",
        "p": "DIMM inventory",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1385,12 +1482,14 @@
       {
        "c": "top / htop",
        "p": "Process view",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "vmstat 1",
        "p": "CPU, memory, IO summary",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1400,7 +1499,8 @@
       {
        "c": "sensors",
        "p": "Temperatures and fans",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1410,22 +1510,26 @@
       {
        "c": "ipmitool sdr",
        "p": "Sensor readings",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ipmitool sel list",
        "p": "Hardware event log",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ipmitool chassis status",
        "p": "Power and chassis state",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ipmitool lan print",
        "p": "BMC network config",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1435,12 +1539,14 @@
       {
        "c": "dmesg -T",
        "p": "Kernel messages with time",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "journalctl -k -b",
        "p": "Kernel log this boot",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     }
@@ -1456,7 +1562,8 @@
       {
        "c": "pveum user list",
        "p": "List users",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "pveum user add <user>@pve --password <p>",
@@ -1476,7 +1583,8 @@
       {
        "c": "pveum role list",
        "p": "List roles",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1486,7 +1594,8 @@
       {
        "c": "pveum acl list",
        "p": "List ACLs",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "pveum acl modify /vms/<vmid> --users <user>@pve --roles PVEVMAdmin",
@@ -1511,7 +1620,8 @@
       {
        "c": "pveum realm list",
        "p": "Auth realms",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     }
@@ -1527,17 +1637,20 @@
       {
        "c": "pvenode task list",
        "p": "Recent tasks",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "pvenode task log <upid>",
        "p": "Task log",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "pvenode task status <upid>",
        "p": "Task state",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1547,17 +1660,20 @@
       {
        "c": "journalctl -u pvedaemon -f",
        "p": "API daemon log",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "journalctl -u pveproxy -f",
        "p": "Web proxy log",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "tail -f /var/log/syslog",
        "p": "System log",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1567,17 +1683,20 @@
       {
        "c": "pvesh get /cluster/status",
        "p": "Cluster status via API",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "pvesh get /cluster/resources --type vm",
        "p": "All VMs in cluster",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "pvesh get /nodes/<node>/status",
        "p": "Node status",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "pvesh create /nodes/<node>/qemu/<vmid>/status/start",
@@ -1658,7 +1777,8 @@
       {
        "c": "pveceph pool ls",
        "p": "List pools",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "pveceph pool create <pool> --size 3 --min_size 2 --crush_rule <rule> --add_storages 1",
@@ -1726,12 +1846,14 @@
       {
        "c": "ceph -s",
        "p": "Cluster summary",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph -w",
        "p": "Live event stream",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1741,12 +1863,14 @@
       {
        "c": "ceph health detail",
        "p": "Warnings with detail",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph status --format json-pretty",
        "p": "Machine-readable status",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1756,12 +1880,14 @@
       {
        "c": "ceph df",
        "p": "Raw and per-pool usage",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph df detail",
        "p": "Extended usage and quotas",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1771,12 +1897,14 @@
       {
        "c": "ceph versions",
        "p": "Daemon versions",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph fsid",
        "p": "Cluster ID",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1786,7 +1914,8 @@
       {
        "c": "ceph log last 50",
        "p": "Recent cluster log",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1796,12 +1925,14 @@
       {
        "c": "ceph crash ls",
        "p": "Recorded daemon crashes",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph crash info <crash-id>",
        "p": "Crash details",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph crash archive-all",
@@ -1816,7 +1947,8 @@
       {
        "c": "ceph time-sync-status",
        "p": "MON clock skew",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1826,7 +1958,8 @@
       {
        "c": "ceph report",
        "p": "Full cluster report",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     }
@@ -1842,12 +1975,14 @@
       {
        "c": "ceph mon stat",
        "p": "MON summary",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph mon dump",
        "p": "MON map",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1857,7 +1992,8 @@
       {
        "c": "ceph quorum_status -f json-pretty",
        "p": "Quorum detail",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1867,7 +2003,8 @@
       {
        "c": "ceph daemon mon.<id> mon_status",
        "p": "Local MON status (admin socket)",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1887,7 +2024,8 @@
       {
        "c": "ceph mon feature ls",
        "p": "MON features",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1907,7 +2045,8 @@
       {
        "c": "ceph mon getmap -o monmap.bin",
        "p": "Export MON map",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     }
@@ -1923,12 +2062,14 @@
       {
        "c": "ceph mgr stat",
        "p": "Active and standby MGR",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph mgr services",
        "p": "Module endpoints",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1948,7 +2089,8 @@
       {
        "c": "ceph mgr module ls",
        "p": "Enabled and available modules",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph mgr module enable prometheus",
@@ -1968,7 +2110,8 @@
       {
        "c": "ceph balancer status",
        "p": "Balancer state",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph balancer mode upmap",
@@ -1983,7 +2126,8 @@
       {
        "c": "ceph balancer eval",
        "p": "Score current distribution",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -1993,7 +2137,8 @@
       {
        "c": "ceph iostat",
        "p": "Cluster IO rates (iostat module)",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -2003,7 +2148,8 @@
       {
        "c": "ceph progress",
        "p": "Ongoing recovery progress",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     }
@@ -2019,17 +2165,20 @@
       {
        "c": "ceph osd tree",
        "p": "CRUSH tree with state",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph osd tree down",
        "p": "Only down OSDs",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph osd tree --show-shadow",
        "p": "Include device-class shadow trees",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -2039,17 +2188,20 @@
       {
        "c": "ceph osd df",
        "p": "Usage per OSD",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph osd df tree",
        "p": "Usage per bucket",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph osd utilization",
        "p": "Min, max and deviation",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -2059,17 +2211,20 @@
       {
        "c": "ceph osd stat",
        "p": "Up and in counts",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph osd dump",
        "p": "OSD map, flags, ratios",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph osd ls",
        "p": "OSD IDs",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -2079,12 +2234,14 @@
       {
        "c": "ceph osd metadata <osd-id>",
        "p": "Host, device, versions",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph osd find <osd-id>",
        "p": "Host and CRUSH location",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -2094,22 +2251,26 @@
       {
        "c": "ceph device ls",
        "p": "Devices and predicted life expectancy",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph device ls-by-daemon osd.<id>",
        "p": "Device used by an OSD",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph device info <devid>",
        "p": "Device identity, location and health",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph device get-health-metrics <devid>",
        "p": "Stored device health metrics",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph device scrape-health-metrics <devid>",
@@ -2129,7 +2290,8 @@
       {
        "c": "ceph osd perf",
        "p": "Commit and apply latency",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -2159,7 +2321,8 @@
       {
        "c": "ceph osd blocklist ls",
        "p": "Blocklisted clients",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     }
@@ -2225,12 +2388,14 @@
       {
        "c": "ceph osd ok-to-stop <osd-id>",
        "p": "Safe to stop without losing availability",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph osd safe-to-destroy <osd-id>",
        "p": "Safe to destroy without data loss",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -2281,12 +2446,14 @@
       {
        "c": "ceph-volume inventory",
        "p": "Devices usable for OSDs (on OSD host)",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph-volume lvm list",
        "p": "OSD to device mapping (on OSD host)",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -2341,7 +2508,8 @@
       {
        "c": "systemctl status ceph-osd@<osd-id>",
        "p": "OSD daemon state",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "systemctl restart ceph-osd@<osd-id>",
@@ -2351,7 +2519,8 @@
       {
        "c": "journalctl -u ceph-osd@<osd-id> -f",
        "p": "OSD log",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -2361,7 +2530,8 @@
       {
        "c": "ceph-bluestore-tool show-label --dev /dev/<dev>",
        "p": "Read OSD label",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph-bluestore-tool fsck --path /var/lib/ceph/osd/ceph-<id>",
@@ -2407,17 +2577,20 @@
       {
        "c": "ceph daemon osd.<id> dump_ops_in_flight",
        "p": "Current slow or active ops (admin socket)",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph daemon osd.<id> dump_historic_ops",
        "p": "Recent slowest ops (admin socket)",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph daemon osd.<id> status",
        "p": "OSD state (admin socket)",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -2427,12 +2600,14 @@
       {
        "c": "ceph daemon osd.<id> perf dump",
        "p": "Internal counters (admin socket)",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph daemonperf osd.<id>",
        "p": "Live counters (admin socket)",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -2442,12 +2617,14 @@
       {
        "c": "ceph daemon osd.<id> config show",
        "p": "Effective config (admin socket)",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph config show osd.<id>",
        "p": "Effective config from MON",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -2467,7 +2644,8 @@
       {
        "c": "ceph config get osd osd_heartbeat_grace",
        "p": "Heartbeat grace",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     }
@@ -2483,17 +2661,20 @@
       {
        "c": "ceph osd crush tree",
        "p": "CRUSH hierarchy",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph osd crush class ls",
        "p": "Device classes",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph osd crush tunables show",
        "p": "Tunables profile",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -2503,12 +2684,14 @@
       {
        "c": "ceph osd crush rule ls",
        "p": "List rules",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph osd crush rule dump <rule>",
        "p": "Rule detail",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph osd crush rule create-replicated <rule> <root> <type> [<class>]",
@@ -2563,12 +2746,14 @@
       {
        "c": "ceph osd getcrushmap -o crush.bin",
        "p": "Export compiled map",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "crushtool -d crush.bin -o crush.txt",
        "p": "Decompile",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "crushtool -c crush.txt -o crush.new",
@@ -2578,12 +2763,14 @@
       {
        "c": "crushtool -i crush.bin --test --rule <n> --num-rep 3 --show-bad-mappings",
        "p": "Validate mappings",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "crushtool -i crush.bin --test --rule <n> --num-rep 3 --show-utilization",
        "p": "Simulate distribution",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph osd setcrushmap -i crush.new",
@@ -2604,17 +2791,20 @@
       {
        "c": "ceph osd pool ls detail",
        "p": "Pools with settings",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph osd pool get <pool> all",
        "p": "All settings of a pool",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph osd pool stats",
        "p": "Client and recovery IO per pool",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -2674,7 +2864,8 @@
       {
        "c": "ceph osd pool autoscale-status",
        "p": "PG autoscaler view",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -2689,7 +2880,8 @@
       {
        "c": "ceph osd pool get-quota <pool>",
        "p": "Show quota",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -2724,7 +2916,8 @@
       {
        "c": "rados df",
        "p": "Objects and bytes per pool",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     }
@@ -2740,22 +2933,26 @@
       {
        "c": "ceph pg stat",
        "p": "PG state counts",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph pg dump_stuck inactive",
        "p": "Stuck inactive PGs",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph pg dump_stuck unclean",
        "p": "Stuck unclean PGs",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph pg dump_stuck undersized",
        "p": "Stuck undersized PGs",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -2765,17 +2962,20 @@
       {
        "c": "ceph pg ls",
        "p": "All PGs",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph pg ls-by-pool <pool>",
        "p": "PGs of a pool",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph pg ls-by-osd osd.<id>",
        "p": "PGs on an OSD",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -2785,7 +2985,8 @@
       {
        "c": "ceph pg map <pgid>",
        "p": "Up and acting OSDs",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -2795,7 +2996,8 @@
       {
        "c": "ceph pg <pgid> query",
        "p": "Full PG state",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -2866,12 +3068,14 @@
       {
        "c": "ceph config dump",
        "p": "All centralized settings",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph config get <who> <option>",
        "p": "Read one option",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph config set <who> <option> <value>",
@@ -2952,7 +3156,8 @@
       {
        "c": "rbd ls -l -p <pool>",
        "p": "Images with size",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -2962,22 +3167,26 @@
       {
        "c": "rbd info <pool>/<image>",
        "p": "Image details",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "rbd du -p <pool>",
        "p": "Provisioned vs used",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "rbd status <pool>/<image>",
        "p": "Watchers (who has it open)",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "rbd lock ls <pool>/<image>",
        "p": "Image locks",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -2987,7 +3196,8 @@
       {
        "c": "rbd snap ls <pool>/<image>",
        "p": "List snapshots",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "rbd snap create <pool>/<image>@<snap>",
@@ -3077,7 +3287,8 @@
       {
        "c": "rbd trash ls -p <pool>",
        "p": "Trash contents",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "rbd trash mv <pool>/<image>",
@@ -3112,7 +3323,8 @@
       {
        "c": "rbd perf image iostat -p <pool>",
        "p": "Per-image IO rates",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -3148,7 +3360,8 @@
       {
        "c": "systemctl status ceph-radosgw@rgw.<name>",
        "p": "RGW daemon state",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -3158,12 +3371,14 @@
       {
        "c": "radosgw-admin user list",
        "p": "List users",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "radosgw-admin user info --uid=<uid>",
        "p": "User detail and keys",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "radosgw-admin user create --uid=<uid> --display-name=<name>",
@@ -3238,22 +3453,26 @@
       {
        "c": "radosgw-admin bucket list",
        "p": "List buckets",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "radosgw-admin bucket list --uid=<uid>",
        "p": "Buckets of a user",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "radosgw-admin bucket stats --bucket=<bucket>",
        "p": "Bucket size, objects, shards",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "radosgw-admin bucket limit check",
        "p": "Objects per shard and fill status",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "radosgw-admin bucket check --bucket=<bucket>",
@@ -3273,12 +3492,14 @@
       {
        "c": "radosgw-admin reshard list",
        "p": "Queued reshards",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "radosgw-admin reshard status --bucket=<bucket>",
        "p": "Reshard state",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "radosgw-admin bucket reshard --bucket=<bucket> --num-shards=<n>",
@@ -3293,7 +3514,8 @@
       {
        "c": "radosgw-admin usage show --uid=<uid>",
        "p": "Usage log",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -3303,7 +3525,8 @@
       {
        "c": "radosgw-admin lc list",
        "p": "Lifecycle status",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "radosgw-admin lc process",
@@ -3318,7 +3541,8 @@
       {
        "c": "radosgw-admin gc list --include-all",
        "p": "Pending garbage",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "radosgw-admin gc process",
@@ -3333,27 +3557,32 @@
       {
        "c": "radosgw-admin zone get",
        "p": "Zone config",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "radosgw-admin zonegroup get",
        "p": "Zonegroup config",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "radosgw-admin realm list",
        "p": "Realms",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "radosgw-admin period get",
        "p": "Current period",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "radosgw-admin sync status",
        "p": "Multisite sync state",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -3363,7 +3592,8 @@
       {
        "c": "rados -p <index-pool> listomapkeys <object>",
        "p": "Keys in an index object (large omap check)",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     }
@@ -3379,22 +3609,26 @@
       {
        "c": "ceph fs ls",
        "p": "List filesystems",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph fs status",
        "p": "Ranks, clients, usage",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph mds stat",
        "p": "MDS states",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph fs get <fs>",
        "p": "Filesystem map",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -3414,7 +3648,8 @@
       {
        "c": "ceph fs subvolume ls <fs>",
        "p": "List subvolumes",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -3450,7 +3685,8 @@
       {
        "c": "ceph auth ls",
        "p": "All keys and caps",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -3460,12 +3696,14 @@
       {
        "c": "ceph auth get client.<name>",
        "p": "One key and caps",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph auth print-key client.<name>",
        "p": "Print secret only",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -3536,17 +3774,20 @@
       {
        "c": "rados lspools",
        "p": "List pools",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "rados -p <pool> ls",
        "p": "List objects (large pools: slow)",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "rados -p <pool> stat <object>",
        "p": "Object size and mtime",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "rados -p <pool> get <object> <file>",
@@ -3571,12 +3812,14 @@
       {
        "c": "rados -p <pool> listomapkeys <object>",
        "p": "Omap keys of an object",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "rados -p <pool> listomapvals <object>",
        "p": "Omap key and values",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     }
@@ -3592,7 +3835,8 @@
       {
        "c": "ceph versions",
        "p": "Mixed-version check",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -3602,7 +3846,8 @@
       {
        "c": "ceph osd dump",
        "p": "Read `require_osd_release` and flags",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph osd require-osd-release <release>",
@@ -3622,7 +3867,8 @@
       {
        "c": "ceph features",
        "p": "Connected client feature levels",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -3637,7 +3883,8 @@
       {
        "c": "ceph -s",
        "p": "Confirm all PGs `active+clean` before next node",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -3663,7 +3910,8 @@
       {
        "c": "ceph health detail",
        "p": "Find the exact warning",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -3673,12 +3921,14 @@
       {
        "c": "ceph daemon osd.<id> dump_ops_in_flight",
        "p": "Which ops are stuck (admin socket)",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph osd perf",
        "p": "OSDs with high latency",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -3688,22 +3938,26 @@
       {
        "c": "ceph osd stat",
        "p": "Up and in counts",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "journalctl -u ceph-osd@<osd-id> --since \"1 hour ago\"",
        "p": "OSD log around the flap",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph config get osd osd_heartbeat_grace",
        "p": "Heartbeat grace in use",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ethtool -S <if>",
        "p": "NIC errors on OSD host",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -3713,12 +3967,14 @@
       {
        "c": "ceph pg dump_stuck inactive",
        "p": "Find inactive PGs",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph pg <pgid> query",
        "p": "See why a PG is stuck",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -3728,7 +3984,8 @@
       {
        "c": "ceph pg ls undersized",
        "p": "PGs missing replicas",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -3738,7 +3995,8 @@
       {
        "c": "ceph osd df tree",
        "p": "Find the full OSD or host",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -3748,17 +4006,20 @@
       {
        "c": "ceph health detail",
        "p": "Names pool and object",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "radosgw-admin bucket limit check",
        "p": "Buckets over shard limit",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "rados -p <pool> listomapkeys <object>",
        "p": "Count keys in object",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -3768,12 +4029,14 @@
       {
        "c": "ceph time-sync-status",
        "p": "MON skew",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "chronyc tracking",
        "p": "Local NTP offset",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -3783,7 +4046,8 @@
       {
        "c": "ceph quorum_status -f json-pretty",
        "p": "Who is in quorum",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     },
@@ -3793,12 +4057,14 @@
       {
        "c": "rbd status <pool>/<image>",
        "p": "Watchers on the image",
-       "d": false
+       "d": false,
+       "r": true
       },
       {
        "c": "ceph osd blocklist ls",
        "p": "Blocklisted client addresses",
-       "d": false
+       "d": false,
+       "r": true
       }
      ]
     }

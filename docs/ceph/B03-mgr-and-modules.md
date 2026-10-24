@@ -1,22 +1,24 @@
-# B3 · MGR and modules
+# B3 · MGR và module
 
-[← Mục lục](../../README.md) · Ceph · 12 lệnh
+[← Mục lục](../../README.md) · Ceph · 12 lệnh · tên gốc: MGR and modules
 
-[← B2 MON](../ceph/B02-mon.md) · [B4 OSD status →](../ceph/B04-osd-status.md)
+Ký hiệu: `[chỉ đọc]` chỉ xem trạng thái, không thay đổi hệ thống; `⚠ NGUY HIỂM` phá hủy hoặc ảnh hưởng dịch vụ; không ghi chú gì là lệnh có thay đổi cấu hình hoặc trạng thái, đọc kỹ trước khi chạy.
 
-## Status
+[← B2 MON](../ceph/B02-mon.md) · [B4 Trạng thái OSD →](../ceph/B04-osd-status.md)
+
+## Trạng thái (Status)
 
 ```bash
-# MGR đang active và standby | Active and standby MGR
+# [chỉ đọc] MGR đang active và standby | Active and standby MGR
 # từ khóa: mgr active standby
 ceph mgr stat
 
-# Địa chỉ các module (dashboard, prometheus) | Module endpoints
+# [chỉ đọc] Địa chỉ các module (dashboard, prometheus) | Module endpoints
 # từ khóa: mgr dashboard prometheus url
 ceph mgr services
 ```
 
-## Control
+## Điều khiển (Control)
 
 ```bash
 # Chuyển MGR active sang node khác | Fail over active MGR
@@ -24,10 +26,10 @@ ceph mgr services
 ceph mgr fail
 ```
 
-## Modules
+## Module (Modules)
 
 ```bash
-# Module MGR đã bật và có sẵn | Enabled and available modules
+# [chỉ đọc] Module MGR đã bật và có sẵn | Enabled and available modules
 # từ khóa: mgr module
 ceph mgr module ls
 
@@ -40,10 +42,10 @@ ceph mgr module enable prometheus
 ceph mgr module disable <module>
 ```
 
-## Balancer
+## Cân bằng (Balancer)
 
 ```bash
-# Trạng thái balancer | Balancer state
+# [chỉ đọc] Trạng thái balancer | Balancer state
 # từ khóa: balancer cân bằng pg
 ceph balancer status
 
@@ -55,7 +57,7 @@ ceph balancer mode upmap
 # từ khóa: bật tắt balancer
 ceph balancer on / ceph balancer off
 
-# Chấm điểm độ cân bằng hiện tại | Score current distribution
+# [chỉ đọc] Chấm điểm độ cân bằng hiện tại | Score current distribution
 # từ khóa: balancer lệch dung lượng
 ceph balancer eval
 ```
@@ -63,15 +65,15 @@ ceph balancer eval
 ## IO
 
 ```bash
-# Tốc độ IO của cluster | Cluster IO rates (iostat module)
+# [chỉ đọc] Tốc độ IO của cluster | Cluster IO rates (iostat module)
 # từ khóa: io tốc độ throughput
 ceph iostat
 ```
 
-## Progress
+## Tiến độ (Progress)
 
 ```bash
-# Tiến độ recovery đang chạy | Ongoing recovery progress
+# [chỉ đọc] Tiến độ recovery đang chạy | Ongoing recovery progress
 # từ khóa: recovery tiến độ progress
 ceph progress
 ```

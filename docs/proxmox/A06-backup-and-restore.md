@@ -1,8 +1,10 @@
-# A6 · Backup and restore
+# A6 · Backup và khôi phục
 
-[← Mục lục](../../README.md) · Proxmox host · 16 lệnh
+[← Mục lục](../../README.md) · Proxmox host · 16 lệnh · tên gốc: Backup and restore
 
-[← A5 Storage (pvesm)](../proxmox/A05-storage-pvesm.md) · [A7 High availability and replication →](../proxmox/A07-high-availability-and-replication.md)
+Ký hiệu: `[chỉ đọc]` chỉ xem trạng thái, không thay đổi hệ thống; `⚠ NGUY HIỂM` phá hủy hoặc ảnh hưởng dịch vụ; không ghi chú gì là lệnh có thay đổi cấu hình hoặc trạng thái, đọc kỹ trước khi chạy.
+
+[← A5 Storage (pvesm)](../proxmox/A05-storage-pvesm.md) · [A7 HA và replication →](../proxmox/A07-high-availability-and-replication.md)
 
 ## vzdump
 
@@ -16,7 +18,7 @@ vzdump <vmid> --storage <storage> --mode snapshot --compress zstd
 vzdump --all --storage <storage>
 ```
 
-## Restore
+## Khôi phục (Restore)
 
 ```bash
 # Restore VM từ backup | Restore VM
@@ -28,10 +30,10 @@ qmrestore <archive-or-volid> <vmid> --storage <storage>
 pct restore <ctid> <archive-or-volid> --storage <storage>
 ```
 
-## Jobs
+## Lịch chạy (job) (Jobs)
 
 ```bash
-# Liệt kê các job backup | List backup jobs
+# [chỉ đọc] Liệt kê các job backup | List backup jobs
 # từ khóa: job backup lịch
 pvesh get /cluster/backup
 ```
@@ -39,11 +41,11 @@ pvesh get /cluster/backup
 ## PBS client
 
 ```bash
-# Liệt kê nhóm backup trên PBS | List backup groups
+# [chỉ đọc] Liệt kê nhóm backup trên PBS | List backup groups
 # từ khóa: pbs backup danh sách
 proxmox-backup-client list --repository <user@realm@host:datastore>
 
-# Liệt kê snapshot backup trên PBS | List snapshots
+# [chỉ đọc] Liệt kê snapshot backup trên PBS | List snapshots
 # từ khóa: pbs snapshot
 proxmox-backup-client snapshot list --repository <repo>
 
@@ -56,10 +58,10 @@ proxmox-backup-client backup <name>.pxar:<path> --repository <repo>
 proxmox-backup-client restore <snapshot> <archive> <target> --repository <repo>
 ```
 
-## PBS server (on PBS host)
+## PBS server (chạy trên máy PBS) (PBS server (on PBS host))
 
 ```bash
-# Liệt kê datastore của PBS | List datastores
+# [chỉ đọc] Liệt kê datastore của PBS | List datastores
 # từ khóa: pbs datastore
 proxmox-backup-manager datastore list
 ```
@@ -71,23 +73,27 @@ proxmox-backup-manager datastore list
 # từ khóa: pbs gc dọn rác giải phóng dung lượng
 proxmox-backup-manager garbage-collection start <datastore>
 
-# Liệt kê job verify | Verify jobs
+# [chỉ đọc] Liệt kê job verify | Verify jobs
 # từ khóa: pbs verify kiểm tra toàn vẹn
 proxmox-backup-manager verify-job list
 
-# Liệt kê job prune | Prune jobs
+# [chỉ đọc] Liệt kê job prune | Prune jobs
 # từ khóa: pbs prune giữ lại bản backup
 proxmox-backup-manager prune-job list
 
-# Liệt kê job sync | Sync jobs
+# [chỉ đọc] Liệt kê job sync | Sync jobs
 # từ khóa: pbs sync đồng bộ
 proxmox-backup-manager sync-job list
 
-# Liệt kê đĩa trên máy PBS | Disks on PBS host
+# [chỉ đọc] Liệt kê đĩa trên máy PBS | Disks on PBS host
 # từ khóa: pbs đĩa
 proxmox-backup-manager disk list
 
-# Liệt kê user PBS | PBS users
+# [chỉ đọc] Liệt kê user PBS | PBS users
 # từ khóa: pbs user
 proxmox-backup-manager user list
 ```
+
+## Case và runbook dùng lệnh trong nhóm này
+
+- [Backup vzdump lỗi hoặc treo](../cases/pve/backup-fail.md)

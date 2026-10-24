@@ -1,0 +1,24 @@
+{
+ "topics": [
+  {"id": "cluster", "name": "Cluster & HA", "keywords": "cluster quorum corosync ha high availability fence node"},
+  {"id": "vm", "name": "VM & Container", "keywords": "vm máy ảo container lxc qm pct"},
+  {"id": "storage", "name": "Storage & ZFS", "keywords": "storage lưu trữ zfs lvm nfs iscsi disk đĩa"},
+  {"id": "backup", "name": "Backup & khôi phục", "keywords": "backup sao lưu restore khôi phục pbs vzdump"},
+  {"id": "network", "name": "Mạng", "keywords": "network mạng bridge bond vlan mtu firewall"},
+  {"id": "host", "name": "Host & phần cứng", "keywords": "host node phần cứng hardware disk kernel"},
+  {"id": "upgrade", "name": "Nâng cấp & di chuyển", "keywords": "nâng cấp upgrade migrate di chuyển p2v v2v chuyển đổi"},
+  {"id": "access", "name": "Quyền, GUI & console", "keywords": "quyền permission user gui console proxy api token"},
+  {"id": "ceph", "name": "Ceph (MON, OSD, PG)", "keywords": "ceph mon mgr osd pg pool crush rbd cephfs"},
+  {"id": "rgw", "name": "Ceph RGW / S3", "keywords": "rgw s3 radosgw bucket object"},
+  {"id": "monitor", "name": "Giám sát & log", "keywords": "giám sát monitoring log task prometheus grafana cảnh báo"}
+ ],
+ "branches": {
+  "A1": ["host"], "A2": ["cluster"], "A3": ["vm"], "A4": ["vm"], "A5": ["storage"], "A6": ["backup"],
+  "A7": ["cluster"], "A8": ["network"], "A9": ["network"], "A10": ["storage", "host"], "A11": ["host"],
+  "A12": ["access"], "A13": ["monitor", "access"], "A14": ["ceph"],
+  "B1": ["ceph"], "B2": ["ceph"], "B3": ["ceph"], "B4": ["ceph"], "B5": ["ceph"], "B6": ["ceph"],
+  "B7": ["ceph"], "B8": ["ceph"], "B9": ["ceph"], "B10": ["ceph"], "B11": ["ceph"], "B12": ["ceph", "vm"],
+  "B13": ["rgw"], "B14": ["ceph", "storage"], "B15": ["ceph", "access"], "B16": ["ceph"], "B17": ["ceph", "upgrade"],
+  "B18": ["ceph"]
+ }
+}
