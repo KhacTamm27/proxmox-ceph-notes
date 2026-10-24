@@ -13,6 +13,8 @@
 #   bash s3gw-prepare.sh --with-test-user      # tạo thêm user test-ops
 #   bash s3gw-prepare.sh --rgw-url http://192.168.69.190:8080
 #   bash s3gw-prepare.sh -y                    # tự đồng ý restart RGW nếu cần
+#   EXPORTER_ACCESS_KEY=<khóa> bash s3gw-prepare.sh   # chọn khóa khi user exporter có nhiều khóa
+#   MONITOR_HOST=<IP VM monitor>               # IP in trong hướng dẫn cuối (mặc định 192.168.69.172)
 #
 # Script chạy lại nhiều lần được (idempotent). Khóa bí mật KHÔNG in ra màn hình,
 # chỉ nằm trong file quyền 600.
@@ -23,6 +25,8 @@ EXPORTER_UID="${EXPORTER_UID:-usage-exporter}"
 TEST_UID="${TEST_UID:-test-ops}"
 RGW_URL="${RGW_URL:-}"
 OUT_DIR="${OUT_DIR:-/root}"
+MONITOR_HOST="${MONITOR_HOST:-192.168.69.172}"
+EXPORTER_ACCESS_KEY="${EXPORTER_ACCESS_KEY:-}"   # chọn khóa cụ thể khi user có nhiều khóa (đang xoay khóa)
 EXPORTER_CAPS="buckets=read;users=read;usage=read;metadata=read;info=read"
 WITH_TEST_USER=0
 ASSUME_YES=0
@@ -37,7 +41,7 @@ while [[ $# -gt 0 ]]; do
     --with-test-user) WITH_TEST_USER=1 ;;
     --rgw-url)        RGW_URL="${2:?thiếu giá trị cho --rgw-url}"; shift ;;
     -y|--yes)         ASSUME_YES=1 ;;
-    -h|--help)        sed -n '2,20p' "$0"; exit 0 ;;
+    -h|--help)        sed -n '2,21p' "$0"; exit 0 ;;
     *) die "Tham số không hợp lệ: $1 (xem --help)" ;;
   esac
   shift
@@ -80,13 +84,19 @@ ensure_usage_log() {
   fi
   warn "Chưa thấy dữ liệu usage. Có thể do chưa bật hoặc chưa có lưu lượng nào."
   if command -v ceph >/dev/null 2>&1; then
+    # Đã bật sẵn thì chỉ là chưa có lưu lượng: không đặt lại, không restart RGW vô ích.
+    if [[ "$(ceph config get client.rgw rgw_enable_usage_log 2>/dev/null)" == "true" ]]; then
+      ok "rgw_enable_usage_log đã là true (client.rgw). Tạo vài thao tác S3 rồi kiểm tra lại: radosgw-admin usage show"
+      warn "Nếu RGW đặt cấu hình riêng trong ceph.conf ([client.rgw.<tên>]) thì giá trị đó được ưu tiên, hãy kiểm tra thêm ở đó."
+      return
+    fi
     ceph config set client.rgw rgw_enable_usage_log true
     ok "Đã đặt rgw_enable_usage_log=true (client.rgw)."
     local svc
     svc="$(systemctl list-units 'ceph-radosgw@*' --no-legend --plain 2>/dev/null | awk '{print $1}' | head -1)"
     if [[ -n "$svc" ]]; then
       local ans="n"
-      if [[ $ASSUME_YES -eq 1 ]]; then ans="y"; else read -r -p "Restart $svc để áp dụng? (sẽ ngắt RGW vài giây) [y/N] " ans; fi
+      if [[ $ASSUME_YES -eq 1 ]]; then ans="y"; else read -r -p "Restart $svc để áp dụng? (sẽ ngắt RGW vài giây) [y/N] " ans || ans="n"; fi
       if [[ "$ans" =~ ^[Yy]$ ]]; then systemctl restart "$svc"; ok "Đã restart $svc."; else warn "Chưa restart. Hãy restart RGW sau để cấu hình có hiệu lực."; fi
     else
       warn "Không tìm thấy service ceph-radosgw@*. Hãy tự restart RGW."
@@ -114,14 +124,23 @@ setup_exporter_user() {
   log "Tạo/kiểm tra user '$EXPORTER_UID' (chỉ đọc)..."
   local j ak sk
   j="$(ensure_user "$EXPORTER_UID" "Usage Exporter" "$EXPORTER_CAPS")"
-  ak="$(json_get "$j" 'd["keys"][0]["access_key"]')"
-  sk="$(json_get "$j" 'd["keys"][0]["secret_key"]')"
-  [[ -n "$ak" && -n "$sk" ]] || die "Không lấy được khóa của user $EXPORTER_UID."
+  # Chỉ lấy khóa S3 của chính user (bỏ khóa subuser). Có nhiều khóa (đang xoay khóa) thì phải chỉ rõ khóa cần dùng.
+  local nkeys
+  nkeys="$(json_get "$j" 'len([k for k in d["keys"] if k["user"]=="'"$EXPORTER_UID"'"])')"
+  if [[ -n "$EXPORTER_ACCESS_KEY" ]]; then
+    ak="$EXPORTER_ACCESS_KEY"
+  elif [[ "$nkeys" == "1" ]]; then
+    ak="$(json_get "$j" '[k for k in d["keys"] if k["user"]=="'"$EXPORTER_UID"'"][0]["access_key"]')"
+  else
+    die "User $EXPORTER_UID có $nkeys khóa S3. Chạy lại với EXPORTER_ACCESS_KEY=<access key cần dùng> (xem: radosgw-admin user info --uid=$EXPORTER_UID)."
+  fi
+  sk="$(json_get "$j" 'next((k["secret_key"] for k in d["keys"] if k["access_key"]=="'"$ak"'"), "")')"
+  [[ -n "$ak" && -n "$sk" ]] || die "Không lấy được khóa $ak của user $EXPORTER_UID."
   log "Quyền (caps) hiện có của $EXPORTER_UID:"
   json_get "$j" '", ".join(c["type"]+"="+c["perm"] for c in d["caps"])' | sed 's/^/      /'
   local missing=""
   for t in buckets users usage metadata info; do
-    json_get "$j" 'any(c["type"]=="'"$t"'" and "read" in c["perm"] for c in d["caps"])' | grep -q True || missing="$missing $t"
+    json_get "$j" 'any(c["type"]=="'"$t"'" and (c["perm"]=="*" or "read" in c["perm"]) for c in d["caps"])' | grep -q True || missing="$missing $t"
   done
   [[ -z "$missing" ]] || die "Thiếu quyền read cho:$missing"
   ok "Đủ 5 quyền đọc: buckets, users, usage, metadata, info."
@@ -155,11 +174,11 @@ summary() {
   cat <<EOM
 
 ================ HOÀN TẤT ================
-Bước tiếp theo (trên VM monitor 192.168.69.172):
+Bước tiếp theo (trên VM monitor $MONITOR_HOST):
   1) Chép file env sang VM monitor:
-       scp $OUT_DIR/rgw-exporter.env root@192.168.69.172:/tmp/rgw-exporter.env
+       scp $OUT_DIR/rgw-exporter.env root@$MONITOR_HOST:/tmp/rgw-exporter.env
   2) Trên VM monitor chạy:
-       bash monitor-deploy.sh install --env-file /tmp/rgw-exporter.env
+       GRAFANA_PASSWORD='***' bash monitor-deploy.sh install --env-file /tmp/rgw-exporter.env
   3) Xoá file env tạm sau khi xong:
        shred -u /tmp/rgw-exporter.env  (trên VM monitor)
        shred -u $OUT_DIR/rgw-exporter.env  (trên S3-GW, nếu không cần giữ)

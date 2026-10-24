@@ -18,7 +18,7 @@
 #
 # Cần đặt cạnh script: rgw-usage-alerts.yml và rgw-usage-dashboard.json
 # Biến môi trường chỉnh được: BASE_DIR, EXPORTER_DIR, EXPORTER_IMAGE, EXPORTER_PORT,
-#   SITE_LABEL, HOST_IP, PROM_URL, GRAFANA_URL, GRAFANA_USER, GRAFANA_PASSWORD
+#   SITE_LABEL, HOST_IP, PROM_URL, PROM_CONTAINER, GRAFANA_URL, GRAFANA_USER, GRAFANA_PASSWORD
 # =============================================================================
 set -euo pipefail
 
@@ -30,6 +30,7 @@ EXPORTER_PORT="${EXPORTER_PORT:-9242}"
 SITE_LABEL="${SITE_LABEL:-lab}"
 HOST_IP="${HOST_IP:-}"
 PROM_URL="${PROM_URL:-http://localhost:9090}"
+PROM_CONTAINER="${PROM_CONTAINER:-prometheus}"
 GRAFANA_URL="${GRAFANA_URL:-http://localhost:3000}"
 GRAFANA_USER="${GRAFANA_USER:-admin}"
 GRAFANA_PASSWORD="${GRAFANA_PASSWORD:-}"
@@ -71,8 +72,10 @@ preflight() {
   for c in docker curl python3; do command -v "$c" >/dev/null || die "Thiếu lệnh '$c'."; done
   [[ -f "$BASE_DIR/docker-compose.yml" ]] || die "Không thấy $BASE_DIR/docker-compose.yml (đã chạy setup-monitoring.sh chưa?)."
   [[ -f "$BASE_DIR/prometheus/prometheus.yml" ]] || die "Không thấy $BASE_DIR/prometheus/prometheus.yml."
-  [[ -f "$RULES_SRC" ]] || die "Thiếu file luật: $RULES_SRC"
-  [[ -f "$DASH_SRC" ]]  || die "Thiếu file dashboard: $DASH_SRC"
+  if [[ "$CMD" != "check" ]]; then
+    [[ -f "$RULES_SRC" ]] || die "Thiếu file luật: $RULES_SRC"
+    [[ -f "$DASH_SRC" ]]  || die "Thiếu file dashboard: $DASH_SRC"
+  fi
   [[ -n "$HOST_IP" ]] || HOST_IP="$(hostname -I | awk '{print $1}')"
   ok "Môi trường hợp lệ (VM IP: $HOST_IP)."
 }
@@ -98,6 +101,8 @@ install_env_file() {
 
 validate_env() {
   local f="$1" srv ak sk
+  [[ $(<"$f") != *$'\r'* ]] || die "File env có ký tự CRLF (soạn trên Windows?). Sửa: sed -i 's/\r\$//' $f"
+  ! grep -Eq "^[A-Z_]+=[\"']" "$f" || die "File env có giá trị nằm trong dấu nháy; docker --env-file giữ nguyên dấu nháy nên Exporter sẽ đọc sai. Bỏ dấu nháy trong $f"
   srv="$(get_env "$f" RADOSGW_SERVER)"; ak="$(get_env "$f" ACCESS_KEY)"; sk="$(get_env "$f" SECRET_KEY)"
   [[ "$srv" != *"://http"* ]] || die "RADOSGW_SERVER bị lặp 'http://': '$srv' (lỗi đã từng gặp, sửa thành http://IP:CỔNG)."
   [[ "$srv" =~ ^https?://[^/]+/?$ ]] || die "RADOSGW_SERVER không hợp lệ: '$srv'"
@@ -128,7 +133,8 @@ edit_compose() {  # in "changed"/"unchanged"
   local f="$BASE_DIR/docker-compose.yml"
   if grep -q 'prometheus/rules:/etc/prometheus/rules' "$f"; then echo unchanged; return; fi
   cp -p "$f" "$f.bak-$TS"
-  sed -i '/\.\/prometheus\/prometheus\.yml:\/etc\/prometheus\/prometheus\.yml:ro/a\      - ./prometheus/rules:/etc/prometheus/rules:ro' "$f"
+  # Chèn ngay sau dòng volume prometheus.yml, dùng đúng thụt lề của dòng đó (compose có thể thụt 4 hoặc 6 dấu cách).
+  sed -i -E 's#^([[:space:]]*)- (\./prometheus/prometheus\.yml:/etc/prometheus/prometheus\.yml(:ro)?)[[:space:]]*$#&\n\1- ./prometheus/rules:/etc/prometheus/rules:ro#' "$f"
   grep -q 'prometheus/rules:/etc/prometheus/rules' "$f" || { cp -p "$f.bak-$TS" "$f"; die "Không tự sửa được docker-compose.yml. Thêm tay dòng '- ./prometheus/rules:/etc/prometheus/rules:ro' vào volumes của prometheus."; }
   echo changed
 }
@@ -149,18 +155,30 @@ if not re.search(r'(?m)^rule_files:', live):
         print("ERR: không thấy mục scrape_configs:"); sys.exit(2)
     txt = txt[:m.start()] + "rule_files:\n  - /etc/prometheus/rules/*.yml\n\n" + txt[m.start():]
     changed = True
-if not re.search(r'(?m)^\s*-\s*job_name:\s*[\'"]?rgw-usage[\'"]?\s*$', live):
+job = re.search(r'(?m)^(\s*)-\s*job_name:\s*[\'"]?rgw-usage[\'"]?\s*$', live)
+if job:
+    # Job đã có (có thể sửa tay từ trước): giữ nguyên, chỉ cảnh báo nếu target khác target mong đợi.
+    nxt = re.search(r'(?m)^%s-\s*job_name:' % re.escape(job.group(1)), live[job.end():])
+    block = live[job.end():job.end() + nxt.start()] if nxt else live[job.end():]
+    if target not in block:
+        found = ", ".join(re.findall(r'[\w.-]+:\d+', block)) or "?"
+        sys.stderr.write("[!] Job rgw-usage đã có nhưng target là %s, không phải %s. Script không tự sửa job có sẵn: "
+                         "sửa tay trong prometheus.yml rồi reload (xem mục 7.6 trong tài liệu).\n" % (found, target))
+else:
     keys = re.findall(r'(?m)^([A-Za-z_]+):', live)
     if not keys or keys[-1] != 'scrape_configs':
         print("ERR: scrape_configs không phải mục cuối file, hãy thêm job rgw-usage bằng tay"); sys.exit(2)
+    # Dùng cùng thụt lề với các job có sẵn: các phần tử của một danh sách YAML lệch cột là lỗi cú pháp.
+    m = re.search(r'(?m)^(\s*)-\s*job_name:', live)
+    ind = m.group(1) if m else "  "
     if not txt.endswith("\n"): txt += "\n"
     txt += (
-        "\n  - job_name: rgw-usage\n"
-        "    scrape_interval: 60s\n"
-        "    static_configs:\n"
-        "      - targets: ['%s']\n"
-        "        labels:\n"
-        "          site: '%s'\n" % (target, site))
+        "\n{i}- job_name: rgw-usage\n"
+        "{i}  scrape_interval: 60s\n"
+        "{i}  static_configs:\n"
+        "{i}    - targets: ['{t}']\n"
+        "{i}      labels:\n"
+        "{i}        site: '{s}'\n").format(i=ind, t=target, s=site)
     changed = True
 if changed: open(path, "w").write(txt)
 print("changed" if changed else "unchanged")
@@ -185,17 +203,17 @@ setup_prometheus() {
   install -m 644 "$RULES_SRC" "$BASE_DIR/prometheus/rules/rgw-usage-alerts.yml"
   ok "compose: $c1 | prometheus.yml: $c2 | đã chép rgw-usage-alerts.yml"
   log "Áp dụng (docker compose up -d)..."
-  compose up -d >/dev/null
+  compose up -d >/dev/null || { restore_backups; compose up -d >/dev/null || true; die "docker compose up lỗi sau khi sửa cấu hình, đã khôi phục file cũ."; }
   wait_for 60 "Prometheus sẵn sàng" curl -sf "$PROM_URL/-/ready" || { restore_backups; compose up -d >/dev/null || true; die "Prometheus không lên sau khi sửa cấu hình."; }
-  if docker exec prometheus promtool check config /etc/prometheus/prometheus.yml >/tmp/promtool.out 2>&1 \
-     && docker exec prometheus promtool check rules /etc/prometheus/rules/rgw-usage-alerts.yml >>/tmp/promtool.out 2>&1; then
+  if docker exec "$PROM_CONTAINER" promtool check config /etc/prometheus/prometheus.yml >/tmp/promtool.out 2>&1 \
+     && docker exec "$PROM_CONTAINER" promtool check rules /etc/prometheus/rules/rgw-usage-alerts.yml >>/tmp/promtool.out 2>&1; then
     ok "promtool: cấu hình và luật hợp lệ."
   else
     sed 's/^/    | /' /tmp/promtool.out; restore_backups; compose up -d >/dev/null || true
     die "promtool báo lỗi, đã khôi phục cấu hình cũ."
   fi
-  curl -sf -X POST "$PROM_URL/-/reload" >/dev/null || warn "Không reload được qua API (thiếu --web.enable-lifecycle?). Dùng: docker restart prometheus"
-  ok "Đã reload Prometheus."
+  if curl -sf -X POST "$PROM_URL/-/reload" >/dev/null; then ok "Đã reload Prometheus."
+  else warn "Không reload được qua API (thiếu --web.enable-lifecycle?). Dùng: docker restart $PROM_CONTAINER"; fi
 }
 
 # ---------------------------------------------------------------- grafana
@@ -287,7 +305,7 @@ PY
 }
 
 # ---------------------------------------------------------------- main
-usage() { sed -n '2,25p' "$0"; }
+usage() { sed -n '2,21p' "$0"; }
 
 main() {
   while [[ $# -gt 0 ]]; do

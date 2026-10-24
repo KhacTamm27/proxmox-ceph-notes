@@ -1,8 +1,9 @@
 # Giám sát S3 User Ops bằng Ceph RADOSGW Usage Exporter
 
 > **Phạm vi:** theo dõi số thao tác (ops), băng thông và tỉ lệ lỗi của từng S3 user / bucket trên Ceph RGW, hiển thị bằng Grafana, cảnh báo bằng Prometheus.
-> **Trạng thái:** đã chạy thử thành công trên môi trường lab (S3-GW + VM monitor). Ngày cập nhật: 2026-10-24.
-> **Bộ file đi kèm:** `s3gw-prepare.sh`, `monitor-deploy.sh`, `rgw-usage-alerts.yml`, `rgw-usage-dashboard.json`.
+> **Trạng thái:** đã dựng và có metric thật trên môi trường lab (S3-GW + VM monitor). Bộ script tự động đã được review và kiểm thử với file cấu hình giả lập; lần chạy đầu trên lab cần đối chiếu kết quả (mục 1.5). Ngày cập nhật: 2026-10-24.
+> **Bộ file đi kèm** (thư mục [`tools/s3-rgw-usage/`](../../tools/s3-rgw-usage/)): `s3gw-prepare.sh`, `monitor-deploy.sh`, `rgw-usage-alerts.yml`, `rgw-usage-dashboard.json`.
+> **Lưu ý:** IP, tên user và đường dẫn trong bài là của môi trường lab, thay bằng giá trị của môi trường khác khi áp dụng.
 
 ---
 
@@ -17,7 +18,7 @@
 | Mất bao lâu? | Chạy 2 script, khoảng 10 phút |
 | Độ trễ số liệu? | Vài phút (RGW ghi usage log theo lô), không realtime |
 
-Phần này **bổ sung** cho hai hướng đã có trong task (Nginx VTS và Loki + Promtail). Ba hướng bổ trợ nhau, không thay thế nhau:
+Phần này **bổ sung** cho hai hướng giám sát đã có (Nginx VTS và Loki + Promtail). Ba hướng bổ trợ nhau, không thay thế nhau:
 
 | Hướng | Trả lời được câu hỏi nào |
 |---|---|
@@ -73,6 +74,27 @@ VM Tam-K3S (VM monitor)  192.168.69.172
 | `/opt/monitoring/prometheus/rules/rgw-usage-alerts.yml` | Luật cảnh báo |
 | `/opt/monitoring/grafana/provisioning/datasources/prometheus.yml` | Datasource Prometheus cho Grafana |
 | `/opt/rgw-exporter/env` | Cấu hình + khóa của Exporter (quyền 600) |
+
+### 1.5 Quá trình dựng lab (đã làm) và hiện trạng
+
+Các bước đã làm tay trên lab, theo thứ tự:
+
+1. Dựng VM monitor bằng `setup-monitoring.sh`: cài Docker, tạo thư mục và cấu hình, chạy Prometheus, Grafana, node-exporter bằng `docker compose`.
+2. Sửa `prometheus.yml`: job `rgw-usage` bị thụt **3** dấu cách (các job khác là 2) nên Prometheus báo `did not find expected '-' indicator`.
+3. Kiểm tra RGW: trên S3-GW, `netstat`/`ss` thấy `radosgw` nghe cổng 8080; từ VM monitor `telnet 192.168.69.190 8080` thông.
+4. Chạy `rgw-usage-exporter` trên **VM monitor** (không chạy trên S3-GW), đọc RGW qua mạng.
+5. Sửa `RADOSGW_SERVER`: container từng được tạo với `http://http://192.168.69.190:8080/` nên báo `Failed to resolve 'http'`. Xóa container, sửa file env, tạo lại bằng `--env-file`; log hiện `Polling http://192.168.69.190:8080`.
+6. Có metric thật tại `:9242/metrics`: `radosgw_usage_ops_total`, `successful_ops_total`, `sent_bytes_total`, `received_bytes_total`, nhãn `owner`, `bucket`, `category`, `store`.
+7. Chốt các truy vấn dashboard theo nhãn **`owner`** (không phải `user`).
+
+Hiện trạng cần xác nhận khi chạy lại:
+
+| Mục | Trạng thái | Cách xác nhận |
+|---|---|---|
+| Target của job `rgw-usage` | Từng để `192.168.69.190:9242` (sai, đó là IP RGW). Phải là `192.168.69.172:9242` | `http://192.168.69.172:9090/targets` thấy `rgw-usage` **UP**. `monitor-deploy.sh` cảnh báo nếu target vẫn sai (script không tự sửa job đã có) |
+| Khóa của `usage-exporter` | Khóa cũ đã xuất hiện trong chat | Lab thì giữ được; xoay khóa theo mục 9 trước khi dùng cho môi trường khác |
+| Mật khẩu Grafana | Có thể vẫn là mặc định `ChangeMe@123` | Đổi theo mục 8 |
+| Kênh thông báo cảnh báo | Chưa có | Mục 12 |
 
 ---
 
@@ -142,7 +164,7 @@ bash s3gw-prepare.sh --with-test-user
 
 Script làm:
 
-1. Kiểm tra **usage log** đã có dữ liệu chưa. Nếu chưa, bật `rgw_enable_usage_log` (và hỏi trước khi restart RGW).
+1. Kiểm tra **usage log** đã có dữ liệu chưa. Nếu chưa có dữ liệu nhưng `rgw_enable_usage_log` đã là `true` thì chỉ là chưa có lưu lượng: script **không** restart RGW. Nếu chưa bật thì bật và hỏi trước khi restart RGW (chạy không có terminal thì mặc định không restart).
 2. Tạo user `usage-exporter` với đúng 5 quyền đọc. Nếu user đã tồn tại thì bổ sung quyền còn thiếu và **kiểm tra lại đủ 5 quyền**.
 3. Ghi file `/root/rgw-exporter.env` (quyền 600) gồm địa chỉ RGW và khóa. **Khóa không in ra màn hình.**
 4. Với `--with-test-user`: tạo user `test-ops`, khóa nằm ở `/root/test-ops-keys.txt` (quyền 600).
@@ -173,7 +195,7 @@ Script làm theo thứ tự:
 5. **Import dashboard** vào Grafana qua API (cần `GRAFANA_PASSWORD`; không có thì bỏ qua và báo cách import tay).
 6. **Chạy bộ kiểm tra cuối** và in kết quả đạt/lỗi.
 
-Đặc điểm: **chạy lại nhiều lần được** (không nhân đôi job, không thêm trùng volume). Mỗi lần chạy sẽ tạo lại container Exporter (gián đoạn vài giây, không ảnh hưởng dịch vụ S3).
+Đặc điểm: **chạy lại nhiều lần được** (không nhân đôi job, không thêm trùng volume). Dòng thêm vào `prometheus.yml` và `docker-compose.yml` dùng đúng thụt lề của file đang có. Nếu job `rgw-usage` đã có từ trước (sửa tay), script **giữ nguyên** job đó và chỉ cảnh báo khi target khác `IP-VM:9242`. Nếu `docker compose up` hoặc `promtool` lỗi, script khôi phục cả hai file từ bản backup. File env bị CRLF (soạn trên Windows) hoặc có giá trị trong dấu nháy sẽ bị chặn ngay ở bước kiểm tra. Mỗi lần chạy sẽ tạo lại container Exporter (gián đoạn vài giây, không ảnh hưởng dịch vụ S3).
 
 Các lệnh con khác:
 
@@ -316,7 +338,7 @@ Hai luật sau có **ngưỡng lưu lượng tối thiểu** để lúc ít requ
 ## 7. Cần double check
 
 ### 7.1 Kiểm tra kiểu metric
-Theo hiểu biết hiện tại, exporter khai báo các metric `_total` dưới dạng *gauge* (đọc tổng từ usage log mỗi lần hỏi) chứ không phải *counter*. Điều này chạy được với `rate()`, nhưng khi tổng **giảm** (xóa bucket, `usage trim`) thì `rate()` hiểu là bộ đếm reset và đồ thị có thể nhảy. Kiểm tra bản đang dùng:
+Exporter đọc **tổng tích lũy** từ usage log mỗi lần được hỏi; chưa xác nhận bản đang chạy khai báo metric là *counter* hay *gauge*. Dù là loại nào, khi tổng **giảm** (xóa user/bucket, `usage trim`) thì `rate()` coi là bộ đếm reset và đồ thị có thể nhảy một điểm. Kiểm tra bản đang dùng:
 
 ```bash
 curl -s localhost:9242/metrics | grep '^# TYPE radosgw_usage'
@@ -355,6 +377,21 @@ Là các thao tác không thuộc bucket nào (ví dụ liệt kê danh sách bu
 ### 7.10 Số Exporter cần
 Theo hiểu biết hiện tại, usage log là của cả zone/cluster nên **một Exporter trỏ vào một RGW** là đủ cho cả cụm RGW cùng zone. Khi triển khai thật nên xác nhận lại bằng cách so sánh với `radosgw-admin usage show`.
 
+### 7.11 Docker bỏ qua tường lửa ufw
+Cổng publish bằng `docker run -p 9242:9242` được Docker mở trực tiếp trong iptables, **ufw không chặn được**. Muốn giới hạn chỉ mạng quản trị truy cập, dùng chain `DOCKER-USER`, ví dụ:
+
+```bash
+iptables -I DOCKER-USER -p tcp --dport 9242 ! -s 192.168.69.0/24 -j DROP
+```
+
+Lệnh trên không tự lưu sau reboot; dùng `iptables-persistent` hoặc cơ chế tường lửa đang dùng trên VM.
+
+### 7.12 `up == 1` chỉ có nghĩa là Exporter còn trả lời
+Luật `RGWUsageExporterDown` dựa trên `up`, tức là Prometheus gọi được Exporter. Nếu Exporter vẫn chạy nhưng **không gọi được RGW** (sai khóa, RGW down), target vẫn có thể UP trong khi số liệu đứng yên. Khi nghi ngờ, xem `docker logs --tail 30 rgw-usage-exporter` (403, timeout) và so với `radosgw-admin usage show`.
+
+### 7.13 Luật "ops tăng đột biến" không bắt user mới
+`RGWUserOpsSpike` so với 1 giờ trước. User **mới xuất hiện** (1 giờ trước chưa có series) không có giá trị để so nên luật không kích hoạt. Nếu cần, thêm luật theo ngưỡng tuyệt đối (ví dụ `RGWBucketOpsHigh` ở mục 10.1).
+
 ---
 
 ## 8. Lỗi thường gặp và cách xử lý
@@ -374,6 +411,10 @@ Theo hiểu biết hiện tại, usage log là của cả zone/cluster nên **m�
 | Dashboard "No data" | Chưa đủ 2 lần scrape, khoảng thời gian quá ngắn, hoặc biến lọc sai | Chọn "Last 1 hour", để biến lọc là All, đợi 2 đến 3 phút |
 | Không đăng nhập được Grafana | Mật khẩu đã đổi, hoặc volume Grafana cũ giữ mật khẩu cũ | `docker exec -it grafana grafana cli admin reset-admin-password <mật-khẩu-mới>` |
 | Script báo `scrape_configs không phải mục cuối file` | `prometheus.yml` có mục khác sau `scrape_configs` | Thêm job `rgw-usage` bằng tay theo mục 5.5 (script đã khôi phục file nguyên vẹn) |
+| Script cảnh báo `Job rgw-usage đã có nhưng target là ...` | Job sửa tay từ trước, target trỏ sai (ví dụ IP của RGW) | Sửa `targets` thành `IP-VM-monitor:9242`, reload, kiểm tra `/targets` |
+| Script báo file env có CRLF hoặc dấu nháy | File env soạn trên Windows, hoặc viết `KEY="giá trị"` | `sed -i 's/\r$//' <file>`, bỏ dấu nháy, chạy lại |
+| `s3gw-prepare.sh` báo user có nhiều khóa S3 | Đang xoay khóa, user có cả khóa cũ và mới | Chạy lại với `EXPORTER_ACCESS_KEY=<khóa mới>` |
+| Chạy script báo `$'\r': command not found` | Script bị đổi sang CRLF khi tải hoặc clone trên Windows | `sed -i 's/\r$//' *.sh` (repo đã có `.gitattributes` giữ LF cho file `.sh`) |
 
 ---
 
@@ -382,7 +423,7 @@ Theo hiểu biết hiện tại, usage log là của cả zone/cluster nên **m�
 | Nhu cầu | Cách làm |
 |---|---|
 | Đổi IP/cổng RGW | Sửa `RADOSGW_SERVER` trong `/opt/rgw-exporter/env`, chạy lại `bash monitor-deploy.sh install` |
-| Đổi (xoay) khóa Exporter | Trên S3-GW: `radosgw-admin key create --uid=usage-exporter --key-type=s3 --gen-access-key --gen-secret`, cập nhật file env, tạo lại container, sau đó mới xóa khóa cũ: `radosgw-admin key rm --uid=usage-exporter --key-type=s3 --access-key=<khóa-cũ>` |
+| Đổi (xoay) khóa Exporter | Trên S3-GW: `radosgw-admin key create --uid=usage-exporter --key-type=s3 --gen-access-key --gen-secret`, chạy lại `EXPORTER_ACCESS_KEY=<khóa-mới> bash s3gw-prepare.sh` (hoặc sửa tay file env), tạo lại container bằng `monitor-deploy.sh install`, xác nhận có metric, sau đó mới xóa khóa cũ: `radosgw-admin key rm --uid=usage-exporter --key-type=s3 --access-key=<khóa-cũ>` |
 | Đổi IP VM monitor | Sửa `targets` của job `rgw-usage` trong `prometheus.yml`, reload |
 | Đổi nhãn site | Sửa `labels.site`, reload (dữ liệu cũ vẫn mang nhãn cũ đến hết thời gian lưu) |
 | Thêm site/cụm RGW khác | Chạy thêm một Exporter trỏ vào RGW của site đó (khác tên container, cổng, file env), rồi thêm một khối `targets` mới với nhãn `site` khác vào **cùng job** `rgw-usage`. Script không tự làm bước này, cần sửa tay |
@@ -470,7 +511,7 @@ Một số chỉnh sửa hay dùng:
 - User Exporter **chỉ có quyền đọc**. Không dùng user quản trị toàn quyền cho Exporter.
 - **Không dán khóa vào chat, ticket, wiki.** Nếu lỡ lộ, xoay khóa ngay (mục 9).
 - Đổi mật khẩu Grafana mặc định (`ChangeMe@123` trong `setup-monitoring.sh`) sau khi cài.
-- Cổng `9242` (Exporter) chỉ cần cho Prometheus truy cập; nên giới hạn bằng tường lửa. Cổng Prometheus/Grafana chỉ mở cho mạng quản trị.
+- Cổng `9242` (Exporter) chỉ cần cho Prometheus truy cập; giới hạn bằng chain `DOCKER-USER` vì ufw không chặn cổng Docker publish (mục 7.11). Cổng Prometheus/Grafana chỉ mở cho mạng quản trị.
 - Admin Ops API (`/admin`) của RGW chỉ nên với tới được từ VM monitor, không công khai ra Internet.
 
 ---
@@ -491,7 +532,9 @@ Một số chỉnh sửa hay dùng:
 
 ## 13. Việc còn lại
 
-- [ ] Đổi khóa của `usage-exporter` nếu khóa cũ đã bị lộ ra ngoài hệ thống (ví dụ dán vào chat).
+- [ ] Xác nhận target job `rgw-usage` là `192.168.69.172:9242` và đang UP (mục 1.5).
+- [ ] Chạy `monitor-deploy.sh check` trên lab, đối chiếu với kết quả mong đợi ở mục 4.3.
+- [ ] Đổi khóa của `usage-exporter` trước khi dùng ngoài lab (khóa cũ đã xuất hiện trong chat).
 - [ ] Đổi mật khẩu Grafana mặc định.
 - [ ] Kiểm tra panel tỉ lệ lỗi sau khi nhập dashboard bản mới (mục 7.5).
 - [ ] Chọn và cấu hình kênh thông báo (Telegram hoặc email).
@@ -517,14 +560,16 @@ docker exec prometheus promtool check config /etc/prometheus/prometheus.yml
 curl -X POST http://localhost:9090/-/reload
 ```
 
-## Phụ lục B: cấu trúc file đề xuất trên repo docs
+## Phụ lục B: vị trí trong repo
 
 ```
-docs/
-  s3-rgw-usage-monitoring.md        # tài liệu này
-scripts/s3-rgw-usage/
-  s3gw-prepare.sh
-  monitor-deploy.sh
-  rgw-usage-alerts.yml
-  rgw-usage-dashboard.json
+docs/guides/s3-rgw-usage-monitoring.md     # bài viết này
+tools/s3-rgw-usage/
+  s3gw-prepare.sh                          # chạy trên S3-GW
+  monitor-deploy.sh                        # chạy trên VM monitor
+  rgw-usage-alerts.yml                     # luật cảnh báo Prometheus
+  rgw-usage-dashboard.json                 # dashboard Grafana
+data/guides.json                           # thông tin bài viết cho mindmap và ô tìm kiếm
 ```
+
+Cách tải về VM: đặt 4 file trong `tools/s3-rgw-usage/` vào **cùng một thư mục** (ví dụ `/root/s3-rgw-usage/`) rồi chạy theo mục 4.
