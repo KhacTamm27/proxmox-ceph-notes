@@ -71,6 +71,24 @@ for sc in ("ceph", "pve"):
 scr_list = json.loads((ROOT / "data/scripts.json").read_text(encoding="utf-8"))
 for sc_ in scr_list:
     sc_["code"] = (ROOT / "tools" / sc_["file"]).read_text(encoding="utf-8")
+
+# ---- bài viết chuyên đề: Markdown viết tay trong docs/guides/, build không sinh lại ----
+guides = json.loads((ROOT / "data/guides.json").read_text(encoding="utf-8"))
+for g in guides:
+    for key in ("id", "title", "scope", "summary", "tags", "file"):
+        if not g.get(key):
+            sys.exit(f"LỖI: data/guides.json, bài '{g.get('id', '?')}' thiếu trường '{key}'.")
+    if not (ROOT / g["file"]).is_file():
+        sys.exit(f"LỖI: data/guides.json trỏ tới file không tồn tại: {g['file']}")
+    g["md"] = (ROOT / g["file"]).read_text(encoding="utf-8")
+    for a in g.get("attachments", []):
+        if not (ROOT / a).exists():
+            sys.exit(f"LỖI: bài '{g['id']}' có file đi kèm không tồn tại: {a}")
+registered = {g["file"] for g in guides}
+for f in sorted((ROOT / "docs/guides").glob("*.md")):
+    rel = f.relative_to(ROOT).as_posix()
+    if not f.name.startswith("_") and rel not in registered:
+        print(f"CẢNH BÁO: {rel} chưa khai báo trong data/guides.json nên không hiện trên mindmap và ô tìm kiếm.")
 SCOPE_LABEL = {"ceph": "Ceph", "pve": "Proxmox cluster"}
 
 # ---- từng file .md ----
@@ -182,6 +200,11 @@ for c in cases:
     if c.get("kind") == "runbook":
         r.append(f"| [{c['title']}](docs/runbooks/{c['id']}.md) | {c['goal'].replace('|', '/')} |")
 r.append("")
+r += ["## Bài viết chuyên đề", "", "| Bài viết | Nội dung | File đi kèm |", "|---|---|---|"]
+for g in guides:
+    att = ", ".join(f"[`{Path(a).name}`]({a})" for a in g.get("attachments", [])) or "-"
+    r.append(f"| [{g['title']}]({g['file']}) | {g['summary'].replace('|', '/')} | {att} |")
+r.append("")
 r += ["## Script tiện ích", "", "| Script | Mục đích |", "|---|---|"]
 for sc_ in scr_list:
     r.append(f"| [{sc_['title']}](docs/scripts/{sc_['id']}.md) | {sc_['goal'].replace('|', '/')} |")
@@ -193,17 +216,25 @@ for side, branches in data.items():
         subs = ", ".join(s["name"] for s in b["subs"])
         r.append(f"| {b['id']} | [{b['name']}](docs/{slugs[b['id']]}) | {count(b)} | {subs} |")
     r.append("")
-r += ["## Cập nhật tài liệu", "",
-      "- `data/commands.json`: nhóm → nhóm con → `{c: lệnh, p: mô tả, d: nguy hiểm?}`.",
-      "- `data/vi.json`: mô tả tiếng Việt và từ khóa, khóa là đúng chuỗi lệnh trong commands.json: `\"lệnh\": [\"mô tả\", \"từ khóa\"]`.",
-      "- `data/cases.json`: các case study (triệu chứng, nguyên nhân, các bước, lưu ý).",
-      "- `data/triage.json`: hướng dẫn chẩn đoán ban đầu theo mô tả tự nhiên (ví dụ VM crash, storage chậm), gồm lệnh chỉ đọc, dấu hiệu cần xem và case liên quan.",
-      "- `data/scripts.json` và thư mục `tools/`: script tiện ích (siêu dữ liệu trong JSON, mã nguồn `.sh` hoặc `.py` trong `tools/`).",
-      "- `data/synonyms.json`: nhóm từ đồng nghĩa Việt/Anh cho ô tìm kiếm (ví dụ `khởi động lại` = `reboot` = `restart`); thêm từ vào nhóm thay vì chép từ khóa vào từng lệnh.",
-      "- `data/search_tests.json`: câu tìm mẫu và kết quả phải đứng đầu; build tự chạy `scripts/check_search.js` (cần Node.js) và cảnh báo nếu có câu không đạt.", "",
-      "Sau khi sửa, chạy:", "",
+r += ["## Thêm tài liệu mới: đặt ở đâu", "",
+      "Chọn loại theo nội dung, mỗi loại có một chỗ cố định nên mindmap, ô tìm kiếm và README tự cập nhật sau khi build:", "",
+      "| Nội dung mới | Đặt vào | Ghi chú |",
+      "|---|---|---|",
+      "| Một lệnh tra cứu | `data/commands.json` (nhóm, nhóm con) và `data/vi.json` (mô tả tiếng Việt, từ khóa) | Lệnh phá hủy/ảnh hưởng dịch vụ đặt `d: true` |",
+      "| Một sự cố: triệu chứng, nguyên nhân, các bước xử lý | `data/cases.json` (`scope`: `pve` hoặc `ceph`) | Ghi câu lỗi gốc vào `symptoms` để tìm được bằng cách dán lỗi |",
+      "| Quy trình thao tác từng bước (nâng cấp, chuyển đổi, cấu hình) | `data/cases.json` với `kind: runbook` | Có `goal` và `prereq` |",
+      "| Script tiện ích một file | mã nguồn trong `tools/`, thông tin trong `data/scripts.json` | |",
+      "| Bài viết dài: mô hình, cơ chế, triển khai, double check, lỗi thường gặp, tùy biến | `docs/guides/<id>.md` và khai báo trong `data/guides.json`; file đi kèm (script, dashboard, cấu hình) để trong `tools/<id>/` | Bắt đầu từ mẫu `docs/guides/_TEMPLATE.md`; mục lục tự tách từ heading `##` và `###` |",
+      "| Hướng dẫn chẩn đoán ban đầu theo mô tả tự nhiên | `data/triage.json` | Chỉ dùng lệnh chỉ đọc |", "",
+      "Giúp người khác tìm được bài mới:", "",
+      "- `tags` ghi cả cách nói tiếng Việt, thuật ngữ tiếng Anh và câu lỗi gốc người dùng hay gõ.",
+      "- Từ đồng nghĩa dùng chung (ví dụ `khởi động lại` = `reboot` = `restart`) thêm vào `data/synonyms.json`, không cần chép vào từng mục.",
+      "- Thêm 1 đến 2 câu tìm mẫu vào `data/search_tests.json` (`top_case`, `top_command` hoặc `top_guide`) để build cảnh báo nếu sau này bài bị tụt khỏi kết quả.",
+      "- Không ghi khóa, mật khẩu hoặc token thật vào repo.", "",
+      "Sau khi sửa, chạy (kiểm thử tìm kiếm cần Node.js):", "",
       "```bash", f"python3 scripts/build.py --repo {args.repo or '<user>/<repo>'}", "```", "",
-      "Lệnh trên sinh lại README này, toàn bộ `docs/**/*.md`, `docs/index.html` và `prototype/index.html`.", ""]
+      "Lệnh trên sinh lại README này, `docs/proxmox`, `docs/ceph`, `docs/cases`, `docs/runbooks`, `docs/scripts`, `docs/index.html` và `prototype/index.html`. "
+      "Thư mục `docs/guides/` là bài viết tay, build chỉ đọc, không ghi đè.", ""]
 (ROOT / "README.md").write_text("\n".join(r), encoding="utf-8")
 
 # ---- mindmap HTML ----
@@ -216,7 +247,8 @@ html = (tpl.replace("/*__SEARCH_JS__*/", search_js)
            .replace("/*__SLUGS__*/{}", json.dumps(slugs))
            .replace("/*__CASES__*/[]", json.dumps(cases, ensure_ascii=False).replace("</", "<\\/"))
            .replace("/*__TRIAGE__*/[]", json.dumps(triage, ensure_ascii=False).replace("</", "<\\/"))
-           .replace("/*__SCRIPTS__*/[]", json.dumps(scr_list, ensure_ascii=False).replace("</", "<\\/")))
+           .replace("/*__SCRIPTS__*/[]", json.dumps(scr_list, ensure_ascii=False).replace("</", "<\\/"))
+           .replace("/*__GUIDES__*/[]", json.dumps(guides, ensure_ascii=False).replace("</", "<\\/")))
 (ROOT / "docs/index.html").write_text(html, encoding="utf-8")
 prototype_tpl = (ROOT / "prototype/template.html").read_text(encoding="utf-8")
 prototype_html = (prototype_tpl
@@ -228,7 +260,7 @@ nce = sum(c["scope"] == "ceph" and c.get("kind") != "runbook" for c in cases)
 npv = sum(c["scope"] == "pve" and c.get("kind") != "runbook" for c in cases)
 print(
     f"ok: {len(slugs)} file .md, {nce + npv} case ({nce} Ceph, {npv} Proxmox), "
-    f"{nrb} runbook, {len(scr_list)} script, {total} lệnh, Việt hóa {covered}/{total}"
+    f"{nrb} runbook, {len(scr_list)} script, {len(guides)} bài viết, {total} lệnh, Việt hóa {covered}/{total}"
     .encode("utf-8", errors="replace").decode("utf-8")
 )
 

@@ -55,6 +55,8 @@
   ["tốc độ", "speed", "throughput", "băng thông", "bandwidth", "iperf"],
   ["hiệu năng", "performance", "perf", "benchmark", "bench"],
   ["cảnh báo", "warning", "warn", "health warn"],
+  ["giám sát", "theo dõi", "monitoring", "monitor"],
+  ["cảnh báo", "alert", "alerting", "alertmanager"],
   ["upload", "tải lên"],
   ["passthrough", "pci passthrough", "gpu passthrough", "iommu", "vfio"]
 ]

@@ -152,6 +152,11 @@ details.case ol li{padding:7px 0}
 @media(max-width:620px){.hero,.pagewrap{width:calc(100% - 28px)}.hero{padding-top:28px}.hero-grid{grid-template-columns:1fr;gap:16px}.stats{grid-template-columns:repeat(4,minmax(0,1fr));min-width:0}.stat{padding:8px}.stat strong{font-size:17px}.stat span{font-size:10px}.hero-copy{font-size:14px}.search-help{align-items:flex-start;flex-direction:column}.search-hint{display:none}.tools{width:100%;overflow:auto;flex-wrap:nowrap}.tools .tab{flex:none}.content-nav{margin-inline:-14px;padding-inline:14px}.path-grid,.side,.casesec{grid-template-columns:1fr}.path-card{min-height:auto}.sidehead,.casesec>.section-heading{grid-column:1}.bname{flex:1}.bsubs{display:none}.bbody{grid-template-columns:1fr}.section-heading{align-items:flex-start;flex-direction:column}.learn-note{flex-direction:column;gap:4px}}
 @media(max-width:620px){.triage-actions .note{min-width:0}.triage-card summary{padding:12px}.triage-step{padding:10px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important}}
+.guide-meta{color:var(--muted);font-size:13px;margin:4px 0 10px}
+.guide-toc{margin:6px 0 12px;padding-left:18px;columns:2;column-gap:28px;font-size:14px}
+.guide-toc li{break-inside:avoid;margin:2px 0}
+.guide-toc li.sub{list-style:circle;margin-left:14px;font-size:13px}
+@media(max-width:620px){.guide-toc{columns:1}}
 </style>
 </head>
 <body>
@@ -163,6 +168,7 @@ details.case ol li{padding:7px 0}
 <button id="tabceph" class="tab" type="button" aria-pressed="false">Case Ceph</button>
 <button id="tabrun" class="tab" type="button" aria-pressed="false">Runbook</button>
 <button id="tabscr" class="tab" type="button" aria-pressed="false">Script</button>
+<button id="tabguide" class="tab" type="button" aria-pressed="false">Bài viết</button>
 </nav>
 </header>
 <section class="hero" aria-labelledby="welcome-title">
@@ -209,6 +215,7 @@ details.case ol li{padding:7px 0}
 </div>
 <section id="results" hidden></section>
 <section id="cases-ceph" class="casesec content-section" hidden><div class="section-heading"><div><h2 class="sech">Case Ceph</h2><p>Chọn triệu chứng để xem nguyên nhân và các bước kiểm tra an toàn.</p></div></div></section>
+<section id="cases-guide" class="casesec content-section" hidden><div class="section-heading"><div><h2 class="sech">Bài viết chuyên đề</h2><p>Tài liệu dài theo chủ đề: mô hình, cơ chế, triển khai, double check, lỗi thường gặp và tùy biến. Mục lục dẫn thẳng tới từng phần trên GitHub.</p></div></div></section>
 <section id="cases-scr" class="casesec content-section" hidden><div class="section-heading"><div><h2 class="sech">Script tiện ích</h2><p>Công cụ đọc/kiểm tra thông tin cluster. Xem cách dùng và lưu ý trước khi chạy.</p></div></div></section>
 <section id="cases-run" class="casesec content-section" hidden><div class="section-heading"><div><h2 class="sech">Runbook</h2><p>Quy trình từng bước cho các thao tác cần chuẩn bị và xác minh.</p></div></div></section>
 <section id="cases-pve" class="casesec content-section" hidden><div class="section-heading"><div><h2 class="sech">Case Proxmox</h2><p>Tra cứu lỗi host, VM/CT, cluster, storage, network và dịch vụ.</p></div></div></section>
@@ -226,7 +233,8 @@ details.case ol li{padding:7px 0}
 const DATA=/*__DATA__*/null;
 const REPO="/*__REPO__*/";const SLUGS=/*__SLUGS__*/{};const CASES=/*__CASES__*/[];const TRIAGE=/*__TRIAGE__*/[];const SCRIPTS=/*__SCRIPTS__*/[];
 const SYNONYMS=/*__SYNONYMS__*/[];
-const ENGINE=createSearch(SYNONYMS),INDEX=createIndex(ENGINE,{DATA,CASES,SCRIPTS,TRIAGE});
+const GUIDES=/*__GUIDES__*/[];
+const ENGINE=createSearch(SYNONYMS),INDEX=createIndex(ENGINE,{DATA,CASES,SCRIPTS,TRIAGE,GUIDES});
 const $=s=>document.querySelector(s);
 const map=$('#map'),wires=$('#wires'),root=$('#root'),q=$('#q');
 let raf=0;
@@ -311,7 +319,7 @@ window.addEventListener('resize',draw);
 window.addEventListener('scroll',draw,{passive:true});
 if(window.ResizeObserver)new ResizeObserver(draw).observe(map);
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
-const res=$('#results'),secs={ceph:$('#cases-ceph'),pve:$('#cases-pve'),run:$('#cases-run'),scr:$('#cases-scr')},casesEl=document;
+const res=$('#results'),secs={ceph:$('#cases-ceph'),pve:$('#cases-pve'),run:$('#cases-run'),scr:$('#cases-scr'),guide:$('#cases-guide')},casesEl=document;
 function mkPrompt(title,sym,cmds){return 'Tôi đang xử lý trên cluster Proxmox + Ceph: '+title+'\n'+(sym?'Triệu chứng: '+sym+'\n':'')+'Các lệnh chẩn đoán liên quan:\n'+cmds.map(c=>'- '+c).join('\n')+'\n\nOutput lệnh thực tế của tôi (đã xóa IP, tên host, key):\n<<< dán output vào đây >>>\n\nHãy phân tích nguyên nhân khả dĩ nhất, nói rõ còn thiếu thông tin gì, và đề xuất bước tiếp theo theo thứ tự an toàn nhất. Cảnh báo trước nếu có lệnh nguy hiểm.'}
 function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
 function cmdEl(c){const e=el('code','cmdline',c);e.title='Bấm để copy';e.tabIndex=0;e.addEventListener('click',()=>copy(e,c));return e}
@@ -340,6 +348,26 @@ CASES.forEach(c=>{
     c.refs.forEach((r,i)=>{if(i)rp.append(' · ');const a=el('a',null,r.t);a.href=r.u;a.target='_blank';a.rel='noopener';rp.append(a)});d.append(rp)}
   d.append(pb);(rb?secs.run:c.scope==='pve'?secs.pve:secs.ceph).append(d);
 });
+const GH=f=>REPO?'https://github.com/'+REPO+'/blob/main/'+f:'../'+f;
+INDEX.guides.forEach(({g,toc})=>{
+  const d=el('details','case');d.id='guide-'+g.id;
+  d.append(el('summary',null,g.title));
+  d.append(el('p','guide-meta',[g.scope==='ceph'?'Ceph':'Proxmox',g.status,g.updated&&'cập nhật '+g.updated].filter(Boolean).join(' · ')));
+  d.append(el('p',null,g.summary));
+  const open=el('a','pbtn','Mở bài viết đầy đủ');open.href=GH(g.file);open.target='_blank';open.rel='noopener';d.append(open);
+  if(toc.length){
+    d.append(el('b',null,'Mục lục:'));
+    const ul=el('ul','guide-toc');
+    toc.forEach(t=>{const li=el('li',t.level===3?'sub':null);const a=el('a',null,t.text);a.href=GH(g.file)+'#'+t.anchor;a.target='_blank';a.rel='noopener';li.append(a);ul.append(li)});
+    d.append(ul);
+  }
+  if((g.attachments||[]).length){
+    const rel=el('div','related-links');
+    g.attachments.forEach(f=>{const a=el('a',null,f.split('/').pop());a.href=GH(f);a.target='_blank';a.rel='noopener';rel.append(a)});
+    d.append(el('b',null,'File đi kèm'),rel);
+  }
+  secs.guide.append(d);
+});
 SCRIPTS.forEach(s=>{
   const d=el('details','case');d.id='script-'+s.id;
   d.append(el('summary',null,s.title));
@@ -353,7 +381,7 @@ SCRIPTS.forEach(s=>{
 });
 function show(tab,focus=false){
   map.hidden=tab!=='map';Object.keys(secs).forEach(k=>{secs[k].hidden=tab!==k});
-  [['map','#tabmap'],['ceph','#tabceph'],['pve','#tabpve'],['run','#tabrun'],['scr','#tabscr']].forEach(([k,id])=>$(id).setAttribute('aria-pressed',String(tab===k)));
+  [['map','#tabmap'],['ceph','#tabceph'],['pve','#tabpve'],['run','#tabrun'],['scr','#tabscr'],['guide','#tabguide']].forEach(([k,id])=>$(id).setAttribute('aria-pressed',String(tab===k)));
   $('#expand').hidden=$('#collapse').hidden=tab!=='map';
   if(tab==='map')draw();
   if(focus)(tab==='map'?map:secs[tab]).scrollIntoView({block:'start',behavior:'smooth'});
@@ -363,6 +391,7 @@ $('#tabceph').addEventListener('click',()=>show('ceph',true));
 $('#tabpve').addEventListener('click',()=>show('pve',true));
 $('#tabrun').addEventListener('click',()=>show('run',true));
 $('#tabscr').addEventListener('click',()=>show('scr',true));
+$('#tabguide').addEventListener('click',()=>show('guide',true));
 function renderTriage(hit){
   const item=hit.item,d=el('details','triage-card');d.open=true;
   const summary=el('summary');summary.append(document.createTextNode('Bắt đầu chẩn đoán: '+item.title),el('small',null,'Hướng dẫn theo bước · '+(item.scope==='mixed'?'chọn đúng backend':item.scope==='pve'?'Proxmox':'Ceph')));
@@ -389,17 +418,17 @@ function renderTriage(hit){
 }
 function renderResults(v,r){
   res.replaceChildren();
-  const shown=r&&new Set([...r.cases.map(x=>'case-'+x.c.id),...r.scripts.map(x=>'script-'+x.s.id)]);
+  const shown=r&&new Set([...r.cases.map(x=>'case-'+x.c.id),...r.scripts.map(x=>'script-'+x.s.id),...r.guides.map(x=>'guide-'+x.g.id)]);
   casesEl.querySelectorAll('details.case').forEach(d=>{d.hidden=!!v&&!shown.has(d.id)});
   if(!v){res.hidden=true;return}
   if(!r.terms.length){
     res.append(el('p','results-empty','Nhập một từ khóa có ý nghĩa, ví dụ “storage chậm”, “VM crash”, “OSD latency” hoặc một tên lệnh.'));
     res.hidden=false;return;
   }
-  const hits=r.commands,ch=r.cases.map(x=>x.c),sh=r.scripts.map(x=>x.s),guided=r.triage;
+  const hits=r.commands,ch=r.cases.map(x=>x.c),sh=r.scripts.map(x=>x.s),gd=r.guides.map(x=>x.g),guided=r.triage;
   const head=el('div','rhead');
-  head.append(el('span',null,'Kết quả: '+guided.length+' hướng dẫn chẩn đoán, '+hits.length+' lệnh, '+ch.length+' case/runbook, '+sh.length+' script'));
-  if(hits.length||ch.length||sh.length||guided.length){
+  head.append(el('span',null,'Kết quả: '+guided.length+' hướng dẫn chẩn đoán, '+hits.length+' lệnh, '+ch.length+' case/runbook, '+gd.length+' bài viết, '+sh.length+' script'));
+  if(hits.length||ch.length||sh.length||gd.length||guided.length){
     const pb=el('button','pbtn','Copy prompt cho Claude');pb.type='button';
     pb.addEventListener('click',()=>copy(pb,mkPrompt('"'+q.value.trim()+'"','',hits.slice(0,15).map(h=>h.it.c))));
     head.append(pb);
@@ -407,11 +436,12 @@ function renderResults(v,r){
   const syn=r.terms.filter(t=>t.alts.length>1).map(t=>ENGINE.label(t.raw)+' → '+t.alts.filter(a=>a!==t.raw).slice(0,4).map(ENGINE.label).join(', '));
   res.append(head);
   if(syn.length)res.append(el('p','note synonyms','Tìm cả từ đồng nghĩa: '+syn.join(' · ')));
-  if(!hits.length&&!ch.length&&!sh.length&&!guided.length){
+  if(!hits.length&&!ch.length&&!sh.length&&!gd.length&&!guided.length){
     res.append(el('p','results-empty','Chưa tìm thấy nội dung phù hợp. Thử từ khóa ngắn hơn hoặc tìm bằng cả tiếng Việt và tiếng Anh.'));
   }
   ch.slice(0,12).forEach(c=>{const a=el('a','rcase',(c.kind==='runbook'?'Runbook: ':c.scope==='pve'?'Case Proxmox: ':'Case Ceph: ')+c.title);a.href='#case-'+c.id;res.append(a)});
   if(ch.length>12)res.append(el('p','note','Còn '+(ch.length-12)+' case/runbook ít liên quan hơn, xem trong các tab Case và Runbook.'));
+  gd.forEach(g=>{const a=el('a','rcase','Bài viết: '+g.title);a.href='#guide-'+g.id;res.append(a)});
   sh.forEach(s=>{const a=el('a','rcase','Script: '+s.title);a.href='#script-'+s.id;res.append(a)});
   hits.slice(0,30).forEach(({b,it})=>{
     const row=el('div','rrow');const a=el('a',null,b.id);a.href='#'+b.id;
@@ -440,6 +470,8 @@ function openHash(){
   if(id==='cases-pve'){show('pve');document.getElementById('cases-pve').scrollIntoView({block:'start'});return}
   if(id==='runbooks'||id==='cases-run'){show('run');document.getElementById('cases-run').scrollIntoView({block:'start'});return}
   if(id==='scripts'||id==='cases-scr'){show('scr');document.getElementById('cases-scr').scrollIntoView({block:'start'});return}
+  if(id==='guides'||id==='cases-guide'){show('guide');document.getElementById('cases-guide').scrollIntoView({block:'start'});return}
+  if(id.startsWith('guide-')){show('guide');const d=document.getElementById(id);if(d){d.hidden=false;d.open=true;d.scrollIntoView({block:'start'})}return}
   if(id.startsWith('script-')){show('scr');const d=document.getElementById(id);if(d){d.hidden=false;d.open=true;d.scrollIntoView({block:'start'})}return}
   if(id.startsWith('case-')){const cc=CASES.find(c=>'case-'+c.id===id);show(cc&&cc.kind==='runbook'?'run':cc&&cc.scope==='pve'?'pve':'ceph');const d=document.getElementById(id);if(d){d.hidden=false;d.open=true;d.scrollIntoView({block:'start'})}return}
   show('map');

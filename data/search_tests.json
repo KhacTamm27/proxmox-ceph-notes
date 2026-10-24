@@ -51,5 +51,10 @@
  {"q": "radosgw-admin user", "min": 3},
  {"q": "vlan đang dùng", "min": 1},
  {"q": "storage chậm", "min": 1},
- {"q": "VM crash", "min": 1}
+ {"q": "VM crash", "min": 1},
+ {"q": "giám sát s3 user", "top_guide": "s3-rgw-usage-monitoring"},
+ {"q": "rgw usage exporter", "top_guide": "s3-rgw-usage-monitoring"},
+ {"q": "grafana dashboard rgw", "top_guide": "s3-rgw-usage-monitoring"},
+ {"q": "thêm rule cảnh báo prometheus", "top_guide": "s3-rgw-usage-monitoring"},
+ {"q": "ops/s theo bucket", "top_guide": "s3-rgw-usage-monitoring"}
 ]

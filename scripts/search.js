@@ -69,8 +69,24 @@ function createSearch(synGroups){
   return {N,words,parse,prepare,score,hit,triageHits,label};
 }
 
-// Dựng chỉ mục cho lệnh, case/runbook, script và triage; query() trả kết quả đã xếp hạng.
-function createIndex(engine,{DATA,CASES,SCRIPTS,TRIAGE}){
+// Bài viết Markdown: tách heading ## / ### thành mục lục, anchor theo cách GitHub tạo (để link thẳng tới mục).
+function guideOutline(md){
+  const toc=[],seen=new Map();
+  let fence=false;
+  String(md||'').split('\n').forEach(line=>{
+    if(/^\s*```/.test(line)){fence=!fence;return}
+    const m=!fence&&/^(#{2,3})\s+(.+?)\s*#*\s*$/.exec(line);
+    if(!m)return;
+    const text=m[2].replace(/\[([^\]]*)\]\([^)]*\)/g,'$1').replace(/[`*]/g,'').trim();
+    let anchor=text.toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu,'').replace(/\s/g,'-');
+    const n=seen.get(anchor)||0;seen.set(anchor,n+1);if(n)anchor+='-'+n;
+    toc.push({level:m[1].length,text,anchor});
+  });
+  return toc;
+}
+
+// Dựng chỉ mục cho lệnh, case/runbook, script, bài viết và triage; query() trả kết quả đã xếp hạng.
+function createIndex(engine,{DATA,CASES,SCRIPTS,TRIAGE,GUIDES=[]}){
   const SIDE={left:'proxmox pve',right:'ceph'};
   const commands=[];
   Object.entries(DATA).forEach(([side,branches])=>branches.forEach(b=>b.subs.forEach(s=>s.items.forEach(it=>{
@@ -83,17 +99,20 @@ function createIndex(engine,{DATA,CASES,SCRIPTS,TRIAGE}){
     [c.steps.flatMap(st=>st.cmds||[]).join(' '),1],[SCOPE[c.scope]+(c.kind==='runbook'?' runbook':' case'),1]])}));
   const scripts=SCRIPTS.map((s,index)=>({s,index,doc:engine.prepare([
     [s.title,8],[s.tags,4],[s.goal,3],[s.notes+' '+s.usage.map(u=>u.c+' '+u.d).join(' ')+' script',1]])}));
+  const guides=GUIDES.map((g,index)=>({g,index,toc:guideOutline(g.md),doc:null}));
+  guides.forEach(x=>{x.doc=engine.prepare([[x.g.title,8],[x.g.tags,4],[x.g.summary,3],
+    [x.toc.map(t=>t.text).join(' '),2],[(SCOPE[x.g.scope]||'')+' bài viết guide',1],[x.g.md,1]])});
   const rank=(list,terms)=>list.map(x=>({...x,score:engine.score(x.doc,terms)})).filter(x=>x.score>0)
     .sort((a,b)=>b.score-a.score||(a.index||0)-(b.index||0));
   function query(q){
     const terms=engine.parse(q);
     const triage=terms.length<2?[]:TRIAGE.map(item=>({item,score:engine.triageHits(item.title+' '+item.aliases,terms)}))
       .filter(h=>h.score>=2).sort((a,b)=>b.score-a.score);
-    return {terms,commands:rank(commands,terms),cases:rank(cases,terms),scripts:rank(scripts,terms),triage};
+    return {terms,commands:rank(commands,terms),cases:rank(cases,terms),scripts:rank(scripts,terms),guides:rank(guides,terms),triage};
   }
-  return {commands,cases,scripts,query};
+  return {commands,cases,scripts,guides,query};
 }
 
-if(typeof module!=='undefined'&&module.exports)module.exports={createSearch,createIndex,N};
-else{root.createSearch=createSearch;root.createIndex=createIndex}
+if(typeof module!=='undefined'&&module.exports)module.exports={createSearch,createIndex,guideOutline,N};
+else{root.createSearch=createSearch;root.createIndex=createIndex;root.guideOutline=guideOutline}
 })(this);

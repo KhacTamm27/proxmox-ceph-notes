@@ -106,6 +106,12 @@ Tài liệu cá nhân: 499 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 | [Di chuyển VM giữa hai cluster Proxmox bằng remote migration](docs/runbooks/rb-pve-cross-cluster-migrate.md) | Di chuyển VM giữa hai cluster PVE độc lập bằng remote migration, kiểm soát quyền API, mapping network/storage và cutover. |
 | [Xóa node Proxmox khỏi cluster an toàn (VM, HA và Ceph)](docs/runbooks/rb-pve-remove-node.md) | Gỡ một node PVE khỏi cluster sau khi đã xử lý workload, HA và mọi dịch vụ Ceph gắn với node đó. |
 
+## Bài viết chuyên đề
+
+| Bài viết | Nội dung | File đi kèm |
+|---|---|---|
+| [Giám sát S3 user ops bằng Ceph RGW Usage Exporter (Prometheus + Grafana)](docs/guides/s3-rgw-usage-monitoring.md) | Theo dõi ops/s, băng thông và tỉ lệ lỗi theo từng S3 user và bucket trên Ceph RGW. Exporter đọc usage log qua Admin Ops API, Prometheus lưu và cảnh báo, Grafana hiển thị. Gồm mô hình lab, luồng hoạt động, script triển khai tự động, các điểm cần double check, lỗi thường gặp, thay đổi cấu hình, thêm luật cảnh báo và sửa dashboard. | [`s3gw-prepare.sh`](tools/s3-rgw-usage/s3gw-prepare.sh), [`monitor-deploy.sh`](tools/s3-rgw-usage/monitor-deploy.sh), [`rgw-usage-alerts.yml`](tools/s3-rgw-usage/rgw-usage-alerts.yml), [`rgw-usage-dashboard.json`](tools/s3-rgw-usage/rgw-usage-dashboard.json) |
+
 ## Script tiện ích
 
 | Script | Mục đích |
@@ -157,20 +163,30 @@ Tài liệu cá nhân: 499 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 | B17 | [Upgrade and compatibility](docs/ceph/B17-upgrade-and-compatibility.md) | 8 | Versions, Release, Clients, Pre-upgrade, Post-upgrade |
 | B18 | [Troubleshooting shortlist](docs/ceph/B18-troubleshooting-shortlist.md) | 19 | HEALTH_WARN, Slow ops, OSD flapping, PGs stuck, Undersized, Nearfull, Large omap, Clock skew, MON down, Client hang |
 
-## Cập nhật tài liệu
+## Thêm tài liệu mới: đặt ở đâu
 
-- `data/commands.json`: nhóm → nhóm con → `{c: lệnh, p: mô tả, d: nguy hiểm?}`.
-- `data/vi.json`: mô tả tiếng Việt và từ khóa, khóa là đúng chuỗi lệnh trong commands.json: `"lệnh": ["mô tả", "từ khóa"]`.
-- `data/cases.json`: các case study (triệu chứng, nguyên nhân, các bước, lưu ý).
-- `data/triage.json`: hướng dẫn chẩn đoán ban đầu theo mô tả tự nhiên (ví dụ VM crash, storage chậm), gồm lệnh chỉ đọc, dấu hiệu cần xem và case liên quan.
-- `data/scripts.json` và thư mục `tools/`: script tiện ích (siêu dữ liệu trong JSON, mã nguồn `.sh` hoặc `.py` trong `tools/`).
-- `data/synonyms.json`: nhóm từ đồng nghĩa Việt/Anh cho ô tìm kiếm (ví dụ `khởi động lại` = `reboot` = `restart`); thêm từ vào nhóm thay vì chép từ khóa vào từng lệnh.
-- `data/search_tests.json`: câu tìm mẫu và kết quả phải đứng đầu; build tự chạy `scripts/check_search.js` (cần Node.js) và cảnh báo nếu có câu không đạt.
+Chọn loại theo nội dung, mỗi loại có một chỗ cố định nên mindmap, ô tìm kiếm và README tự cập nhật sau khi build:
 
-Sau khi sửa, chạy:
+| Nội dung mới | Đặt vào | Ghi chú |
+|---|---|---|
+| Một lệnh tra cứu | `data/commands.json` (nhóm, nhóm con) và `data/vi.json` (mô tả tiếng Việt, từ khóa) | Lệnh phá hủy/ảnh hưởng dịch vụ đặt `d: true` |
+| Một sự cố: triệu chứng, nguyên nhân, các bước xử lý | `data/cases.json` (`scope`: `pve` hoặc `ceph`) | Ghi câu lỗi gốc vào `symptoms` để tìm được bằng cách dán lỗi |
+| Quy trình thao tác từng bước (nâng cấp, chuyển đổi, cấu hình) | `data/cases.json` với `kind: runbook` | Có `goal` và `prereq` |
+| Script tiện ích một file | mã nguồn trong `tools/`, thông tin trong `data/scripts.json` | |
+| Bài viết dài: mô hình, cơ chế, triển khai, double check, lỗi thường gặp, tùy biến | `docs/guides/<id>.md` và khai báo trong `data/guides.json`; file đi kèm (script, dashboard, cấu hình) để trong `tools/<id>/` | Bắt đầu từ mẫu `docs/guides/_TEMPLATE.md`; mục lục tự tách từ heading `##` và `###` |
+| Hướng dẫn chẩn đoán ban đầu theo mô tả tự nhiên | `data/triage.json` | Chỉ dùng lệnh chỉ đọc |
+
+Giúp người khác tìm được bài mới:
+
+- `tags` ghi cả cách nói tiếng Việt, thuật ngữ tiếng Anh và câu lỗi gốc người dùng hay gõ.
+- Từ đồng nghĩa dùng chung (ví dụ `khởi động lại` = `reboot` = `restart`) thêm vào `data/synonyms.json`, không cần chép vào từng mục.
+- Thêm 1 đến 2 câu tìm mẫu vào `data/search_tests.json` (`top_case`, `top_command` hoặc `top_guide`) để build cảnh báo nếu sau này bài bị tụt khỏi kết quả.
+- Không ghi khóa, mật khẩu hoặc token thật vào repo.
+
+Sau khi sửa, chạy (kiểm thử tìm kiếm cần Node.js):
 
 ```bash
 python3 scripts/build.py --repo KhacTamm27/proxmox-ceph-notes
 ```
 
-Lệnh trên sinh lại README này, toàn bộ `docs/**/*.md`, `docs/index.html` và `prototype/index.html`.
+Lệnh trên sinh lại README này, `docs/proxmox`, `docs/ceph`, `docs/cases`, `docs/runbooks`, `docs/scripts`, `docs/index.html` và `prototype/index.html`. Thư mục `docs/guides/` là bài viết tay, build chỉ đọc, không ghi đè.
