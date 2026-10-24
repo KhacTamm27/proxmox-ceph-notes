@@ -1,0 +1,39 @@
+groups:
+  - name: rgw-usage
+    rules:
+      - alert: RGWUsageExporterDown
+        expr: up{job="rgw-usage"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "RGW Usage Exporter không phản hồi"
+          description: "Target {{ $labels.instance }} đã DOWN quá 2 phút. Kiểm tra container rgw-usage-exporter và kết nối tới RGW."
+
+      - alert: RGWUserErrorRateHigh
+        expr: |
+          (
+            1 - sum by (owner) (rate(radosgw_usage_successful_ops_total{category!="get_bucket_object_lock"}[10m]))
+              / sum by (owner) (rate(radosgw_usage_ops_total{category!="get_bucket_object_lock"}[10m]))
+          ) > 0.10
+          and
+          sum by (owner) (rate(radosgw_usage_ops_total{category!="get_bucket_object_lock"}[10m])) > 0.05
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "S3 user {{ $labels.owner }} có tỉ lệ lỗi cao"
+          description: "Tỉ lệ thao tác lỗi của user {{ $labels.owner }} trên 10% trong 10 phút (giá trị hiện tại {{ $value | humanizePercentage }})."
+
+      - alert: RGWUserOpsSpike
+        expr: |
+          sum by (owner) (rate(radosgw_usage_ops_total[5m])) > 1
+          and
+          sum by (owner) (rate(radosgw_usage_ops_total[5m]))
+            > 3 * sum by (owner) (rate(radosgw_usage_ops_total[5m] offset 1h))
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ops của S3 user {{ $labels.owner }} tăng đột biến"
+          description: "ops/s của user {{ $labels.owner }} đang gấp hơn 3 lần so với 1 giờ trước (hiện tại {{ $value | humanize }} ops/s)."
