@@ -8,7 +8,7 @@
 
 ```bash
 # Xem địa chỉ IP ngắn gọn | Addresses, brief
-# từ khóa: ip địa chỉ interface
+# từ khóa: ip địa chỉ interface xem node quản trị mac
 ip -br a
 
 # Chi tiết interface, VLAN, bond | Link details, VLAN, bond
@@ -48,7 +48,7 @@ cat /proc/net/bonding/bond0
 
 ```bash
 # Xem cấu hình mạng | Network config
-# từ khóa: cấu hình mạng interfaces
+# từ khóa: cấu hình mạng interfaces đổi ip node ip quản trị gateway sửa ip vmbr0 bond vlan
 cat /etc/network/interfaces
 
 # Áp dụng cấu hình mạng không cần reboot | Apply network config
@@ -60,7 +60,7 @@ ifreload -a
 
 ```bash
 # Tốc độ, duplex, trạng thái link | Speed, duplex, link
-# từ khóa: tốc độ link duplex nic
+# từ khóa: tốc độ link duplex nic cổng 1g 10g up down
 ethtool <if>
 
 # Thống kê lỗi card mạng trên host OSD | NIC statistics, errors, drops

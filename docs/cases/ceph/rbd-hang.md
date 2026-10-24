@@ -38,4 +38,4 @@ qm start <vmid>
 
 Chỉ xóa lock thủ công (rbd lock rm) khi chắc chắn client giữ lock đã chết, nếu không có nguy cơ hai nơi cùng ghi một image.
 
-<!-- từ khóa: ceph rbd vm treo io lock watcher blocklist image không mở được -->
+<!-- từ khóa: ceph rbd vm treo io lock watcher blocklist image không mở được is locked map failed -->

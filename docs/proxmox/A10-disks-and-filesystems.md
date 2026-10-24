@@ -20,7 +20,7 @@ blkid
 
 ```bash
 # Dung lượng các filesystem | Filesystem usage
-# từ khóa: đầy disk đầy ổ dung lượng root
+# từ khóa: đầy disk đầy ổ dung lượng root no space left on device hết
 df -h
 ```
 
@@ -40,7 +40,7 @@ nvme smart-log /dev/nvme0
 
 ```bash
 # Xem dữ liệu SMART của đĩa | SMART data
-# từ khóa: smart đĩa hỏng bad sector sức khỏe
+# từ khóa: smart đĩa hỏng bad sector sức khỏe ổ cứng sắp reallocated pending
 smartctl -a /dev/<dev>
 ```
 
@@ -76,7 +76,7 @@ zfs list
 
 ```bash
 # Độ trễ và mức dùng của đĩa theo thời gian thực | Device latency and utilization
-# từ khóa: io đĩa chậm latency util
+# từ khóa: io đĩa chậm latency util iowait wait await ổ storage
 iostat -x 1
 
 # Tiến trình đang dùng IO | Processes doing IO

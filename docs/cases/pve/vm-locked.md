@@ -38,4 +38,4 @@ qm config <vmid>
 
 Chỉ unlock khi chắc không còn tiến trình nào đang dùng VM. Với container dùng pct unlock <ctid>. Sau backup bị ngắt nên kiểm tra snapshot rác trên VM.
 
-<!-- từ khóa: proxmox vm lock locked backup snapshot unlock qm không start migrate treo -->
+<!-- từ khóa: proxmox vm lock locked backup snapshot unlock qm không start migrate treo can't file is -->

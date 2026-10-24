@@ -40,4 +40,4 @@ du -sh /var/lib/vz/*
 
 Không xóa tay trong /var/lib/ceph hay /etc/pve. Log Ceph lớn thì kiểm tra logrotate. Đặt cảnh báo khi ổ root vượt khoảng 80%.
 
-<!-- từ khóa: proxmox đầy ổ root disk full log journal /var/log no space left on device -->
+<!-- từ khóa: proxmox đầy ổ root disk full log journal /var/log no space left on device hết dung lượng -->

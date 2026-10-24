@@ -8,7 +8,7 @@
 
 ```bash
 # Liệt kê các VM trên node | List VMs on node
-# từ khóa: danh sách vm máy ảo
+# từ khóa: danh sách vm máy ảo vmid liệt kê
 qm list
 
 # Trạng thái chi tiết của VM | Detailed VM status
@@ -40,7 +40,7 @@ qm start <vmid>
 qm shutdown <vmid> --timeout 60
 
 # Tắt cứng VM | Hard stop
-# từ khóa: stop tắt cứng vm treo kill
+# từ khóa: stop tắt cứng vm treo kill force ngang
 qm stop <vmid>
 
 # Khởi động lại VM | Reboot
@@ -88,7 +88,7 @@ qm set <vmid> --memory 8192 --cores 4
 qm set <vmid> --scsi1 <storage>:<size-GiB>
 
 # Tăng dung lượng đĩa VM | Grow disk
-# từ khóa: mở rộng đĩa tăng disk resize hết dung lượng
+# từ khóa: mở rộng đĩa tăng disk resize hết dung lượng ổ vm extend grow
 qm resize <vmid> scsi0 +10G
 
 # Chuyển đĩa VM sang storage khác | Move disk to another storage (alias `qm move-disk`)
@@ -148,7 +148,7 @@ qm agent <vmid> ping
 qm guest exec <vmid> -- <cmd>
 
 # Lấy IP của VM qua guest agent | Guest IPs
-# từ khóa: ip vm địa chỉ agent
+# từ khóa: ip vm địa chỉ agent tìm của mac address interface
 qm guest cmd <vmid> network-get-interfaces
 ```
 

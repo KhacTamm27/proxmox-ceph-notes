@@ -8,6 +8,7 @@ import argparse
 import json
 import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -23,6 +24,7 @@ data = json.loads((ROOT / "data/commands.json").read_text(encoding="utf-8"))
 vi = json.loads((ROOT / "data/vi.json").read_text(encoding="utf-8"))
 cases = json.loads((ROOT / "data/cases.json").read_text(encoding="utf-8"))
 triage = json.loads((ROOT / "data/triage.json").read_text(encoding="utf-8"))
+synonyms = json.loads((ROOT / "data/synonyms.json").read_text(encoding="utf-8"))
 SIDES = {"left": ("proxmox", "Proxmox host"), "right": ("ceph", "Ceph")}
 
 
@@ -196,7 +198,9 @@ r += ["## Cập nhật tài liệu", "",
       "- `data/vi.json`: mô tả tiếng Việt và từ khóa, khóa là đúng chuỗi lệnh trong commands.json: `\"lệnh\": [\"mô tả\", \"từ khóa\"]`.",
       "- `data/cases.json`: các case study (triệu chứng, nguyên nhân, các bước, lưu ý).",
       "- `data/triage.json`: hướng dẫn chẩn đoán ban đầu theo mô tả tự nhiên (ví dụ VM crash, storage chậm), gồm lệnh chỉ đọc, dấu hiệu cần xem và case liên quan.",
-      "- `data/scripts.json` và thư mục `tools/`: script tiện ích (siêu dữ liệu trong JSON, mã nguồn `.sh` hoặc `.py` trong `tools/`).", "",
+      "- `data/scripts.json` và thư mục `tools/`: script tiện ích (siêu dữ liệu trong JSON, mã nguồn `.sh` hoặc `.py` trong `tools/`).",
+      "- `data/synonyms.json`: nhóm từ đồng nghĩa Việt/Anh cho ô tìm kiếm (ví dụ `khởi động lại` = `reboot` = `restart`); thêm từ vào nhóm thay vì chép từ khóa vào từng lệnh.",
+      "- `data/search_tests.json`: câu tìm mẫu và kết quả phải đứng đầu; build tự chạy `scripts/check_search.js` (cần Node.js) và cảnh báo nếu có câu không đạt.", "",
       "Sau khi sửa, chạy:", "",
       "```bash", f"python3 scripts/build.py --repo {args.repo or '<user>/<repo>'}", "```", "",
       "Lệnh trên sinh lại README này, toàn bộ `docs/**/*.md`, `docs/index.html` và `prototype/index.html`.", ""]
@@ -204,7 +208,10 @@ r += ["## Cập nhật tài liệu", "",
 
 # ---- mindmap HTML ----
 tpl = (ROOT / "scripts/template.html").read_text(encoding="utf-8")
-html = (tpl.replace("/*__DATA__*/null", json.dumps(data, ensure_ascii=False))
+search_js = (ROOT / "scripts/search.js").read_text(encoding="utf-8")
+html = (tpl.replace("/*__SEARCH_JS__*/", search_js)
+           .replace("/*__SYNONYMS__*/[]", json.dumps(synonyms, ensure_ascii=False))
+           .replace("/*__DATA__*/null", json.dumps(data, ensure_ascii=False))
            .replace("/*__REPO__*/", args.repo)
            .replace("/*__SLUGS__*/{}", json.dumps(slugs))
            .replace("/*__CASES__*/[]", json.dumps(cases, ensure_ascii=False).replace("</", "<\\/"))
@@ -224,3 +231,12 @@ print(
     f"{nrb} runbook, {len(scr_list)} script, {total} lệnh, Việt hóa {covered}/{total}"
     .encode("utf-8", errors="replace").decode("utf-8")
 )
+
+# ---- kiểm thử tìm kiếm (cần Node.js; dùng đúng scripts/search.js đã nhúng vào web) ----
+node = shutil.which("node")
+if node:
+    rc = subprocess.run([node, str(ROOT / "scripts/check_search.js")]).returncode
+    if rc:
+        print("CẢNH BÁO: có câu tìm mẫu trong data/search_tests.json không đạt, xem chi tiết ở trên.")
+else:
+    print("Bỏ qua kiểm thử tìm kiếm: không thấy Node.js (node).")

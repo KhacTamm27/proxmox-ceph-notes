@@ -141,4 +141,4 @@ ip r
 - [Linux kernel: Bonding driver](https://www.kernel.org/doc/Documentation/networking/bonding.txt)
 - [Open vSwitch: Bonding FAQ](https://docs.openvswitch.org/en/latest/faq/bonding/)
 
-<!-- từ khóa: proxmox pve network networking mạng bridge linux bridge ovs openvswitch bond bond-mode bond_mode active-backup balance-rr balance-xor broadcast 802.3ad lacp trunk vlan allow vlan-aware bridge-vids switch port-channel nic teaming cấu hình mạng -->
+<!-- từ khóa: proxmox pve network networking mạng bridge linux bridge ovs openvswitch bond bond-mode bond_mode active-backup balance-rr balance-xor broadcast 802.3ad lacp trunk vlan allow vlan-aware bridge-vids switch port-channel nic teaming cấu hình mạng mất vm không có đổi ip ip quản trị -->

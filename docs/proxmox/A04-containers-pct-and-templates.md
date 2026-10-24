@@ -68,7 +68,7 @@ pct clone <ctid> <newid>
 pct set <ctid> --memory 2048 --cores 2
 
 # Tăng dung lượng đĩa gốc container | Grow root disk
-# từ khóa: mở rộng disk container đầy
+# từ khóa: mở rộng disk container đầy tăng dung lượng ổ extend grow
 pct resize <ctid> rootfs +5G
 
 # Mở khóa container | Remove lock

@@ -39,4 +39,4 @@ lvextend --poolmetadatasize +<size> <vg>/data
 
 Pool đầy 100% có thể làm hỏng filesystem trong VM, nên đặt cảnh báo ở khoảng 80%. Cẩn thận khi overprovision.
 
-<!-- từ khóa: proxmox lvm thin pool đầy local-lvm out of space metadata io error fstrim snapshot -->
+<!-- từ khóa: proxmox lvm thin pool đầy local-lvm out of space metadata io error fstrim snapshot data hết dung lượng -->

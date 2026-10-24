@@ -43,4 +43,4 @@ vzdump <vmid> --storage <storage> --mode snapshot --compress zstd
 
 Lỗi freeze thường do guest agent trong VM không chạy, cài hoặc bật qemu-guest-agent. Nên giãn lịch để các job backup không chồng nhau.
 
-<!-- từ khóa: proxmox backup vzdump lỗi treo guest agent freeze storage đầy pbs lock -->
+<!-- từ khóa: proxmox backup vzdump lỗi treo guest agent freeze storage đầy pbs lock fs-freeze job errors thất bại -->

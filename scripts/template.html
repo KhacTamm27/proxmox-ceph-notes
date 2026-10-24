@@ -221,11 +221,13 @@ details.case ol li{padding:7px 0}
 </section>
 <footer class="app-footer">Tài liệu tham khảo vận hành Proxmox VE và Ceph. Nội dung lệnh cần được đối chiếu với phiên bản, cấu hình và trạng thái cluster thực tế trước khi thực hiện.</footer>
 </main>
+<script>/*__SEARCH_JS__*/</script>
 <script>
 const DATA=/*__DATA__*/null;
 const REPO="/*__REPO__*/";const SLUGS=/*__SLUGS__*/{};const CASES=/*__CASES__*/[];const TRIAGE=/*__TRIAGE__*/[];const SCRIPTS=/*__SCRIPTS__*/[];
+const SYNONYMS=/*__SYNONYMS__*/[];
+const ENGINE=createSearch(SYNONYMS),INDEX=createIndex(ENGINE,{DATA,CASES,SCRIPTS,TRIAGE});
 const $=s=>document.querySelector(s);
-const N=s=>String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');
 const map=$('#map'),wires=$('#wires'),root=$('#root'),q=$('#q');
 let raf=0;
 function draw(){cancelAnimationFrame(raf);raf=requestAnimationFrame(paint)}
@@ -272,7 +274,7 @@ function build(side,branches,holder,title){
       const ul=document.createElement('ul');
       s.items.forEach(it=>{
         const li=document.createElement('li');if(it.d)li.className='danger';
-        li.dataset.t=N(it.c+' '+it.p+' '+(it.v||'')+' '+(it.k||'')+' '+s.name+' '+b.name);
+        li.item=it;
         const c=document.createElement('code');c.textContent=it.c;c.title='Click to copy';c.tabIndex=0;
         c.addEventListener('click',()=>copy(c,it.c));
         c.addEventListener('keydown',e=>{if(e.key==='Enter')copy(c,it.c)});
@@ -291,16 +293,17 @@ build('right',DATA.right,$('#right'),'Ceph · '+DATA.right.length+' nhóm');
 $('#expand').addEventListener('click',()=>{document.querySelectorAll('.branch:not([hidden])').forEach(s=>setOpen(s,true));draw()});
 $('#collapse').addEventListener('click',()=>{document.querySelectorAll('.branch').forEach(s=>setOpen(s,false));draw()});
 q.addEventListener('input',()=>{
-const v=N(q.value.trim()),terms=searchTerms(v);renderResults(v);
+  const v=q.value.trim(),r=v?INDEX.query(v):null,found=r&&new Set(r.commands.map(x=>x.it));
+  renderResults(v,r);
   document.querySelectorAll('.branch').forEach(sec=>{
     let any=false;
     sec.querySelectorAll('.sub').forEach(sub=>{
       let subAny=false;
-    sub.querySelectorAll('li').forEach(li=>{const ok=!v||(terms.length>0&&terms.every(w=>li.dataset.t.includes(w)));li.hidden=!ok;if(ok)subAny=true});
+      sub.querySelectorAll('li').forEach(li=>{const ok=!v||found.has(li.item);li.hidden=!ok;if(ok)subAny=true});
       sub.hidden=!subAny;if(subAny)any=true;
     });
-    sec.hidden=!!v&&(!terms.length||!any);
-    setOpen(sec,!!v&&terms.length>0&&any);
+    sec.hidden=!!v&&!any;
+    setOpen(sec,!!v&&any);
   });
   draw();
 });
@@ -310,11 +313,10 @@ if(window.ResizeObserver)new ResizeObserver(draw).observe(map);
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
 const res=$('#results'),secs={ceph:$('#cases-ceph'),pve:$('#cases-pve'),run:$('#cases-run'),scr:$('#cases-scr')},casesEl=document;
 function mkPrompt(title,sym,cmds){return 'Tôi đang xử lý trên cluster Proxmox + Ceph: '+title+'\n'+(sym?'Triệu chứng: '+sym+'\n':'')+'Các lệnh chẩn đoán liên quan:\n'+cmds.map(c=>'- '+c).join('\n')+'\n\nOutput lệnh thực tế của tôi (đã xóa IP, tên host, key):\n<<< dán output vào đây >>>\n\nHãy phân tích nguyên nhân khả dĩ nhất, nói rõ còn thiếu thông tin gì, và đề xuất bước tiếp theo theo thứ tự an toàn nhất. Cảnh báo trước nếu có lệnh nguy hiểm.'}
-const ct=c=>N([c.title,c.tags,c.symptoms,c.causes,c.goal,c.prereq,(c.quick_reference||[]).map(x=>x.title+' '+x.text).join(' ')].filter(Boolean).join(' '));
 function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
 function cmdEl(c){const e=el('code','cmdline',c);e.title='Bấm để copy';e.tabIndex=0;e.addEventListener('click',()=>copy(e,c));return e}
 CASES.forEach(c=>{
-  const d=el('details','case');d.id='case-'+c.id;d.dataset.t=ct(c);const rb=c.kind==='runbook';
+  const d=el('details','case');d.id='case-'+c.id;const rb=c.kind==='runbook';
   d.append(el('summary',null,c.title));
   const p1=el('p');p1.append(el('b',null,rb?'Mục tiêu: ':'Triệu chứng: '),rb?c.goal:c.symptoms);
   const p2=el('p');p2.append(el('b',null,rb?'Điều kiện trước khi làm: ':'Nguyên nhân hay gặp: '),rb?c.prereq:c.causes);
@@ -338,9 +340,8 @@ CASES.forEach(c=>{
     c.refs.forEach((r,i)=>{if(i)rp.append(' · ');const a=el('a',null,r.t);a.href=r.u;a.target='_blank';a.rel='noopener';rp.append(a)});d.append(rp)}
   d.append(pb);(rb?secs.run:c.scope==='pve'?secs.pve:secs.ceph).append(d);
 });
-const st=s=>N([s.title,s.tags,s.goal,s.notes,s.usage.map(u=>u.c+' '+u.d).join(' ')].join(' '));
 SCRIPTS.forEach(s=>{
-  const d=el('details','case');d.id='script-'+s.id;d.dataset.t=st(s);
+  const d=el('details','case');d.id='script-'+s.id;
   d.append(el('summary',null,s.title));
   const p1=el('p');p1.append(el('b',null,'Mục đích: '),s.goal);d.append(p1);
   const p2=el('p');p2.append(el('b',null,'Cách dùng:'));d.append(p2);
@@ -362,27 +363,6 @@ $('#tabceph').addEventListener('click',()=>show('ceph',true));
 $('#tabpve').addEventListener('click',()=>show('pve',true));
 $('#tabrun').addEventListener('click',()=>show('run',true));
 $('#tabscr').addEventListener('click',()=>show('scr',true));
-const SEARCH_STOPWORDS=new Set(['bi','la','toi','dang','gap','loi','cua','can','gi','the','nao','lam','sao','cho','voi','mot','nhung','cac','va','tren','duoc','khong','kiem','tra','xem','check','checking','is','a','an','for','to','my','it','i','have','got','getting','please']);
-function searchTerms(v){return N(v).split(/[^a-z0-9]+/).filter(w=>w&&!SEARCH_STOPWORDS.has(w))}
-function relevanceScore(primary,secondary,terms){
-  const p=N(primary),s=N(secondary);
-  return terms.reduce((score,term)=>score+(p.includes(term)?6:s.includes(term)?2:0),0);
-}
-function oneTranspositionApart(a,b){
-  if(a.length!==b.length)return false;
-  let i=0;
-  while(i<a.length&&a[i]===b[i])i++;
-  return i+1<a.length&&a[i]===b[i+1]&&a[i+1]===b[i]&&a.slice(i+2)===b.slice(i+2);
-}
-function triageMatches(v){
-  const terms=searchTerms(v);
-  if(terms.length<2)return [];
-  return TRIAGE.map(item=>{
-    const words=N([item.title,item.aliases].join(' ')).split(/[^a-z0-9]+/).filter(Boolean);
-    const matched=terms.filter(term=>words.some(word=>word===term||(term.length>=4&&oneTranspositionApart(term,word))));
-    return {item,score:matched.length};
-  }).filter(hit=>hit.score>=2).sort((a,b)=>b.score-a.score);
-}
 function renderTriage(hit){
   const item=hit.item,d=el('details','triage-card');d.open=true;
   const summary=el('summary');summary.append(document.createTextNode('Bắt đầu chẩn đoán: '+item.title),el('small',null,'Hướng dẫn theo bước · '+(item.scope==='mixed'?'chọn đúng backend':item.scope==='pve'?'Proxmox':'Ceph')));
@@ -407,39 +387,31 @@ function renderTriage(hit){
   actions.append(prompt,el('span','note','Chạy lệnh trên node phù hợp; xóa IP, hostname, key và dữ liệu nhạy cảm trước khi chia sẻ output.'));
   body.append(actions);d.append(summary,body);return d;
 }
-function renderResults(v){
+function renderResults(v,r){
   res.replaceChildren();
-  const toks=searchTerms(v),guided=triageMatches(v);
-  casesEl.querySelectorAll('details.case').forEach(d=>{d.hidden=!!v&&(!toks.length||!toks.every(w=>d.dataset.t.includes(w)))});
+  const shown=r&&new Set([...r.cases.map(x=>'case-'+x.c.id),...r.scripts.map(x=>'script-'+x.s.id)]);
+  casesEl.querySelectorAll('details.case').forEach(d=>{d.hidden=!!v&&!shown.has(d.id)});
   if(!v){res.hidden=true;return}
-  if(!toks.length){
+  if(!r.terms.length){
     res.append(el('p','results-empty','Nhập một từ khóa có ý nghĩa, ví dụ “storage chậm”, “VM crash”, “OSD latency” hoặc một tên lệnh.'));
     res.hidden=false;return;
   }
-  const hits=[];
-  [...DATA.left,...DATA.right].forEach(b=>b.subs.forEach(s=>s.items.forEach(it=>{
-    const t=N(it.c+' '+it.p+' '+(it.v||'')+' '+(it.k||'')+' '+s.name+' '+b.name);
-    if(toks.every(w=>t.includes(w)))hits.push({b,it});
-  })));
-  const ch=CASES.map((c,index)=>({
-    c,
-    index,
-    score:relevanceScore(c.title,[c.tags,c.symptoms,c.causes,c.goal,c.prereq].filter(Boolean).join(' '),toks)
-  })).filter(({c})=>toks.every(w=>ct(c).includes(w)))
-    .sort((a,b)=>b.score-a.score||a.index-b.index).map(({c})=>c);
-  const sh=SCRIPTS.filter(s=>toks.every(w=>st(s).includes(w)));
+  const hits=r.commands,ch=r.cases.map(x=>x.c),sh=r.scripts.map(x=>x.s),guided=r.triage;
   const head=el('div','rhead');
-  head.append(el('span',null,'Kết quả: '+guided.length+' hướng dẫn chẩn đoán, '+hits.length+' lệnh, '+ch.length+' case, '+sh.length+' script'));
+  head.append(el('span',null,'Kết quả: '+guided.length+' hướng dẫn chẩn đoán, '+hits.length+' lệnh, '+ch.length+' case/runbook, '+sh.length+' script'));
   if(hits.length||ch.length||sh.length||guided.length){
     const pb=el('button','pbtn','Copy prompt cho Claude');pb.type='button';
     pb.addEventListener('click',()=>copy(pb,mkPrompt('"'+q.value.trim()+'"','',hits.slice(0,15).map(h=>h.it.c))));
     head.append(pb);
   }
+  const syn=r.terms.filter(t=>t.alts.length>1).map(t=>ENGINE.label(t.raw)+' → '+t.alts.filter(a=>a!==t.raw).slice(0,4).map(ENGINE.label).join(', '));
   res.append(head);
+  if(syn.length)res.append(el('p','note synonyms','Tìm cả từ đồng nghĩa: '+syn.join(' · ')));
   if(!hits.length&&!ch.length&&!sh.length&&!guided.length){
     res.append(el('p','results-empty','Chưa tìm thấy nội dung phù hợp. Thử từ khóa ngắn hơn hoặc tìm bằng cả tiếng Việt và tiếng Anh.'));
   }
-  ch.forEach(c=>{const a=el('a','rcase',(c.kind==='runbook'?'Runbook: ':c.scope==='pve'?'Case Proxmox: ':'Case Ceph: ')+c.title);a.href='#case-'+c.id;res.append(a)});
+  ch.slice(0,12).forEach(c=>{const a=el('a','rcase',(c.kind==='runbook'?'Runbook: ':c.scope==='pve'?'Case Proxmox: ':'Case Ceph: ')+c.title);a.href='#case-'+c.id;res.append(a)});
+  if(ch.length>12)res.append(el('p','note','Còn '+(ch.length-12)+' case/runbook ít liên quan hơn, xem trong các tab Case và Runbook.'));
   sh.forEach(s=>{const a=el('a','rcase','Script: '+s.title);a.href='#script-'+s.id;res.append(a)});
   hits.slice(0,30).forEach(({b,it})=>{
     const row=el('div','rrow');const a=el('a',null,b.id);a.href='#'+b.id;

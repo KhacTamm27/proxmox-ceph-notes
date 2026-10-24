@@ -38,4 +38,4 @@ systemctl restart pveproxy pvedaemon
 
 Thử trình duyệt ẩn danh hoặc xóa cookie PVEAuthCookie để loại trừ lỗi phía client. Nếu truy cập qua reverse proxy hoặc VIP thì kiểm tra thêm giờ và timeout trên lớp đó.
 
-<!-- từ khóa: proxmox gui web logout đăng xuất session ticket pveproxy không đăng nhập lệch giờ -->
+<!-- từ khóa: proxmox gui web logout đăng xuất session ticket pveproxy không đăng nhập lệch giờ invalid permission denied 401 login -->

@@ -16,7 +16,7 @@ pveum user list
 pveum user add <user>@pve --password <p>
 
 # Đổi mật khẩu user | Change password
-# từ khóa: đổi mật khẩu password
+# từ khóa: đổi mật khẩu password root reset quên
 pveum passwd <user>@pve
 ```
 

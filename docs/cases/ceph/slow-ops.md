@@ -1,4 +1,4 @@
-# Slow ops / blocked requests
+# Slow ops / blocked requests (Ceph chậm, IO bị chặn)
 
 [← Mục lục](../../../README.md) · Case study Ceph
 
@@ -65,4 +65,4 @@ ceph -w
 
 ceph tell osd.<id> compact ép RocksDB compact các bảng dữ liệu; lệnh này không xóa object hay metadata còn cần thiết, không xóa dữ liệu người dùng. Khi DB metadata phình lớn là nguyên nhân gây chậm, compact có thể thu gọn DB metadata và giảm latency OSD — đã quan sát thực tế trên osd.72. So sánh dung lượng DB metadata và ceph osd perf trước/sau để xác nhận hiệu quả. Kết quả không áp dụng cho mọi nguyên nhân latency; compaction tự nó tốn I/O và có thể làm latency tăng tạm thời, nên chỉ chạy trên OSD nghi vấn khi cluster khỏe, từng OSD một. ~100 GB là dấu hiệu trong trường hợp này, không phải ngưỡng áp dụng chung. Nhớ ceph osd unset noscrub sau khi xử lý xong.
 
-<!-- từ khóa: ceph slow ops blocked requests chậm treo latency io osd db rocksdb metadata bluefs spillover compact -->
+<!-- từ khóa: ceph slow ops blocked requests chậm treo latency io osd db rocksdb metadata bluefs spillover compact for -->

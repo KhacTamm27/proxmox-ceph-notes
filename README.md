@@ -29,7 +29,7 @@ Tài liệu cá nhân: 499 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 | [PG inconsistent / scrub errors](docs/cases/ceph/pg-inconsistent.md) | HEALTH_ERR, "pg x.y is active+clean+inconsistent", "N scrub errors". |
 | [Clock skew trên MON (lệch giờ)](docs/cases/ceph/clock-skew.md) | HEALTH_WARN "clock skew detected on mon.X", MON mất quorum chập chờn. |
 | [Ceph nearfull / full / pool đầy](docs/cases/ceph/nearfull-full.md) | HEALTH_WARN "N osd(s) nearfull", HEALTH_ERR "full osd(s)", client không ghi được, backfill dừng. |
-| [Slow ops / blocked requests](docs/cases/ceph/slow-ops.md) | HEALTH_WARN "N slow ops", VM đơ hoặc IO chậm, "requests are blocked". |
+| [Slow ops / blocked requests (Ceph chậm, IO bị chặn)](docs/cases/ceph/slow-ops.md) | HEALTH_WARN "N slow ops", VM đơ hoặc IO chậm, "requests are blocked". |
 | [Thay đĩa OSD hỏng](docs/cases/ceph/osd-replace-disk.md) | OSD down kéo dài, SMART báo lỗi hoặc dmesg có I/O error, cần thay đĩa vật lý. |
 | [Ceph cảnh báo OSD device có nguy cơ hỏng](docs/cases/ceph/osd-device-health-warning.md) | Ceph báo device health hoặc thiết bị có dự đoán tuổi thọ thấp; một OSD vẫn up nhưng SMART/NVMe metrics xấu hoặc thiết bị bị đánh dấu out do dự đoán lỗi. |
 | [PG degraded / undersized, recovery chậm](docs/cases/ceph/pg-degraded-recovery.md) | HEALTH_WARN "Degraded data redundancy", "N pgs undersized/degraded", "objects misplaced", recovery chạy lâu. |
@@ -164,6 +164,8 @@ Tài liệu cá nhân: 499 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 - `data/cases.json`: các case study (triệu chứng, nguyên nhân, các bước, lưu ý).
 - `data/triage.json`: hướng dẫn chẩn đoán ban đầu theo mô tả tự nhiên (ví dụ VM crash, storage chậm), gồm lệnh chỉ đọc, dấu hiệu cần xem và case liên quan.
 - `data/scripts.json` và thư mục `tools/`: script tiện ích (siêu dữ liệu trong JSON, mã nguồn `.sh` hoặc `.py` trong `tools/`).
+- `data/synonyms.json`: nhóm từ đồng nghĩa Việt/Anh cho ô tìm kiếm (ví dụ `khởi động lại` = `reboot` = `restart`); thêm từ vào nhóm thay vì chép từ khóa vào từng lệnh.
+- `data/search_tests.json`: câu tìm mẫu và kết quả phải đứng đầu; build tự chạy `scripts/check_search.js` (cần Node.js) và cảnh báo nếu có câu không đạt.
 
 Sau khi sửa, chạy:
 

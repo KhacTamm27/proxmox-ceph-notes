@@ -38,4 +38,4 @@ qm migrate <vmid> <node> --online --with-local-disks
 
 Gỡ ISO khỏi cdrom trước khi migrate. VM dùng CPU type host giữa các node khác thế hệ có thể lỗi, nên dùng CPU type chung nếu cần live migrate linh hoạt.
 
-<!-- từ khóa: proxmox migrate vm thất bại live migration lỗi local disk cpu cdrom iso storage -->
+<!-- từ khóa: proxmox migrate vm thất bại live migration lỗi local disk cpu cdrom iso storage aborted không được -->

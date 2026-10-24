@@ -44,4 +44,4 @@ journalctl -u pvedaemon --since "10 min ago"
 
 Thấy "no quorum" thì xử lý theo case mất quorum trước. Thấy lock thì xem case VM bị lock.
 
-<!-- từ khóa: proxmox vm không start khởi động lỗi timeout quota storage không đủ ram qm start -->
+<!-- từ khóa: proxmox vm không start khởi động lỗi timeout quota storage không đủ ram qm start failed kvm exit code task error bật được chạy -->

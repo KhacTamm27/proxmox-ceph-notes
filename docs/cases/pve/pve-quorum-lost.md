@@ -44,4 +44,4 @@ pvecm expected 1
 
 pvecm expected 1 có nguy cơ split-brain nếu node kia thật ra vẫn chạy và ghi dữ liệu. Với cluster 2 node nên thêm QDevice. pmxcfs -l là biện pháp cuối cùng.
 
-<!-- từ khóa: proxmox pve quorum mất quorum corosync cluster not ready read-only không start vm -->
+<!-- từ khóa: proxmox pve quorum mất quorum corosync cluster not ready read-only không start vm split brain expected votes -->

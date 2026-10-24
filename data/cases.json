@@ -133,7 +133,7 @@
  {
   "id": "pve-quorum-lost",
   "title": "Cluster Proxmox mất quorum",
-  "tags": "proxmox pve quorum mất quorum corosync cluster not ready read-only không start vm",
+  "tags": "proxmox pve quorum mất quorum corosync cluster not ready read-only không start vm split brain expected votes",
   "symptoms": "GUI báo \"cluster not ready - no quorum\", /etc/pve chuyển read-only, không start được VM, node hiện đỏ.",
   "causes": "Mất liên lạc giữa các node (mạng, switch, firewall chặn UDP 5405-5412), quá nửa số node tắt, hoặc cluster 2 node thiếu QDevice.",
   "steps": [
@@ -270,8 +270,8 @@
  },
  {
   "id": "slow-ops",
-  "title": "Slow ops / blocked requests",
-  "tags": "ceph slow ops blocked requests chậm treo latency io osd db rocksdb metadata bluefs spillover compact",
+  "title": "Slow ops / blocked requests (Ceph chậm, IO bị chặn)",
+  "tags": "ceph slow ops blocked requests chậm treo latency io osd db rocksdb metadata bluefs spillover compact for",
   "symptoms": "HEALTH_WARN \"N slow ops\", VM đơ hoặc IO chậm, \"requests are blocked\".",
   "causes": "Một OSD hoặc đĩa chậm, mạng nghẽn, recovery/scrub chiếm tải giờ cao điểm.",
   "steps": [
@@ -438,7 +438,7 @@
  {
   "id": "node-maintenance",
   "title": "Bảo trì hoặc reboot một node Proxmox + Ceph",
-  "tags": "reboot bảo trì node maintenance noout migrate nâng cấp kernel",
+  "tags": "reboot bảo trì node maintenance noout migrate nâng cấp kernel khởi động lại tắt",
   "symptoms": "Cần reboot node để nâng cấp kernel hoặc thay phần cứng mà không làm gián đoạn VM và không kích hoạt rebalance.",
   "causes": "Khi node tắt, OSD của nó down; sau 10 phút Ceph tự out và bắt đầu rebalance không cần thiết nếu không đặt noout.",
   "steps": [
@@ -634,7 +634,7 @@
  {
   "id": "vm-locked",
   "title": "VM bị lock (backup/snapshot), không start hoặc migrate được",
-  "tags": "proxmox vm lock locked backup snapshot unlock qm không start migrate treo",
+  "tags": "proxmox vm lock locked backup snapshot unlock qm không start migrate treo can't file is",
   "symptoms": "Báo \"VM is locked (backup)\" hoặc \"(snapshot)\", không start, stop, migrate hoặc xóa được.",
   "causes": "Tác vụ backup hoặc snapshot bị ngắt giữa chừng (mất mạng, node reboot, task bị kill) và để lại khóa.",
   "steps": [
@@ -671,7 +671,7 @@
  {
   "id": "pve-gui-logout",
   "title": "GUI Proxmox bị đăng xuất liên tục hoặc không đăng nhập được",
-  "tags": "proxmox gui web logout đăng xuất session ticket pveproxy không đăng nhập lệch giờ",
+  "tags": "proxmox gui web logout đăng xuất session ticket pveproxy không đăng nhập lệch giờ invalid permission denied 401 login",
   "symptoms": "GUI bị đá ra sau một thời gian ngắn, báo \"permission denied\" hoặc \"invalid ticket\", trang tải chậm hoặc treo.",
   "causes": "Giờ lệch giữa node và máy dùng trình duyệt (hoặc giữa các node) làm ticket không hợp lệ; pveproxy hoặc pvedaemon treo; cluster mất quorum.",
   "steps": [
@@ -708,7 +708,7 @@
  {
   "id": "pve-disk-full",
   "title": "Node Proxmox đầy ổ root, dịch vụ lỗi",
-  "tags": "proxmox đầy ổ root disk full log journal /var/log no space left on device",
+  "tags": "proxmox đầy ổ root disk full log journal /var/log no space left on device hết dung lượng",
   "symptoms": "\"No space left on device\", dịch vụ không start, không ghi được /etc/pve, GUI lỗi.",
   "causes": "Log (journal, ceph) phình to, backup hoặc ISO nằm trên local, file tạm.",
   "steps": [
@@ -748,7 +748,7 @@
   "id": "osd-wont-start",
   "scope": "ceph",
   "title": "OSD không lên sau reboot",
-  "tags": "ceph osd không start sau reboot ceph-volume lvm activate không thấy đĩa failed",
+  "tags": "ceph osd không start sau reboot ceph-volume lvm activate không thấy đĩa failed start-limit-hit down",
   "symptoms": "Sau reboot một số OSD vẫn down, systemctl báo failed hoặc start-limit-hit.",
   "causes": "LVM chưa activate, đĩa đổi tên thiết bị hoặc không còn nhận, service chạm giới hạn số lần restart.",
   "steps": [
@@ -787,7 +787,7 @@
   "id": "rbd-hang",
   "scope": "ceph",
   "title": "VM treo IO do image RBD (watcher, lock, blocklist)",
-  "tags": "ceph rbd vm treo io lock watcher blocklist image không mở được",
+  "tags": "ceph rbd vm treo io lock watcher blocklist image không mở được is locked map failed",
   "symptoms": "VM đơ hoặc không start vì đĩa RBD, lỗi \"image is locked\", \"timeout\" khi mở image.",
   "causes": "Client cũ (node đã chết) còn giữ lock hoặc watcher, client bị blocklist, hoặc pool đang chậm.",
   "steps": [
@@ -930,7 +930,7 @@
   "scope": "pve",
   "kind": "case",
   "title": "Cấu hình mạng Proxmox: OVS/Linux bridge, bond, LACP và VLAN trunk",
-  "tags": "proxmox pve network networking mạng bridge linux bridge ovs openvswitch bond bond-mode bond_mode active-backup balance-rr balance-xor broadcast 802.3ad lacp trunk vlan allow vlan-aware bridge-vids switch port-channel nic teaming cấu hình mạng",
+  "tags": "proxmox pve network networking mạng bridge linux bridge ovs openvswitch bond bond-mode bond_mode active-backup balance-rr balance-xor broadcast 802.3ad lacp trunk vlan allow vlan-aware bridge-vids switch port-channel nic teaming cấu hình mạng mất vm không có đổi ip ip quản trị",
   "symptoms": "VM/CT mất mạng hoặc không nhận VLAN; host mất IP quản trị sau khi sửa /etc/network/interfaces; bond chỉ chạy một link hoặc LACP không lên; VLAN tag/trunk không thông suốt.",
   "causes": "Nhầm OVS với Linux bridge; cấu hình bond không khớp mode ở switch; thiếu VLAN allowed trên switch/bridge; nhầm VLAN tag của host interface với VLAN trunk cho VM; MTU không đồng nhất; dùng bond-primary cùng mode 802.3ad.",
   "steps": [
@@ -1163,7 +1163,7 @@
   "id": "migrate-fail",
   "scope": "pve",
   "title": "Migrate VM thất bại",
-  "tags": "proxmox migrate vm thất bại live migration lỗi local disk cpu cdrom iso storage",
+  "tags": "proxmox migrate vm thất bại live migration lỗi local disk cpu cdrom iso storage aborted không được",
   "symptoms": "Migrate báo lỗi, treo ở một phần trăm nào đó, hoặc không cho chọn node đích.",
   "causes": "Đĩa nằm trên local storage, ISO local gắn vào VM, storage không có ở node đích, khác thế hệ CPU với CPU type host, VM đang bị lock, mạng migrate chậm.",
   "steps": [
@@ -1200,7 +1200,7 @@
   "id": "vm-wont-start",
   "scope": "pve",
   "title": "VM không start được",
-  "tags": "proxmox vm không start khởi động lỗi timeout quota storage không đủ ram qm start",
+  "tags": "proxmox vm không start khởi động lỗi timeout quota storage không đủ ram qm start failed kvm exit code task error bật được chạy",
   "symptoms": "qm start báo lỗi, task lỗi, VM dừng ngay sau khi bật.",
   "causes": "Cluster mất quorum, storage chứa đĩa không available, thiếu RAM trên node, VM bị lock, file cấu hình trỏ tới đĩa hoặc thiết bị không tồn tại.",
   "steps": [
@@ -1311,7 +1311,7 @@
   "id": "backup-fail",
   "scope": "pve",
   "title": "Backup vzdump lỗi hoặc treo",
-  "tags": "proxmox backup vzdump lỗi treo guest agent freeze storage đầy pbs lock",
+  "tags": "proxmox backup vzdump lỗi treo guest agent freeze storage đầy pbs lock fs-freeze job errors thất bại",
   "symptoms": "Job backup báo lỗi, chạy rất lâu, hoặc để lại VM bị lock.",
   "causes": "Storage backup đầy hoặc mất kết nối, guest agent không phản hồi khi freeze, VM bị lock, hai job chồng nhau.",
   "steps": [
@@ -1353,7 +1353,7 @@
   "id": "lvm-thin-full",
   "scope": "pve",
   "title": "local-lvm (thin pool) đầy",
-  "tags": "proxmox lvm thin pool đầy local-lvm out of space metadata io error fstrim snapshot",
+  "tags": "proxmox lvm thin pool đầy local-lvm out of space metadata io error fstrim snapshot data hết dung lượng",
   "symptoms": "local-lvm gần 100%, VM bị I/O error hoặc treo, log có \"thin pool ... out of space\".",
   "causes": "Data hoặc metadata của thin pool đầy do snapshot tích tụ, đĩa cấp phát vượt dung lượng thật (overprovision).",
   "steps": [
@@ -2377,7 +2377,7 @@
   "kind": "runbook",
   "scope": "pve",
   "title": "SAN iSCSI + Shared LVM cho cluster Proxmox, và mở rộng dung lượng online (pvmove)",
-  "tags": "runbook san iscsi lvm shared targetcli open-iscsi lun volume group pvmove vgextend mở rộng dung lượng block storage",
+  "tags": "runbook san iscsi lvm shared targetcli open-iscsi lun volume group pvmove vgextend mở rộng dung lượng block storage resize",
   "goal": "Cho 3 node Proxmox cùng đăng nhập một LUN iSCSI và dùng chung một Volume Group (Shared LVM) để chia volume cho VM; sau đó mở rộng dung lượng không mất dữ liệu, không downtime.",
   "prereq": "Một máy storage làm iSCSI target, 3 node Proxmox truy cập được tới nó. Mô hình: các node, iSCSI initiator, iSCSI target, LUN, Shared LVM, mỗi LV là một đĩa VM.",
   "steps": [

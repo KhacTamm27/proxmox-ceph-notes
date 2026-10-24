@@ -103,4 +103,4 @@ vgs
 
 Cấu hình target trong ghi chú gốc (authentication=0, generate_node_acls=1, demo_mode_write_protect=0) cho phép truy cập không xác thực, chỉ phù hợp lab. Production nên giới hạn ACL theo IQN của từng node và bật CHAP. Dù về lý thuyết pvmove không gây downtime, nó tạo tải I/O khi copy dữ liệu.
 
-<!-- từ khóa: runbook san iscsi lvm shared targetcli open-iscsi lun volume group pvmove vgextend mở rộng dung lượng block storage -->
+<!-- từ khóa: runbook san iscsi lvm shared targetcli open-iscsi lun volume group pvmove vgextend mở rộng dung lượng block storage resize -->

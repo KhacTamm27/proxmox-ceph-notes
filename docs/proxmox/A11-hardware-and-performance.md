@@ -20,7 +20,7 @@ numactl -H
 
 ```bash
 # Mức dùng RAM | RAM usage
-# từ khóa: ram bộ nhớ đầy ram thiếu ram
+# từ khóa: ram bộ nhớ đầy ram thiếu ram oom out of memory swap
 free -h
 
 # Danh sách thanh RAM (DIMM) | DIMM inventory
@@ -32,11 +32,11 @@ dmidecode -t memory
 
 ```bash
 # Xem tiến trình | Process view
-# từ khóa: tiến trình cpu cao treo
+# từ khóa: tiến trình cpu cao treo iowait io wait load average tải ram
 top / htop
 
 # Tóm tắt CPU, RAM, IO | CPU, memory, IO summary
-# từ khóa: cpu ram io tổng hợp
+# từ khóa: cpu ram io tổng hợp iowait wait wa cao chậm
 vmstat 1
 ```
 
@@ -72,7 +72,7 @@ ipmitool lan print
 
 ```bash
 # Thông điệp kernel kèm thời gian | Kernel messages with time
-# từ khóa: dmesg lỗi kernel oom io error
+# từ khóa: dmesg lỗi kernel oom io error out of memory i/o đĩa phần cứng
 dmesg -T
 
 # Log kernel của lần boot này | Kernel log this boot

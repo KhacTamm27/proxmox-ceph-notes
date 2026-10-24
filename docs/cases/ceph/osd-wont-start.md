@@ -40,4 +40,4 @@ systemctl start ceph-osd@<osd-id>
 
 Nếu lsblk không còn thấy đĩa thì là lỗi phần cứng, chuyển sang case thay đĩa OSD. Đừng dùng ceph-volume lvm create trên đĩa đang chứa OSD cũ vì sẽ xóa dữ liệu.
 
-<!-- từ khóa: ceph osd không start sau reboot ceph-volume lvm activate không thấy đĩa failed -->
+<!-- từ khóa: ceph osd không start sau reboot ceph-volume lvm activate không thấy đĩa failed start-limit-hit down -->

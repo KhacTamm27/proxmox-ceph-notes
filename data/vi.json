@@ -449,7 +449,7 @@
  ],
  "hostnamectl": [
   "Xem hostname và hệ điều hành",
-  "hostname tên máy os debian"
+  "hostname tên máy os debian đổi đổi node set-hostname"
  ],
  "uname -r": [
   "Xem kernel đang chạy",
@@ -457,7 +457,7 @@
  ],
  "uptime": [
   "Thời gian máy chạy và mức tải",
-  "uptime load tải reboot lần cuối"
+  "uptime load tải reboot lần cuối boot lúc nào thời gian chạy"
  ],
  "timedatectl": [
   "Múi giờ và trạng thái đồng bộ giờ",
@@ -501,11 +501,11 @@
  ],
  "apt update": [
   "Cập nhật danh sách gói từ repo",
-  "apt repo cập nhật nâng cấp"
+  "apt repo cập nhật nâng cấp no-subscription enterprise repository subscription 401 unauthorized sources.list"
  ],
  "apt full-upgrade": [
   "Nâng cấp toàn bộ gói (kể cả thêm/xóa gói phụ thuộc)",
-  "nâng cấp upgrade cập nhật hệ thống"
+  "nâng cấp upgrade cập nhật hệ thống dist-upgrade"
  ],
  "pve8to9 --full": [
   "Công cụ kiểm tra trước khi nâng cấp PVE 8 lên 9",
@@ -525,7 +525,7 @@
  ],
  "qm list": [
   "Liệt kê các VM trên node",
-  "danh sách vm máy ảo"
+  "danh sách vm máy ảo vmid liệt kê"
  ],
  "qm status <vmid> --verbose": [
   "Trạng thái chi tiết của VM",
@@ -553,7 +553,7 @@
  ],
  "qm stop <vmid>": [
   "Tắt cứng VM",
-  "stop tắt cứng vm treo kill"
+  "stop tắt cứng vm treo kill force ngang"
  ],
  "qm reboot <vmid>": [
   "Khởi động lại VM",
@@ -593,7 +593,7 @@
  ],
  "qm resize <vmid> scsi0 +10G": [
   "Tăng dung lượng đĩa VM",
-  "mở rộng đĩa tăng disk resize hết dung lượng"
+  "mở rộng đĩa tăng disk resize hết dung lượng ổ vm extend grow"
  ],
  "qm disk move <vmid> scsi0 <storage>": [
   "Chuyển đĩa VM sang storage khác",
@@ -641,7 +641,7 @@
  ],
  "qm guest cmd <vmid> network-get-interfaces": [
   "Lấy IP của VM qua guest agent",
-  "ip vm địa chỉ agent"
+  "ip vm địa chỉ agent tìm của mac address interface"
  ],
  "qm terminal <vmid>": [
   "Mở console serial của VM",
@@ -725,7 +725,7 @@
  ],
  "pct resize <ctid> rootfs +5G": [
   "Tăng dung lượng đĩa gốc container",
-  "mở rộng disk container đầy"
+  "mở rộng disk container đầy tăng dung lượng ổ extend grow"
  ],
  "pct unlock <ctid>": [
   "Mở khóa container",
@@ -921,7 +921,7 @@
  ],
  "ip -br a": [
   "Xem địa chỉ IP ngắn gọn",
-  "ip địa chỉ interface"
+  "ip địa chỉ interface xem node quản trị mac"
  ],
  "ip -d link show <if>": [
   "Chi tiết interface, VLAN, bond",
@@ -949,7 +949,7 @@
  ],
  "cat /etc/network/interfaces": [
   "Xem cấu hình mạng",
-  "cấu hình mạng interfaces"
+  "cấu hình mạng interfaces đổi ip node ip quản trị gateway sửa ip vmbr0 bond vlan"
  ],
  "ifreload -a": [
   "Áp dụng cấu hình mạng không cần reboot",
@@ -957,7 +957,7 @@
  ],
  "ethtool <if>": [
   "Tốc độ, duplex, trạng thái link",
-  "tốc độ link duplex nic"
+  "tốc độ link duplex nic cổng 1g 10g up down"
  ],
  "ethtool -i <if>": [
   "Driver và firmware của card mạng",
@@ -1037,7 +1037,7 @@
  ],
  "df -h": [
   "Dung lượng các filesystem",
-  "đầy disk đầy ổ dung lượng root"
+  "đầy disk đầy ổ dung lượng root no space left on device hết"
  ],
  "nvme list": [
   "Liệt kê ổ NVMe",
@@ -1049,7 +1049,7 @@
  ],
  "smartctl -a /dev/<dev>": [
   "Xem dữ liệu SMART của đĩa",
-  "smart đĩa hỏng bad sector sức khỏe"
+  "smart đĩa hỏng bad sector sức khỏe ổ cứng sắp reallocated pending"
  ],
  "pvs / vgs / lvs": [
   "Tổng quan LVM (PV, VG, LV)",
@@ -1073,7 +1073,7 @@
  ],
  "iostat -x 1": [
   "Độ trễ và mức dùng của đĩa theo thời gian thực",
-  "io đĩa chậm latency util"
+  "io đĩa chậm latency util iowait wait await ổ storage"
  ],
  "iotop -o": [
   "Tiến trình đang dùng IO",
@@ -1105,7 +1105,7 @@
  ],
  "free -h": [
   "Mức dùng RAM",
-  "ram bộ nhớ đầy ram thiếu ram"
+  "ram bộ nhớ đầy ram thiếu ram oom out of memory swap"
  ],
  "dmidecode -t memory": [
   "Danh sách thanh RAM (DIMM)",
@@ -1113,11 +1113,11 @@
  ],
  "top / htop": [
   "Xem tiến trình",
-  "tiến trình cpu cao treo"
+  "tiến trình cpu cao treo iowait io wait load average tải ram"
  ],
  "vmstat 1": [
   "Tóm tắt CPU, RAM, IO",
-  "cpu ram io tổng hợp"
+  "cpu ram io tổng hợp iowait wait wa cao chậm"
  ],
  "sensors": [
   "Nhiệt độ và quạt",
@@ -1141,7 +1141,7 @@
  ],
  "dmesg -T": [
   "Thông điệp kernel kèm thời gian",
-  "dmesg lỗi kernel oom io error"
+  "dmesg lỗi kernel oom io error out of memory i/o đĩa phần cứng"
  ],
  "journalctl -k -b": [
   "Log kernel của lần boot này",
@@ -1157,7 +1157,7 @@
  ],
  "pveum passwd <user>@pve": [
   "Đổi mật khẩu user",
-  "đổi mật khẩu password"
+  "đổi mật khẩu password root reset quên"
  ],
  "pveum role list": [
   "Liệt kê role",

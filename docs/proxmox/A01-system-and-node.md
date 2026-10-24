@@ -12,7 +12,7 @@
 pveversion -v
 
 # Xem hostname và hệ điều hành | Hostname, OS
-# từ khóa: hostname tên máy os debian
+# từ khóa: hostname tên máy os debian đổi đổi node set-hostname
 hostnamectl
 
 # Xem kernel đang chạy | Running kernel
@@ -24,7 +24,7 @@ uname -r
 
 ```bash
 # Thời gian máy chạy và mức tải | Uptime and load
-# từ khóa: uptime load tải reboot lần cuối
+# từ khóa: uptime load tải reboot lần cuối boot lúc nào thời gian chạy
 uptime
 ```
 
@@ -92,11 +92,11 @@ pvecm updatecerts --force
 
 ```bash
 # Cập nhật danh sách gói từ repo | Refresh package lists
-# từ khóa: apt repo cập nhật nâng cấp
+# từ khóa: apt repo cập nhật nâng cấp no-subscription enterprise repository subscription 401 unauthorized sources.list
 apt update
 
 # Nâng cấp toàn bộ gói (kể cả thêm/xóa gói phụ thuộc) | Upgrade packages
-# từ khóa: nâng cấp upgrade cập nhật hệ thống
+# từ khóa: nâng cấp upgrade cập nhật hệ thống dist-upgrade
 apt full-upgrade
 
 # Công cụ kiểm tra trước khi nâng cấp PVE 8 lên 9 | Pre-upgrade checker (PVE 8 to 9)
