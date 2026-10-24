@@ -6,3 +6,7 @@
 *.conf text eol=lf
 *.env.example text eol=lf
 configs/**/*.interfaces text eol=lf
+*.lua  text eol=lf
+*.service text eol=lf
+*.example text eol=lf
+*.png binary

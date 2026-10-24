@@ -56,5 +56,9 @@
  {"q": "rgw usage exporter", "top_guide": "s3-rgw-usage-monitoring"},
  {"q": "grafana dashboard rgw", "top_guide": "s3-rgw-usage-monitoring"},
  {"q": "thêm rule cảnh báo prometheus", "top_guide": "s3-rgw-usage-monitoring"},
- {"q": "ops/s theo bucket", "top_guide": "s3-rgw-usage-monitoring"}
+ {"q": "ops/s theo bucket", "top_guide": "s3-rgw-usage-monitoring"},
+ {"q": "nginx cache s3", "top_guide": "s3-nginx-cache-proxy"},
+ {"q": "openresty build", "top_guide": "s3-nginx-cache-proxy"},
+ {"q": "s3cmd path-style", "top_guide": "s3-nginx-cache-proxy"},
+ {"q": "x-cache-status hit miss", "top_guide": "s3-nginx-cache-proxy"}
 ]

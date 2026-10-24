@@ -1,0 +1,9 @@
+# ~/.s3cfg cho s3cmd, đi qua NGINX proxy bằng path-style (bucket nằm trong đường dẫn URL).
+# host_bucket KHÔNG chứa %(bucket)s vì /etc/hosts không phân giải được subdomain wildcard.
+[default]
+access_key = WZ3HXFFJ4FEX8SUV0E3L
+secret_key = <SECRET_KEY_CUA_khactamms3>
+host_base = khactamm27.id.vn
+host_bucket = khactamm27.id.vn
+use_https = False
+signature_v2 = False

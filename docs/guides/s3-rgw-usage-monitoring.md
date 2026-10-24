@@ -22,7 +22,7 @@ Phần này **bổ sung** cho hai hướng giám sát đã có (Nginx VTS và Lo
 
 | Hướng | Trả lời được câu hỏi nào |
 |---|---|
-| Nginx VTS | Cache HIT/MISS/BYPASS, 4xx/5xx, số session |
+| Nginx VTS (xem bài [S3 qua NGINX reverse proxy và cache](s3-nginx-cache-proxy.md)) | Cache HIT/MISS/BYPASS, 4xx/5xx, số session |
 | Loki + Promtail | URI/URL nào bị MISS/BYPASS |
 | **RGW Usage Exporter (tài liệu này)** | **S3 user / bucket nào đang dùng bao nhiêu ops/s, băng thông, lỗi** |
 

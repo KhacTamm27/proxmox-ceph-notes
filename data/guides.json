@@ -18,5 +18,28 @@
    "tools/s3-rgw-usage/rgw-usage-alerts.yml",
    "tools/s3-rgw-usage/rgw-usage-dashboard.json"
   ]
+ },
+ {
+  "id": "s3-nginx-cache-proxy",
+  "title": "Ceph S3 Gateway qua NGINX reverse proxy và cache (OpenResty, aws-auth, VTS)",
+  "scope": "ceph",
+  "status": "Đã chạy trên lab",
+  "updated": "2026-10-24",
+  "summary": "Dựng Ceph RGW trên VM riêng, đặt OpenResty phía trước làm reverse proxy, cache object (nginx-aws-auth-module) và dashboard traffic (nginx-vts), kiểm thử bằng s3cmd và S3 Browser qua domain. Gồm sơ đồ và bảng IP, luồng xác thực và cache theo từng loại request, các bước triển khai, cấu hình đầy đủ, điểm cần double check (cache và quyền truy cập, upload lớn, cổng mở), lỗi thường gặp, thay đổi và tùy biến.",
+  "tags": "s3 rgw radosgw nginx openresty reverse proxy cache proxy_cache nginx-aws-auth-module aws_auth nginx-module-vts vts vhost traffic status dashboard s3cmd s3 browser path-style virtual-hosted host_bucket amz-cache x-amz-cache auth_request beast 8080 8090 cache hit miss x-cache-status domain etc/hosts build từ source 403 anonymous",
+  "topics": [
+   "rgw",
+   "network"
+  ],
+  "file": "docs/guides/s3-nginx-cache-proxy.md",
+  "attachments": [
+   "tools/s3-nginx-cache/build-openresty.sh",
+   "tools/s3-nginx-cache/nginx.conf",
+   "tools/s3-nginx-cache/nginx-lua-file.lua",
+   "tools/s3-nginx-cache/conf.d/nginx-default.conf",
+   "tools/s3-nginx-cache/conf.d/nginx-vts-status.conf",
+   "tools/s3-nginx-cache/nginx.service",
+   "tools/s3-nginx-cache/s3cfg.example"
+  ]
  }
 ]
