@@ -65,20 +65,20 @@
   "notes": "Chạy trên một node trong cluster; cần SSH bằng key (không mật khẩu) từ node này tới các node còn lại, cluster Proxmox thường đã có sẵn. Chỉ xét cổng vật lý đang UP (có /sys/class/net/TÊN_CỔNG/device) nên bridge, bond, VLAN ảo không hiện. Node offline hoặc SSH lỗi được ghi rõ trong bảng, node không có cổng khớp hiện (none). Card 10Gb mà chỉ báo 1Gb thường do cáp, SFP hoặc cổng switch. Script bật StrictHostKeyChecking=no và UserKnownHostsFile=/dev/null: tiện trong mạng nội bộ nhưng bỏ qua kiểm tra host key. Thiếu python3 trên node chạy thì script dừng."
  },
  {
-  "id": "ha-menu",
-  "file": "ha-menu.sh",
-  "title": "Menu Stop / Start / Status HA (pve-ha-lrm, pve-ha-crm) trên toàn cluster",
-  "tags": "script ha stop start status lrm crm pve-ha-lrm pve-ha-crm bảo trì maintenance tắt ha bật ha menu cluster fence domino quorum ssh",
+  "id": "menu-ha",
+  "file": "menu-ha.sh",
+  "title": "Menu Stop / Start / Status HA và Cluster (pve-ha-lrm, pve-ha-crm, pve-cluster, corosync) trên toàn cluster",
+  "tags": "script ha stop start status lrm crm pve-ha-lrm pve-ha-crm pve-cluster corosync cluster node ring0_addr quorum authorized_keys2 ssh bảo trì maintenance tắt ha bật ha menu fence domino",
   "topics": [
    "cluster"
   ],
-  "goal": "Tắt hoặc bật HA đồng loạt trên mọi node online đúng thứ tự khi bảo trì production (stop LRM trước rồi CRM; start CRM trước, chờ bầu master, rồi LRM) thay vì gõ tay từng node. Tương ứng bước tắt HA trong runbook bảo trì production.",
+  "goal": "Tắt hoặc bật đồng loạt HA và dịch vụ cluster trên mọi node đúng thứ tự khi bảo trì production, thay vì gõ tay từng node. Stop HA theo thứ tự LRM rồi CRM; start CRM, chờ bầu master, rồi LRM. Stop cluster theo thứ tự pve-cluster rồi corosync; start corosync rồi pve-cluster. Tương ứng các bước tắt HA và dừng cluster trong runbook bảo trì production.",
   "usage": [
    {
-    "c": "./ha-menu.sh",
-    "d": "Mở menu: 1 Stop HA, 2 Start HA, 3 Xem trạng thái, 0 Thoát"
+    "c": "./menu-ha.sh",
+    "d": "Mở menu: 1 Stop HA, 2 Start HA, 3 Xem trạng thái HA, 4 Stop cluster, 5 Start cluster, 6 Xem trạng thái pve-cluster / corosync, 7 Chuẩn bị SSH dự phòng, 0 Thoát"
    }
   ],
-  "notes": "Chạy từ MỘT node trong cluster, cần SSH key root giữa các node. Chỉ tác động tới node đang online theo /etc/pve/.members, nên node offline lúc tắt sẽ không được xử lý và cần kiểm tra lại khi nó online. Script cảnh báo khi cluster không có quorum và hỏi xác nhận trước khi chạy. Trong lúc HA tắt, VM HA sẽ không tự phục hồi nếu node chết, nên chỉ tắt trong khung bảo trì, xong thì chọn 2 để bật lại rồi xem ha-manager status. Các lệnh ssh dùng StrictHostKeyChecking=no."
+  "notes": "Chạy từ MỘT node trong cluster, cần SSH key root giữa các node. Danh sách lấy TẤT CẢ node và ring0_addr từ corosync.conf, kể cả node offline: ưu tiên /etc/pve/corosync.conf, rồi /etc/corosync/corosync.conf; có cache dự phòng /root/.menu-ha-nodes.cache. Node offline vẫn được thử SSH và báo [FAIL] hoặc unreachable; kiểm tra lại khi node online. Phải Stop HA (mục 1) trước khi Stop cluster (mục 4): nếu pve-ha-lrm còn active khi dừng cluster/corosync, node có thể bị watchdog reset. Script cảnh báo và hỏi xác nhận nếu phát hiện LRM còn chạy. Trên Proxmox, /root/.ssh/authorized_keys là symlink tới /etc/pve/priv/authorized_keys; khi stop pve-cluster thì /etc/pve biến mất. Vì vậy mục 4 tự chạy mục 7 để chép public key vào /root/.ssh/authorized_keys2 (file local) trên mọi node và kiểm tra sshd có đọc file này. Nếu chuẩn bị thất bại trên node nào, có thể không SSH start lại được node đó; cần console/IPMI hoặc SSH bằng mật khẩu. Mục 1 và 2 cảnh báo nếu cluster không có quorum; menu hỏi xác nhận trước thao tác. Trong lúc HA tắt, VM HA không tự phục hồi nếu node chết, nên chỉ tắt trong khung bảo trì; xong chọn 2 để bật lại rồi xem ha-manager status. Khi start cluster (mục 5), đợi khoảng 8 giây cho /etc/pve mount và lên quorum, kiểm tra mục 6 và pvecm status trước khi Start HA. Các lệnh SSH dùng StrictHostKeyChecking=no và UserKnownHostsFile=/dev/null. Quy trình gợi ý: 1 Stop HA → 4 Stop cluster → bảo trì → 5 Start cluster → 2 Start HA → 3 kiểm tra."
  }
 ]
