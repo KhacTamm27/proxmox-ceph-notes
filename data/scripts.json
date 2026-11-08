@@ -80,5 +80,31 @@
    }
   ],
   "notes": "Chạy từ MỘT node trong cluster, cần SSH key root giữa các node. Danh sách lấy TẤT CẢ node và ring0_addr từ corosync.conf, kể cả node offline: ưu tiên /etc/pve/corosync.conf, rồi /etc/corosync/corosync.conf; có cache dự phòng /root/.menu-ha-nodes.cache. Node offline vẫn được thử SSH và báo [FAIL] hoặc unreachable; kiểm tra lại khi node online. Phải Stop HA (mục 1) trước khi Stop cluster (mục 4): nếu pve-ha-lrm còn active khi dừng cluster/corosync, node có thể bị watchdog reset. Script cảnh báo và hỏi xác nhận nếu phát hiện LRM còn chạy. Trên Proxmox, /root/.ssh/authorized_keys là symlink tới /etc/pve/priv/authorized_keys; khi stop pve-cluster thì /etc/pve biến mất. Vì vậy mục 4 tự chạy mục 7 để chép public key vào /root/.ssh/authorized_keys2 (file local) trên mọi node và kiểm tra sshd có đọc file này. Nếu chuẩn bị thất bại trên node nào, có thể không SSH start lại được node đó; cần console/IPMI hoặc SSH bằng mật khẩu. Mục 1 và 2 cảnh báo nếu cluster không có quorum; menu hỏi xác nhận trước thao tác. Trong lúc HA tắt, VM HA không tự phục hồi nếu node chết, nên chỉ tắt trong khung bảo trì; xong chọn 2 để bật lại rồi xem ha-manager status. Khi start cluster (mục 5), đợi khoảng 8 giây cho /etc/pve mount và lên quorum, kiểm tra mục 6 và pvecm status trước khi Start HA. Các lệnh SSH dùng StrictHostKeyChecking=no và UserKnownHostsFile=/dev/null. Quy trình gợi ý: 1 Stop HA → 4 Stop cluster → bảo trì → 5 Start cluster → 2 Start HA → 3 kiểm tra."
- }
+},
+{
+ "id": "check-10gb",
+ "file": "check-10Gb.sh",
+ "title": "Kiểm tra NIC / bond / corosync link từng node (check-10Gb.sh)",
+ "tags": "script check-10Gb check-10gb NIC bond LACP OVS corosync link speed 10G ethtool kiểm tra mạng bảo trì switch cáp network port physical link",
+ "topics": [
+  "network",
+  "cluster"
+ ],
+ "goal": "Kiểm tra nhanh tình trạng mạng của toàn cluster Proxmox, mỗi node một dòng trong bảng; dùng trước và sau khi bảo trì mạng, thay switch/cáp/card, hoặc khi nghi ngờ LACP và link corosync có vấn đề. Script chỉ đọc thông tin, không đổi cấu hình. Cổng DATA lấy trực tiếp từ Linux bond hoặc OVS bond, không đoán theo tốc độ hay model card, nên chạy được trên phần cứng hỗn hợp và không cần ethtool.",
+ "usage": [
+  {
+   "c": "./check-10Gb.sh",
+   "d": "Kiểm tra tất cả node trong /etc/pve/.members"
+  },
+  {
+   "c": "./check-10Gb.sh node1 node2",
+   "d": "Chỉ kiểm tra các node được chỉ định"
+  },
+  {
+   "c": "MIN_SPEED=1000 ./check-10Gb.sh",
+   "d": "Đặt ngưỡng mỗi bond slave cần đạt là 1000 Mb/s (mặc định 10000)"
+  }
+ ],
+ "notes": "Các cột: HOST và IP lấy từ /etc/pve/.members; BOND là tên bond và mode; DATA PORTS liệt kê mọi slave cùng link/tốc độ. PAIR là trạng thái bond data: OK (mọi slave UP và >= MIN_SPEED), SLOW (mọi slave UP nhưng có slave chậm), PARTIAL (một số slave DOWN), ALL-DOWN (mọi slave DOWN), NO-BOND hoặc BOND-EMPTY. COR là trạng thái corosync: OK (mọi link có port UP >=1G, có ít nhất 2 link và ít nhất một link ngoài bond data), DOWN, SLOW (<1G), NO-DEDICATED hoặc SINGLE. COROSYNC LINKS map từng ringN_addr trong /etc/pve/corosync.conf tới cổng vật lý thật qua bridge, bond, VLAN hoặc OVS, kèm trạng thái/tốc độ. OTHER PORTS liệt kê cổng vật lý còn lại, IP riêng, bridge master hoặc [unused]. Chạy bằng root trên một node PVE; cần SSH key không mật khẩu giữa các node, python3 và ovs-appctl nếu node dùng OVS bond. Danh sách node và link corosync đọc từ /etc/pve/.members và /etc/pve/corosync.conf, vì vậy /etc/pve phải đang mount; không chạy được sau khi stop pve-cluster. Node offline/SSH lỗi hiện UNREACHABLE. Exit code 0 nếu mọi node OK, 1 nếu có node cần chú ý (PAIR PARTIAL/SLOW/ALL-DOWN/NO-BOND/UNREACHABLE hoặc COR DOWN/SLOW/NO-DEDICATED/SINGLE), phù hợp dùng trong cron/giám sát. Bỏ qua cổng SR-IOV VF. Tốc độ đọc từ /sys/class/net/<nic>/speed; card ảo hoặc link down có thể không báo tốc độ. Màu chỉ hiện trên terminal. SSH dùng StrictHostKeyChecking=no."
+}
 ]
