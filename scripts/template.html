@@ -27,6 +27,14 @@ a{color:var(--brand)}
 .tools .tab[aria-pressed=true]{background:var(--brand-soft);color:var(--brand)}
 .hero,.pagewrap{width:min(1160px,calc(100% - 40px));margin-inline:auto}
 .hero{padding:54px 0 24px}
+body.section-view .hero{padding:10px 0 8px}
+body.section-view .hero-grid,body.section-view #chips,body.section-view #topics,body.section-view .start-section,body.section-view #stat-case-choices{display:none!important}
+body.section-view .search-panel{margin-top:0}
+.page-context{margin:8px 0 0;color:var(--muted);font-size:13px}
+.page-context nav{display:flex;align-items:center;gap:8px}
+.page-context a{color:var(--muted);text-decoration:none}
+.page-context a:hover{color:var(--brand);text-decoration:underline}
+.page-context .crumb-current{color:var(--ink);font-weight:650}
 .hero-grid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:28px;align-items:end}
 .eyebrow{display:inline-flex;align-items:center;gap:8px;margin:0 0 12px;color:var(--brand);font-size:12px;font-weight:750;letter-spacing:.08em;text-transform:uppercase}
 .eyebrow:before{content:"";width:22px;height:2px;background:var(--brand)}
@@ -179,7 +187,7 @@ details.case ol li{padding:7px 0}
 </head>
 <body>
 <header class="top">
-<a class="brand" href="#" aria-label="Về đầu trang"><span class="brandmark">PC</span><span class="brandname">Proxmox + Ceph<small>Tra cứu vận hành</small></span></a>
+<a class="brand" href="#map" aria-label="Về đầu trang"><span class="brandmark">PC</span><span class="brandname">Proxmox + Ceph<small>Tra cứu vận hành</small></span></a>
 <nav class="tools" aria-label="Điều hướng chính">
 <button id="tabmap" class="tab" type="button" aria-pressed="true">Thư viện lệnh</button>
 <button id="tabpve" class="tab" type="button" aria-pressed="false">Case Proxmox</button>
@@ -220,6 +228,9 @@ details.case ol li{padding:7px 0}
   <button class="pbtn" type="button" data-case-tab="ceph">Case Ceph</button>
 </div>
 <main class="pagewrap">
+<div id="page-context" class="page-context" hidden>
+  <nav aria-label="Breadcrumb"><a id="home-crumb" href="#map">Trang chủ</a><span aria-hidden="true">›</span><span id="section-crumb" class="crumb-current"></span></nav>
+</div>
 <section class="start-section" aria-labelledby="start-heading">
   <div class="section-heading"><div><h2 id="start-heading">Bạn muốn làm gì?</h2><p>Chọn một lối đi nhanh, hoặc tìm kiếm theo vấn đề đang gặp.</p></div></div>
   <div class="path-grid">
@@ -429,19 +440,26 @@ SCRIPTS.forEach(s=>{
   const pre=el('pre','code');pre.append(el('code',null,s.code));
   d.append(cb,pre);secs.scr.append(d);
 });
-function show(tab,focus=false){
+const TAB_LABEL={map:'Thư viện lệnh',ceph:'Case Ceph',pve:'Case Proxmox',run:'Runbook',scr:'Script',guide:'Bài viết'};
+const TAB_HASH={map:'#map',ceph:'#cases-ceph',pve:'#cases-pve',run:'#cases-run',scr:'#cases-scr',guide:'#cases-guide'};
+function show(tab,focus=false,navigate=false){
   map.hidden=tab!=='map';Object.keys(secs).forEach(k=>{secs[k].hidden=tab!==k});
   [['map','#tabmap'],['ceph','#tabceph'],['pve','#tabpve'],['run','#tabrun'],['scr','#tabscr'],['guide','#tabguide']].forEach(([k,id])=>$(id).setAttribute('aria-pressed',String(tab===k)));
   $('#expand').hidden=$('#collapse').hidden=tab!=='map';
+  document.body.classList.toggle('section-view',tab!=='map');
+  $('#page-context').hidden=tab==='map';
+  $('#section-crumb').textContent=TAB_LABEL[tab]||TAB_LABEL.map;
   if(tab==='map')draw();
-  if(focus)(tab==='map'?map:secs[tab]).scrollIntoView({block:'start',behavior:'smooth'});
+  if(navigate)history.pushState({tab},'',TAB_HASH[tab]||'#map');
+  if(focus)window.scrollTo({top:0,behavior:'smooth'});
 }
-$('#tabmap').addEventListener('click',()=>show('map',true));
-$('#tabceph').addEventListener('click',()=>show('ceph',true));
-$('#tabpve').addEventListener('click',()=>show('pve',true));
-$('#tabrun').addEventListener('click',()=>show('run',true));
-$('#tabscr').addEventListener('click',()=>show('scr',true));
-$('#tabguide').addEventListener('click',()=>show('guide',true));
+$('#tabmap').addEventListener('click',()=>show('map',true,true));
+$('#tabceph').addEventListener('click',()=>show('ceph',true,true));
+$('#tabpve').addEventListener('click',()=>show('pve',true,true));
+$('#tabrun').addEventListener('click',()=>show('run',true,true));
+$('#tabscr').addEventListener('click',()=>show('scr',true,true));
+$('#tabguide').addEventListener('click',()=>show('guide',true,true));
+$('#home-crumb').addEventListener('click',e=>{e.preventDefault();show('map',true,true)});
 document.querySelectorAll('.stat[data-stat]').forEach(button=>button.addEventListener('click',()=>{
   const destination=button.dataset.stat;
   if(destination==='cases'){
@@ -450,10 +468,10 @@ document.querySelectorAll('.stat[data-stat]').forEach(button=>button.addEventLis
     if(!choices.hidden)choices.scrollIntoView({block:'nearest',behavior:'smooth'});
     return;
   }
-  show(destination==='commands'?'map':destination==='runbooks'?'run':'scr',true);
+  show(destination==='commands'?'map':destination==='runbooks'?'run':'scr',true,true);
 }));
 document.querySelectorAll('[data-case-tab]').forEach(button=>button.addEventListener('click',()=>{
-  show(button.dataset.caseTab,true);
+  show(button.dataset.caseTab,true,true);
   $('#stat-case-choices').hidden=true;
 }));
 function renderTriage(hit){
@@ -558,7 +576,9 @@ const jump=$('#jump');
   arr.forEach(b=>{const a=el('a','jl',BN(b));a.href='#'+b.id;a.title=b.id+' · '+b.name;jump.append(a)});
 });
 function openHash(){
-  const id=decodeURIComponent(location.hash.slice(1));if(!id)return;
+  const id=decodeURIComponent(location.hash.slice(1));
+  if(!id){show('map');return}
+  if(id==='map'){show('map');window.scrollTo({top:0});return}
   if(id==='cases'||id==='cases-ceph'){show('ceph');document.getElementById('cases-ceph').scrollIntoView({block:'start'});return}
   if(id==='cases-pve'){show('pve');document.getElementById('cases-pve').scrollIntoView({block:'start'});return}
   if(id==='runbooks'||id==='cases-run'){show('run');document.getElementById('cases-run').scrollIntoView({block:'start'});return}
