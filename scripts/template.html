@@ -49,6 +49,14 @@ h1{max-width:760px;margin:0;font-size:clamp(30px,4vw,48px);line-height:1.12;lett
 .stat strong{display:block;font-size:20px;line-height:1.2}
 .stat span{color:var(--muted);font-size:11px}
 .search-panel{position:relative;margin-top:28px;padding:8px;border:1px solid var(--line);border-radius:16px;background:var(--panel);box-shadow:var(--shadow)}
+.search-popover{position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:20;max-height:min(70vh,620px);overflow:auto;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--panel);box-shadow:var(--shadow)}
+.popover-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-bottom:10px;border-bottom:1px solid var(--line);font-size:14px;font-weight:700}
+.popover-close{display:grid;place-items:center;flex:none;width:30px;height:30px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);color:var(--muted);font-size:19px;line-height:1}
+.popover-close:hover{border-color:var(--brand);color:var(--brand)}
+.popover-preview{display:grid;gap:6px;margin-top:10px}
+.popover-item{display:block;padding:8px 10px;border-radius:9px;color:var(--ink);text-decoration:none}
+.popover-item:hover{background:var(--panel-2);color:var(--brand)}
+.popover-empty{margin:12px 0 2px;color:var(--muted);font-size:13px}
 .search-row{display:flex;align-items:center;gap:10px}
 .search-icon{width:22px;height:22px;margin-left:10px;color:var(--muted);flex:none}
 #q{width:100%;min-width:0;padding:12px 4px;border:0;outline:0;background:transparent;color:var(--ink);font-size:16px}
@@ -220,6 +228,7 @@ details.case ol li{padding:7px 0}
       <span class="search-hint">/ để tìm</span>
     </div>
     <div class="search-help"><span>Tìm đồng thời trong lệnh, mô tả, từ khóa, case, bài viết và hướng dẫn. Chọn chủ đề để thu hẹp.</span><span>Nhấn Esc để xóa nội dung tìm kiếm.</span></div>
+    <div id="search-popover" class="search-popover" hidden aria-live="polite"></div>
   </div>
   <div class="quick-searches" id="chips" aria-label="Từ khóa gợi ý"></div>
   <div class="topic-row" id="topics" aria-label="Lọc theo chủ đề"><button id="topic-toggle" class="topic-toggle" type="button" aria-expanded="false">Chủ đề ▾</button></div>
@@ -278,6 +287,8 @@ const CASE_BY_ID=Object.fromEntries(CASES.map(c=>[c.id,c])),TOPIC_NAME=Object.fr
 let TOPIC=null;
 const $=s=>document.querySelector(s);
 const map=$('#map'),wires=$('#wires'),root=$('#root'),q=$('#q');
+const popover=$('#search-popover');
+let searchTimer=0;
 let raf=0;
 function draw(){cancelAnimationFrame(raf);raf=requestAnimationFrame(paint)}
 function paint(){
@@ -355,6 +366,8 @@ const inTopic=id=>!TOPIC||((TOPICS.branches||{})[id]||[]).includes(TOPIC);
 function refresh(){
   const v=q.value.trim(),r=(v||TOPIC)?INDEX.query(v,TOPIC):null,found=r&&new Set(r.commandHits.map(x=>x.it));
   renderResults(v,r);
+  clearTimeout(searchTimer);
+  searchTimer=setTimeout(()=>renderSearchPanel(v,r),150);
   document.querySelectorAll('.branch').forEach(sec=>{
     let any=false;
     sec.querySelectorAll('.sub').forEach(sub=>{
@@ -551,6 +564,33 @@ function renderResults(v,r){
   }
   res.hidden=false;
 }
+function renderSearchPanel(v,r){
+  popover.replaceChildren();
+  if(!v||!r||!r.terms.length){popover.hidden=true;return}
+  const cases=r.cases.map(x=>x.c),commands=r.commands,scripts=r.scripts.map(x=>x.s),guides=r.guides.map(x=>x.g);
+  const total=cases.length+commands.length+scripts.length+guides.length+r.triage.length;
+  const head=el('div','popover-head');
+  head.append(el('span',null,total+' kết quả cho “'+v+'”'));
+  const close=el('button','popover-close','×');close.type='button';close.setAttribute('aria-label','Đóng kết quả và xóa từ khóa');
+  close.addEventListener('click',clearSearch);
+  head.append(close);popover.append(head);
+  if(!total){
+    popover.append(el('p','popover-empty','Không tìm thấy. Thử từ khóa khác hoặc chọn một chủ đề.'));
+    popover.hidden=false;return;
+  }
+  const preview=el('div','popover-preview');
+  const items=[
+    ...cases.slice(0,3).map(c=>['#case-'+c.id,(c.kind==='runbook'?'Runbook: ':c.scope==='pve'?'Case Proxmox: ':'Case Ceph: ')+c.title]),
+    ...commands.slice(0,3).map(({b,it})=>['#'+b.id,it.c+' — '+(it.v||it.p)]),
+    ...scripts.slice(0,2).map(s=>['#script-'+s.id,'Script: '+s.title]),
+    ...guides.slice(0,2).map(g=>['#guide-'+g.id,'Bài viết: '+g.title])
+  ].slice(0,5);
+  items.forEach(([href,label])=>{const a=el('a','popover-item',label);a.href=href;a.addEventListener('click',()=>{popover.hidden=true});preview.append(a)});
+  popover.append(preview);popover.hidden=false;
+}
+function clearSearch(){
+  q.value='';q.dispatchEvent(new Event('input'));q.focus();
+}
 const chipToggle=el('button','more-chips','Thêm gợi ý');chipToggle.type='button';chipToggle.setAttribute('aria-expanded','false');
 ['VM crash','VM không start','storage chậm','mất quorum','OSD latency','network LACP','VLAN trunk','RGW 503','scrub lỗi','storage đầy','kiểm tra host'].forEach((x,i)=>{
   const b=el('button','chip',x);b.type='button';
@@ -600,7 +640,7 @@ document.querySelectorAll('.branch').forEach(sec=>sec.querySelector('.bhead').ad
   if(!sec.querySelector('.bbody').hidden)history.replaceState(null,'','#'+sec.id)}));
 document.addEventListener('keydown',e=>{
   if(e.key==='/'&&document.activeElement!==q){e.preventDefault();q.focus();q.select()}
-  if(e.key==='Escape'&&document.activeElement===q){q.value='';q.dispatchEvent(new Event('input'));q.blur()}
+  if(e.key==='Escape'&&(document.activeElement===q||!popover.hidden)){clearSearch();q.blur()}
   if(e.key==='Enter'&&document.activeElement===q&&q.value.trim()){res.scrollIntoView({block:'start',behavior:'smooth'})}
 });
 const sp=new URLSearchParams(location.search),qp=sp.get('q'),tp=sp.get('topic');
