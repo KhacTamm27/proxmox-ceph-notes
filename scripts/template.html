@@ -56,6 +56,16 @@ h1{max-width:760px;margin:0;font-size:clamp(30px,4vw,48px);line-height:1.12;lett
 .popover-preview{display:grid;gap:6px;margin-top:10px}
 .popover-item{display:block;padding:8px 10px;border-radius:9px;color:var(--ink);text-decoration:none}
 .popover-item:hover{background:var(--panel-2);color:var(--brand)}
+.popover-group{margin-top:12px}
+.popover-group h3{display:flex;align-items:center;gap:7px;margin:0 0 5px;font-size:13px}
+.popover-count{color:var(--muted);font-size:11px;font-weight:500}
+.popover-command{display:grid;gap:2px;padding:8px 10px;border-radius:9px;color:var(--ink);text-decoration:none}
+.popover-command:hover{background:var(--panel-2);color:var(--brand)}
+.popover-command code{font:600 12px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere}
+.popover-command span,.popover-meta{color:var(--muted);font-size:12px}
+.popover-ro{justify-self:start;padding:0 6px;border-radius:999px;background:var(--ceph-soft);color:var(--ceph)!important;font-size:10px!important;font-weight:650}
+.popover-all{margin:5px 0 0;padding:5px 9px;border:0;border-radius:7px;background:transparent;color:var(--brand);font-size:12px;font-weight:650}
+.popover-all:hover{background:var(--brand-soft)}
 .popover-empty{margin:12px 0 2px;color:var(--muted);font-size:13px}
 .search-row{display:flex;align-items:center;gap:10px}
 .search-icon{width:22px;height:22px;margin-left:10px;color:var(--muted);flex:none}
@@ -568,7 +578,17 @@ function renderSearchPanel(v,r){
   popover.replaceChildren();
   if(!v||!r||!r.terms.length){popover.hidden=true;return}
   const cases=r.cases.map(x=>x.c),commands=r.commands,scripts=r.scripts.map(x=>x.s),guides=r.guides.map(x=>x.g);
-  const total=cases.length+commands.length+scripts.length+guides.length+r.triage.length;
+  const issueItems=[...cases.filter(c=>c.kind!=='runbook').map(c=>({type:'case',value:c})),
+    ...r.triage.map(hit=>({type:'triage',value:hit.item}))];
+  const workflows=[...cases.filter(c=>c.kind==='runbook').map(c=>({type:'runbook',value:c})),
+    ...scripts.map(s=>({type:'script',value:s}))];
+  const groups=[
+    ['Sự cố',issueItems],
+    ['Lệnh',commands],
+    ['Quy trình',workflows],
+    ['Bài viết',guides]
+  ];
+  const total=groups.reduce((sum,[,items])=>sum+items.length,0);
   const head=el('div','popover-head');
   head.append(el('span',null,total+' kết quả cho “'+v+'”'));
   const close=el('button','popover-close','×');close.type='button';close.setAttribute('aria-label','Đóng kết quả và xóa từ khóa');
@@ -578,15 +598,44 @@ function renderSearchPanel(v,r){
     popover.append(el('p','popover-empty','Không tìm thấy. Thử từ khóa khác hoặc chọn một chủ đề.'));
     popover.hidden=false;return;
   }
-  const preview=el('div','popover-preview');
-  const items=[
-    ...cases.slice(0,3).map(c=>['#case-'+c.id,(c.kind==='runbook'?'Runbook: ':c.scope==='pve'?'Case Proxmox: ':'Case Ceph: ')+c.title]),
-    ...commands.slice(0,3).map(({b,it})=>['#'+b.id,it.c+' — '+(it.v||it.p)]),
-    ...scripts.slice(0,2).map(s=>['#script-'+s.id,'Script: '+s.title]),
-    ...guides.slice(0,2).map(g=>['#guide-'+g.id,'Bài viết: '+g.title])
-  ].slice(0,5);
-  items.forEach(([href,label])=>{const a=el('a','popover-item',label);a.href=href;a.addEventListener('click',()=>{popover.hidden=true});preview.append(a)});
-  popover.append(preview);popover.hidden=false;
+  const itemLink=(href,label)=>{
+    const a=el('a','popover-item',label);a.href=href;
+    a.addEventListener('click',()=>{popover.hidden=true});
+    return a;
+  };
+  groups.forEach(([title,items])=>{
+    if(!items.length)return;
+    const group=el('section','popover-group');
+    const heading=el('h3');heading.append(document.createTextNode(title),el('span','popover-count',String(items.length)));group.append(heading);
+    items.slice(0,5).forEach(item=>{
+      if(title==='Lệnh'){
+        const {b,it}=item,a=el('a','popover-command');a.href='#'+b.id;
+        const code=el('code',null,it.c),description=el('span',null,it.v||it.p),name=el('span','popover-meta','Nhóm: '+BN(b));
+        a.append(code,description,name);
+        if(it.r)a.append(el('span','popover-ro','chỉ đọc'));
+        a.addEventListener('click',()=>{popover.hidden=true});
+        group.append(a);
+      }else if(item.type==='case'){
+        const c=item.value;
+        group.append(itemLink('#case-'+c.id,(c.scope==='pve'?'Case Proxmox: ':'Case Ceph: ')+c.title));
+      }else if(item.type==='runbook'){
+        group.append(itemLink('#case-'+item.value.id,'Runbook: '+item.value.title));
+      }else if(item.type==='script'){
+        group.append(itemLink('#script-'+item.value.id,'Script: '+item.value.title));
+      }else if(item.type==='triage'){
+        group.append(itemLink('#results','Hướng dẫn chẩn đoán: '+item.value.title));
+      }else{
+        group.append(itemLink('#guide-'+item.id,'Bài viết: '+item.title));
+      }
+    });
+    if(items.length>5){
+      const all=el('button','popover-all','Xem tất cả '+items.length);all.type='button';
+      all.addEventListener('click',()=>{popover.hidden=true;res.scrollIntoView({block:'start',behavior:'smooth'})});
+      group.append(all);
+    }
+    popover.append(group);
+  });
+  popover.hidden=false;
 }
 function clearSearch(){
   q.value='';q.dispatchEvent(new Event('input'));q.focus();
