@@ -138,6 +138,7 @@ ceph osd blocklist ls
 - [PG down, peering kẹt hoặc unfound objects (mất nhiều OSD)](../cases/ceph/pg-down-incomplete.md)
 - [Một node chết hẳn (hỏng phần cứng): khôi phục dịch vụ](../cases/pve/node-dead-recovery.md)
 - [Cảnh báo too many / too few PGs, chỉnh pg_num](../cases/ceph/pg-count.md)
+- [Cụm lab ClusterTamm: từ HEALTH_ERR về HEALTH_OK](../cases/ceph/clustertamm-su-co-2026-11.md)
 - [Ceph nearfull / full / pool đầy](../cases/ceph/nearfull-full.md)
 - [Cluster đầy khẩn cấp: ghi bị chặn (OSD_FULL), backfill_toofull](../cases/ceph/cluster-full-emergency.md)
 - [Nâng cấp Ceph Quincy 17.2.8 → Reef 18.2.8 → Squid 19.2.4 trên PVE 8.4 (3 node, có CephFS)](../runbooks/rb-ceph-upgrade-quincy-reef-squid.md)

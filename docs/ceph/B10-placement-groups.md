@@ -110,3 +110,4 @@ ceph osd rm-pg-upmap-items <pgid>
 - [PG inconsistent / scrub errors](../cases/ceph/pg-inconsistent.md)
 - [Large omap objects (thường do bucket index RGW)](../cases/ceph/large-omap.md)
 - [Cảnh báo PG không được scrub / deep-scrub kịp thời](../cases/ceph/deep-scrub-late.md)
+- [Cụm lab ClusterTamm: từ HEALTH_ERR về HEALTH_OK](../cases/ceph/clustertamm-su-co-2026-11.md)

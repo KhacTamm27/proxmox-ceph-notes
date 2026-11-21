@@ -105,6 +105,7 @@ ceph osd crush rm-device-class osd.<id>
 ## Case và runbook dùng lệnh trong nhóm này
 
 - [OSD không lên sau reboot](../cases/ceph/osd-wont-start.md)
+- [Cụm lab ClusterTamm: từ HEALTH_ERR về HEALTH_OK](../cases/ceph/clustertamm-su-co-2026-11.md)
 - [OSD down hoặc up/down liên tục (flapping)](../cases/ceph/osd-down-flapping.md)
 - [Slow ops / blocked requests (Ceph chậm, IO bị chặn)](../cases/ceph/slow-ops.md)
 - [BLUEFS_SPILLOVER: metadata RocksDB tràn sang đĩa chậm](../cases/ceph/bluefs-spillover.md)

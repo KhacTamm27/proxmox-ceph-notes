@@ -29,6 +29,21 @@ topics = json.loads((ROOT / "data/topics.json").read_text(encoding="utf-8"))
 labels = json.loads((ROOT / "data/labels_vi.json").read_text(encoding="utf-8"))
 TOPIC_IDS = {t["id"] for t in topics["topics"]}
 
+# Case Markdown/asset tuỳ chỉnh được nạp vào bộ nhớ trước khi docs/cases/
+# được làm sạch, để build có thể khôi phục đúng bài và hình minh hoạ.
+for c in cases:
+    if c.get("markdown"):
+        md = ROOT / c["markdown"]
+        if not md.is_file():
+            sys.exit(f"LỖI: case '{c['id']}' trỏ tới Markdown không tồn tại: {c['markdown']}")
+        c["_markdown"] = md.read_text(encoding="utf-8")
+    c["_attachments"] = {}
+    for attachment in c.get("attachments", []):
+        a = ROOT / attachment
+        if not a.is_file():
+            sys.exit(f"LỖI: case '{c['id']}' có file đi kèm không tồn tại: {attachment}")
+        c["_attachments"][attachment] = a.read_bytes()
+
 
 def bname(b):
     """Tên nhóm hiển thị (tiếng Việt nếu có). Tên file .md vẫn theo tên gốc để không gãy link."""
@@ -229,7 +244,14 @@ for c in cases:
         o += ["## Nguồn tham khảo", ""] + [f"- [{r['t']}]({r['u']})" for r in c["refs"]] + [""]
     o += [f"<!-- từ khóa: {c['tags']} -->"]
     dest = ROOT / "docs/runbooks" / f"{c['id']}.md" if rb else ROOT / "docs/cases" / c["scope"] / f"{c['id']}.md"
-    dest.write_text("\n".join(o) + "\n", encoding="utf-8")
+    if c.get("_markdown"):
+        dest.write_text(c["_markdown"].rstrip() + "\n", encoding="utf-8")
+    else:
+        dest.write_text("\n".join(o) + "\n", encoding="utf-8")
+    for attachment, content in c["_attachments"].items():
+        target = ROOT / attachment
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(content)
 
 # ---- script .md ----
 for sc_ in scr_list:
@@ -316,6 +338,9 @@ r += ["## Thêm tài liệu mới: đặt ở đâu", "",
 (ROOT / "README.md").write_text("\n".join(r), encoding="utf-8")
 
 # ---- mindmap HTML ----
+for c in cases:
+    c.pop("_markdown", None)
+    c.pop("_attachments", None)
 tpl = (ROOT / "scripts/template.html").read_text(encoding="utf-8")
 search_js = (ROOT / "scripts/search.js").read_text(encoding="utf-8")
 html = (tpl.replace("/*__SEARCH_JS__*/", search_js)

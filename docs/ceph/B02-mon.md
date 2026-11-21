@@ -69,6 +69,7 @@ ceph mon getmap -o monmap.bin
 ## Case và runbook dùng lệnh trong nhóm này
 
 - [Nâng cấp Ceph Quincy 17.2.8 → Reef 18.2.8 → Squid 19.2.4 trên PVE 8.4 (3 node, có CephFS)](../runbooks/rb-ceph-upgrade-quincy-reef-squid.md)
+- [Cụm lab ClusterTamm: từ HEALTH_ERR về HEALTH_OK](../cases/ceph/clustertamm-su-co-2026-11.md)
 - [Nâng cấp Ceph trên Proxmox (ví dụ Reef lên Squid)](../cases/ceph/ceph-upgrade-pve.md)
 - [PVE host hỏng đĩa boot, không có backup cấu hình: kiểm kê và dựng lại node](../cases/pve/pve-host-rebuild-no-config-backup.md)
 - [Xóa node Proxmox khỏi cluster an toàn (VM, HA và Ceph)](../runbooks/rb-pve-remove-node.md)

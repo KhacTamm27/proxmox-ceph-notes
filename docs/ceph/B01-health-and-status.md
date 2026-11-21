@@ -113,6 +113,7 @@ ceph report
 - [Bảo trì production: tắt HA và đặt cờ bảo trì Ceph trước khi tắt node](../runbooks/rb-prod-maintenance.md)
 - [PVE host hỏng đĩa boot, không có backup cấu hình: kiểm kê và dựng lại node](../cases/pve/pve-host-rebuild-no-config-backup.md)
 - [Xóa node Proxmox khỏi cluster an toàn (VM, HA và Ceph)](../runbooks/rb-pve-remove-node.md)
+- [Cụm lab ClusterTamm: từ HEALTH_ERR về HEALTH_OK](../cases/ceph/clustertamm-su-co-2026-11.md)
 - [PG inconsistent / scrub errors](../cases/ceph/pg-inconsistent.md)
 - [Ceph nearfull / full / pool đầy](../cases/ceph/nearfull-full.md)
 - [OSD down hoặc up/down liên tục (flapping)](../cases/ceph/osd-down-flapping.md)

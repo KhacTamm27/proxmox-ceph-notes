@@ -3652,5 +3652,65 @@
     "u": "https://pve.proxmox.com/pve-docs/pve-admin-guide.html"
    }
   ]
+ },
+ {
+  "id": "clustertamm-su-co-2026-11",
+  "scope": "ceph",
+  "title": "Cụm lab ClusterTamm: từ HEALTH_ERR về HEALTH_OK",
+  "tags": "ceph clustertamm health err health ok cephx aes aes256k insecure key auth insecure mon_host recovery_wait pg repair pg inconsistent osd crash bluefs rados permission denied no mon quorum scrubbing",
+  "topics": [
+   "ceph",
+   "cluster"
+  ],
+  "symptoms": "HEALTH_ERR, 1 monitor, insecure key types, PG inconsistent.",
+  "causes": "Cờ bảo trì quên tắt, PG inconsistent, cấu hình/key monitor lệch, key cephx còn aes cũ, RGW/VM dùng key khác và osd.0 còn crash BlueFS.",
+  "steps": [
+   {
+    "t": "Kiểm tra và gỡ cờ bảo trì, recovery và scrub",
+    "cmds": [
+     "ceph osd df",
+     "ceph osd unset norecover",
+     "ceph osd unset nobackfill",
+     "ceph osd unset norebalance",
+     "ceph osd unset noscrub",
+     "ceph osd unset nodeep-scrub",
+     "ceph osd unset noout"
+    ]
+   },
+   {
+    "t": "Repair PG inconsistent",
+    "cmds": [
+     "ceph health detail",
+     "ceph pg repair 15.19"
+    ]
+   },
+   {
+    "t": "Đồng bộ monitor và key cephx",
+    "cmds": [
+     "ceph mon stat",
+     "ceph auth get mon.",
+     "pveceph auth status"
+    ]
+   },
+   {
+    "t": "Thử thay key aes bằng aes256k và hạn chế cipher",
+    "cmds": [
+     "/usr/share/pve-manager/migrations/pve-cephx-rotate-service-keys",
+     "ceph -s"
+    ]
+   },
+   {
+    "t": "Kiểm tra OSD crash và BlueFS",
+    "cmds": [
+     "ceph-bluestore-tool fsck --path /var/lib/ceph/osd/ceph-0",
+     "systemctl status ceph-osd@0"
+    ]
+   }
+  ],
+  "notes": "Xem case đầy đủ để rõ thứ tự xử lý từng thành phần. Với cụm thực tế, chỉ thay key/cipher sau khi đã dò hết client và bản sao key; cấm aes có thể làm client cũ mất kết nối ngay.",
+  "markdown": "docs/cases/ceph/clustertamm-su-co-2026-11.md",
+  "attachments": [
+   "docs/cases/ceph/img/clustertamm-truoc-sau.svg"
+  ]
  }
 ]

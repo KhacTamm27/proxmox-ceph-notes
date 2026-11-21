@@ -51,6 +51,7 @@ Tài liệu cá nhân: 499 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệ
 | [Nâng cấp Ceph trên Proxmox (ví dụ Reef lên Squid)](docs/cases/ceph/ceph-upgrade-pve.md) | Cần nâng cấp phiên bản Ceph mà không làm gián đoạn VM; sau nâng cấp có cảnh báo require-osd-release. |
 | [Cờ bảo trì Ceph còn sót sau bảo trì (noout, noscrub, norecover...)](docs/cases/ceph/maintenance-flags-left.md) | HEALTH_WARN "noout,nobackfill,norecover,norebalance,noscrub,nodeep-scrub flag(s) set", PG không recover, cảnh báo scrub quá hạn. |
 | [CephFS: MDS failover khi restart hoặc nâng cấp (max_mds lớn hơn 1)](docs/cases/ceph/cephfs-mds-restart.md) | Restart ceph-mds.target hoặc nâng cấp làm CephFS gián đoạn ngắn, trạng thái MDS tạm là replay, reconnect hoặc rejoin. |
+| [Cụm lab ClusterTamm: từ HEALTH_ERR về HEALTH_OK](docs/cases/ceph/clustertamm-su-co-2026-11.md) | HEALTH_ERR, 1 monitor, insecure key types, PG inconsistent. |
 
 ## Case study Proxmox cluster (lỗi và cách xử lý)
 

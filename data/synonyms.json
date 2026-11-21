@@ -58,5 +58,10 @@
   ["giám sát", "theo dõi", "monitoring", "monitor"],
   ["cảnh báo", "alert", "alerting", "alertmanager"],
   ["upload", "tải lên"],
-  ["passthrough", "pci passthrough", "gpu passthrough", "iommu", "vfio"]
+  ["passthrough", "pci passthrough", "gpu passthrough", "iommu", "vfio"],
+  ["auth insecure", "AUTH_INSECURE", "insecure key", "insecure key types", "key không an toàn", "cipher không an toàn"],
+  ["rados permission denied", "RADOS permission denied", "handle_auth_bad_method", "permission denied ceph", "ceph authentication denied"],
+  ["pg inconsistent", "pg inconsistent", "scrub error", "scrub errors", "khong khop ban sao", "không khớp bản sao"],
+  ["recovery wait", "recovery_wait", "pg recovery wait", "pg treo recovery"],
+  ["aes256k", "rotate cephx", "rotate key", "cephx key", "cephx aes"]
 ]

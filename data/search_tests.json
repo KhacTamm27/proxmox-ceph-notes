@@ -60,5 +60,10 @@
  {"q": "nginx cache s3", "top_guide": "s3-nginx-cache-proxy"},
  {"q": "openresty build", "top_guide": "s3-nginx-cache-proxy"},
  {"q": "s3cmd path-style", "top_guide": "s3-nginx-cache-proxy"},
- {"q": "x-cache-status hit miss", "top_guide": "s3-nginx-cache-proxy"}
+ {"q": "x-cache-status hit miss", "top_guide": "s3-nginx-cache-proxy"},
+ {"q": "RADOS permission denied", "top_case": "clustertamm-su-co-2026-11"},
+ {"q": "AUTH_INSECURE", "top_case": "clustertamm-su-co-2026-11"},
+ {"q": "aes256k", "top_case": "clustertamm-su-co-2026-11"},
+ {"q": "mon_host recovery_wait", "top_case": "clustertamm-su-co-2026-11"},
+ {"q": "pg repair BlueFS", "top_case": "clustertamm-su-co-2026-11"}
 ]

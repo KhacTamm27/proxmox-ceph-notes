@@ -95,6 +95,7 @@ ceph osd reweight-by-utilization
 - [Cờ bảo trì Ceph còn sót sau bảo trì (noout, noscrub, norecover...)](../cases/ceph/maintenance-flags-left.md)
 - [Nâng cấp Ceph Quincy 17.2.8 → Reef 18.2.8 → Squid 19.2.4 trên PVE 8.4 (3 node, có CephFS)](../runbooks/rb-ceph-upgrade-quincy-reef-squid.md)
 - [Bảo trì production: tắt HA và đặt cờ bảo trì Ceph trước khi tắt node](../runbooks/rb-prod-maintenance.md)
+- [Cụm lab ClusterTamm: từ HEALTH_ERR về HEALTH_OK](../cases/ceph/clustertamm-su-co-2026-11.md)
 - [Thêm OSD hoặc node mới làm chậm production](../cases/ceph/add-osd-throttle.md)
 - [Slow ops / blocked requests (Ceph chậm, IO bị chặn)](../cases/ceph/slow-ops.md)
 - [Thay đĩa OSD hỏng](../cases/ceph/osd-replace-disk.md)
