@@ -33,7 +33,9 @@ a{color:var(--brand)}
 h1{max-width:760px;margin:0;font-size:clamp(30px,4vw,48px);line-height:1.12;letter-spacing:-.045em}
 .hero-copy{max-width:700px;margin:15px 0 0;color:var(--muted);font-size:16px}
 .stats{display:grid;grid-template-columns:repeat(2,minmax(84px,1fr));gap:8px;min-width:210px}
-.stat{padding:11px 13px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.stat{padding:11px 13px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:inherit;text-align:left;transition:transform .15s,border-color .15s,box-shadow .15s}
+.stat:hover{transform:translateY(-2px);border-color:var(--brand);box-shadow:var(--shadow)}
+.stat-case-choices{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
 .stat strong{display:block;font-size:20px;line-height:1.2}
 .stat span{color:var(--muted);font-size:11px}
 .search-panel{position:relative;margin-top:28px;padding:8px;border:1px solid var(--line);border-radius:16px;background:var(--panel);box-shadow:var(--shadow)}
@@ -195,10 +197,10 @@ details.case ol li{padding:7px 0}
       <p class="hero-copy">Tìm lệnh, xử lý sự cố hoặc xem hướng dẫn cấu hình. Có thể tìm bằng tiếng Việt, tiếng Anh hay tên lệnh.</p>
     </div>
     <div class="stats" aria-label="Thống kê thư viện">
-      <div class="stat"><strong id="stat-commands">—</strong><span>lệnh</span></div>
-      <div class="stat"><strong id="stat-cases">—</strong><span>case</span></div>
-      <div class="stat"><strong id="stat-runbooks">—</strong><span>runbook</span></div>
-      <div class="stat"><strong id="stat-scripts">—</strong><span>script</span></div>
+      <button class="stat" type="button" data-stat="commands"><strong id="stat-commands">—</strong><span>lệnh</span></button>
+      <button class="stat" type="button" data-stat="cases" aria-controls="stat-case-choices"><strong id="stat-cases">—</strong><span>case</span></button>
+      <button class="stat" type="button" data-stat="runbooks"><strong id="stat-runbooks">—</strong><span>runbook</span></button>
+      <button class="stat" type="button" data-stat="scripts"><strong id="stat-scripts">—</strong><span>script</span></button>
     </div>
   </div>
   <div class="search-panel">
@@ -212,6 +214,11 @@ details.case ol li{padding:7px 0}
   <div class="quick-searches" id="chips" aria-label="Từ khóa gợi ý"></div>
   <div class="topic-row" id="topics" aria-label="Lọc theo chủ đề"><button id="topic-toggle" class="topic-toggle" type="button" aria-expanded="false">Chủ đề ▾</button></div>
 </section>
+<div id="stat-case-choices" class="stat-case-choices" hidden>
+  <strong>Chọn mục case:</strong>
+  <button class="pbtn" type="button" data-case-tab="pve">Case Proxmox</button>
+  <button class="pbtn" type="button" data-case-tab="ceph">Case Ceph</button>
+</div>
 <main class="pagewrap">
 <section class="start-section" aria-labelledby="start-heading">
   <div class="section-heading"><div><h2 id="start-heading">Bạn muốn làm gì?</h2><p>Chọn một lối đi nhanh, hoặc tìm kiếm theo vấn đề đang gặp.</p></div></div>
@@ -435,6 +442,20 @@ $('#tabpve').addEventListener('click',()=>show('pve',true));
 $('#tabrun').addEventListener('click',()=>show('run',true));
 $('#tabscr').addEventListener('click',()=>show('scr',true));
 $('#tabguide').addEventListener('click',()=>show('guide',true));
+document.querySelectorAll('.stat[data-stat]').forEach(button=>button.addEventListener('click',()=>{
+  const destination=button.dataset.stat;
+  if(destination==='cases'){
+    const choices=$('#stat-case-choices');
+    choices.hidden=!choices.hidden;
+    if(!choices.hidden)choices.scrollIntoView({block:'nearest',behavior:'smooth'});
+    return;
+  }
+  show(destination==='commands'?'map':destination==='runbooks'?'run':'scr',true);
+}));
+document.querySelectorAll('[data-case-tab]').forEach(button=>button.addEventListener('click',()=>{
+  show(button.dataset.caseTab,true);
+  $('#stat-case-choices').hidden=true;
+}));
 function renderTriage(hit){
   const item=hit.item,d=el('details','triage-card');d.open=true;
   const summary=el('summary');summary.append(document.createTextNode('Bắt đầu chẩn đoán: '+item.title),el('small',null,'Hướng dẫn theo bước · '+(item.scope==='mixed'?'chọn đúng backend':item.scope==='pve'?'Proxmox':'Ceph')));
