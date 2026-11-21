@@ -241,7 +241,7 @@ details.case ol li{padding:7px 0}
   </div>
   <div class="learn-note"><strong>Mới bắt đầu?</strong><span>Trước khi chạy lệnh trên cluster thật, đọc phần mô tả và lưu ý an toàn. Lệnh có cảnh báo màu đỏ có thể làm gián đoạn dịch vụ hoặc thay đổi dữ liệu.</span></div>
 </section>
-<div class="content-nav" aria-label="Điều hướng thư viện lệnh">
+<div id="command-nav" class="content-nav" aria-label="Điều hướng thư viện lệnh">
   <span class="navlabel">Nhóm lệnh</span>
   <nav id="jump" aria-label="Nhảy tới nhóm"></nav>
   <span class="spacer"></span>
@@ -446,6 +446,7 @@ function show(tab,focus=false,navigate=false){
   map.hidden=tab!=='map';Object.keys(secs).forEach(k=>{secs[k].hidden=tab!==k});
   [['map','#tabmap'],['ceph','#tabceph'],['pve','#tabpve'],['run','#tabrun'],['scr','#tabscr'],['guide','#tabguide']].forEach(([k,id])=>$(id).setAttribute('aria-pressed',String(tab===k)));
   $('#expand').hidden=$('#collapse').hidden=tab!=='map';
+  $('#command-nav').hidden=tab!=='map';
   document.body.classList.toggle('section-view',tab!=='map');
   $('#page-context').hidden=tab==='map';
   $('#section-crumb').textContent=TAB_LABEL[tab]||TAB_LABEL.map;
