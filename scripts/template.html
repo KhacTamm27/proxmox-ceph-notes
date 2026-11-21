@@ -44,6 +44,9 @@ h1{max-width:760px;margin:0;font-size:clamp(30px,4vw,48px);line-height:1.12;lett
 .search-hint{margin:0 10px;padding:4px 7px;border:1px solid var(--line);border-radius:6px;color:var(--muted);font-size:11px;white-space:nowrap}
 .search-help{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:2px 12px 6px;color:var(--muted);font-size:12px}
 .quick-searches{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.quick-searches:not(.expanded) .extra-chip{display:none}
+.more-chips,.topic-toggle{padding:5px 10px;border:1px dashed var(--line);border-radius:999px;background:transparent;color:var(--brand);font-size:12px}
+.more-chips:hover,.topic-toggle:hover{border-color:var(--brand);background:var(--brand-soft)}
 .chip{padding:5px 10px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--muted);font-size:12px;transition:background .15s,border-color .15s,color .15s}
 .chip:hover{border-color:var(--brand);background:var(--brand-soft);color:var(--brand)}
 .start-section,.content-section{margin:20px 0 36px}
@@ -158,7 +161,7 @@ details.case ol li{padding:7px 0}
 .guide-toc li.sub{list-style:circle;margin-left:14px;font-size:13px}
 @media(max-width:620px){.guide-toc{columns:1}}
 .topic-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:10px}
-.topic-row .navlabel{font-size:12px;color:var(--muted);margin-right:2px}
+.topic-row:not(.expanded) .chip:not([aria-pressed=true]){display:none}
 .chip[aria-pressed=true]{border-color:var(--brand);background:var(--brand);color:#fff}
 .tag{display:inline-block;margin-left:6px;padding:0 6px;border-radius:999px;font-size:11px;font-weight:650;vertical-align:1px;white-space:nowrap}
 .tag.ro{background:var(--ceph-soft);color:var(--ceph)}
@@ -207,7 +210,7 @@ details.case ol li{padding:7px 0}
     <div class="search-help"><span>Tìm đồng thời trong lệnh, mô tả, từ khóa, case, bài viết và hướng dẫn. Chọn chủ đề để thu hẹp.</span><span>Nhấn Esc để xóa nội dung tìm kiếm.</span></div>
   </div>
   <div class="quick-searches" id="chips" aria-label="Từ khóa gợi ý"></div>
-  <div class="topic-row" id="topics" aria-label="Lọc theo chủ đề"><span class="navlabel">Chủ đề:</span></div>
+  <div class="topic-row" id="topics" aria-label="Lọc theo chủ đề"><button id="topic-toggle" class="topic-toggle" type="button" aria-expanded="false">Chủ đề ▾</button></div>
 </section>
 <main class="pagewrap">
 <section class="start-section" aria-labelledby="start-heading">
@@ -506,9 +509,25 @@ function renderResults(v,r){
   }
   res.hidden=false;
 }
-['VM crash','VM không start','storage chậm','mất quorum','OSD latency','network LACP','VLAN trunk','RGW 503','scrub lỗi','storage đầy','kiểm tra host'].forEach(x=>{
+const chipToggle=el('button','more-chips','Thêm gợi ý');chipToggle.type='button';chipToggle.setAttribute('aria-expanded','false');
+['VM crash','VM không start','storage chậm','mất quorum','OSD latency','network LACP','VLAN trunk','RGW 503','scrub lỗi','storage đầy','kiểm tra host'].forEach((x,i)=>{
   const b=el('button','chip',x);b.type='button';
+  if(i>=8)b.classList.add('extra-chip');
   b.addEventListener('click',()=>{q.value=x;q.dispatchEvent(new Event('input'))});$('#chips').append(b)});
+$('#chips').append(chipToggle);
+chipToggle.addEventListener('click',()=>{
+  const expanded=$('#chips').classList.toggle('expanded');
+  chipToggle.textContent=expanded?'Thu gọn':'Thêm gợi ý';
+  chipToggle.setAttribute('aria-expanded',String(expanded));
+});
+(function(){
+  const toggle=$('#topic-toggle'),row=$('#topics');
+  toggle.addEventListener('click',()=>{
+    const expanded=row.classList.toggle('expanded');
+    toggle.textContent=expanded?'Chủ đề ▴':'Chủ đề ▾';
+    toggle.setAttribute('aria-expanded',String(expanded));
+  });
+})();
 (TOPICS.topics||[]).forEach(t=>{
   const b=el('button','chip',t.name);b.type='button';b.dataset.topic=t.id;b.setAttribute('aria-pressed','false');
   b.addEventListener('click',()=>setTopic(t.id));$('#topics').append(b)});
