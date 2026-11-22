@@ -363,6 +363,7 @@ for c in cases:
     c.pop("_attachments", None)
 tpl = (ROOT / "scripts/template.html").read_text(encoding="utf-8")
 search_js = (ROOT / "scripts/search.js").read_text(encoding="utf-8")
+risk_js = (ROOT / "scripts/risk.js").read_text(encoding="utf-8")
 v6_styles = []
 for prototype in sorted((ROOT / "prototype/ui-v6").glob("*.html")):
     source = prototype.read_text(encoding="utf-8")
@@ -405,6 +406,7 @@ for g in guides:
     dates[g["id"]] = g.get("updated") or file_dates.get(g["file"], _head)
 build_date = max([_head, *dates.values()])
 html = (tpl.replace("/*__SEARCH_JS__*/", search_js)
+           .replace("/*__RISK_JS__*/", risk_js)
            .replace("/*__SYNONYMS__*/[]", json.dumps(synonyms, ensure_ascii=False))
            .replace("/*__DATA__*/null", json.dumps(data, ensure_ascii=False))
            .replace("/*__COMMAND_RISK__*/{}", json.dumps(command_risk, ensure_ascii=False).replace("</", "<\\/"))

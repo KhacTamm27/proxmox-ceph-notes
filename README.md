@@ -2,6 +2,8 @@
 
 Tài liệu cá nhân: 499 lệnh, 32 nhóm. Lệnh có ⚠ (23 lệnh) là lệnh phá hủy hoặc ảnh hưởng dịch vụ, đọc kỹ trước khi chạy.
 
+**Mindmap tương tác (lọc lệnh, mở thẳng từng mục):** https://KhacTamm27.github.io/proxmox-ceph-notes/
+
 ## Trạng thái dự án
 
 - Prototype đang ở Phase 2 pilot: backend chỉ đọc đã cài trên VM và chỉ gọi API khi operator chủ động yêu cầu.
@@ -189,7 +191,7 @@ Giúp người khác tìm được bài mới:
 Sau khi sửa, chạy (kiểm thử tìm kiếm cần Node.js):
 
 ```bash
-python3 scripts/build.py --repo <user>/<repo>
+python3 scripts/build.py --repo KhacTamm27/proxmox-ceph-notes
 ```
 
 Lệnh trên sinh lại README này, `docs/proxmox`, `docs/ceph`, `docs/cases`, `docs/runbooks`, `docs/scripts`, `docs/index.html` và `prototype/index.html`. Thư mục `docs/guides/` là bài viết tay, build chỉ đọc, không ghi đè.

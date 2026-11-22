@@ -1,71 +1,71 @@
 {
   "rb-ceph-upgrade-quincy-reef-squid": {
     "group": "Nâng cấp",
-    "duration": "~30 phút",
+    "duration": "4–6 giờ (2 vòng)",
     "risk": "cao",
-    "downtime": "Có",
+    "downtime": "Không (VM chạy tiếp, CephFS chuyển MDS vài giây)",
     "steps": 12
   },
   "rb-prod-maintenance": {
     "group": "Bảo trì",
-    "duration": "~30 phút",
+    "duration": "1–2 giờ/node",
     "risk": "tb",
     "downtime": "Có",
     "steps": 8
   },
   "rb-pbs-s3-datastore": {
     "group": "ZFS",
-    "duration": "~30 phút",
+    "duration": "~1 giờ",
     "risk": "tb",
     "downtime": "Không",
     "steps": 5
   },
   "rb-pve5-to-8-single": {
     "group": "Nâng cấp",
-    "duration": "~30 phút",
+    "duration": "4–8 giờ",
     "risk": "cao",
     "downtime": "Có",
     "steps": 9
   },
   "rb-san-iscsi-shared-lvm": {
     "group": "Storage",
-    "duration": "~30 phút",
+    "duration": "3–4 giờ + thời gian pvmove",
     "risk": "tb",
     "downtime": "Không",
     "steps": 11
   },
   "rb-nas-nfs-storage": {
     "group": "Storage",
-    "duration": "~30 phút",
-    "risk": "tb",
+    "duration": "30–60 phút",
+    "risk": "thap",
     "downtime": "Không",
     "steps": 4
   },
   "rb-console-proxy-nginx": {
     "group": "Console",
-    "duration": "~30 phút",
+    "duration": "2–3 giờ",
     "risk": "tb",
     "downtime": "Không",
     "steps": 10
   },
   "rb-console-ticket-debug": {
     "group": "Console",
-    "duration": "~30 phút",
-    "risk": "tb",
+    "duration": "30–60 phút",
+    "risk": "thap",
     "downtime": "Không",
     "steps": 7
   },
   "rb-zfs-vdev-layout": {
     "group": "ZFS",
-    "duration": "~30 phút",
+    "duration": "~1 giờ",
     "risk": "tb",
     "downtime": "Không",
     "steps": 4
   },
   "rb-zfs-raidz-expansion": {
     "group": "ZFS",
-    "duration": "~30 phút",
-    "risk": "tb",
+    "duration": "30 phút + vài giờ–ngày chờ mở rộng",
+    "risk": "cao",
     "downtime": "Không",
     "steps": 4
   },
@@ -73,63 +73,63 @@
     "group": "ZFS",
     "duration": "~30 phút",
     "risk": "cao",
-    "downtime": "Có",
+    "downtime": "Không",
     "steps": 4
   },
   "rb-zfs-rpool-replace": {
     "group": "ZFS",
-    "duration": "~30 phút",
+    "duration": "1–2 giờ + resilver",
     "risk": "cao",
-    "downtime": "Có",
+    "downtime": "Có (reboot kiểm tra boot)",
     "steps": 4
   },
   "rb-pve-zfs-replication": {
     "group": "ZFS",
-    "duration": "~30 phút",
+    "duration": "1–2 giờ + lần đồng bộ đầu",
     "risk": "tb",
-    "downtime": "Không",
+    "downtime": "Có (khi diễn tập khôi phục)",
     "steps": 4
   },
   "rb-p2v-linux": {
     "group": "Di chuyển VM",
-    "duration": "~30 phút",
+    "duration": "2–6 giờ tùy dung lượng",
     "risk": "tb",
-    "downtime": "Không",
+    "downtime": "Có (khi chuyển hẳn)",
     "steps": 4
   },
   "rb-p2v-windows": {
     "group": "Di chuyển VM",
-    "duration": "~30 phút",
+    "duration": "3–6 giờ",
     "risk": "tb",
-    "downtime": "Không",
+    "downtime": "Có (khi chuyển hẳn)",
     "steps": 5
   },
   "rb-v2v-hyperv": {
     "group": "Di chuyển VM",
-    "duration": "~30 phút",
-    "risk": "thap",
+    "duration": "2–4 giờ/VM",
+    "risk": "tb",
     "downtime": "Có",
     "steps": 5
   },
   "rb-v2v-esxi": {
     "group": "ZFS",
-    "duration": "~30 phút",
-    "risk": "cao",
-    "downtime": "Không",
+    "duration": "2–4 giờ/VM",
+    "risk": "tb",
+    "downtime": "Có",
     "steps": 5
   },
   "rb-pve-cross-cluster-migrate": {
     "group": "Storage",
-    "duration": "~30 phút",
+    "duration": "1–3 giờ",
     "risk": "tb",
-    "downtime": "Có",
+    "downtime": "Có (ngắn, khi chuyển hẳn)",
     "steps": 5
   },
   "rb-pve-remove-node": {
     "group": "Di chuyển VM",
-    "duration": "~30 phút",
-    "risk": "tb",
-    "downtime": "Có",
+    "duration": "2–4 giờ",
+    "risk": "cao",
+    "downtime": "Không (VM migrate trước)",
     "steps": 5
   }
 }

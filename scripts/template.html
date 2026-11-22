@@ -32,6 +32,20 @@ html{scroll-behavior:smooth;overflow-x:hidden}
 .pall{cursor:pointer}
 .lst li a span:first-child{min-width:0}
 .side .dot{flex:none}
+/* Header: menu không xuống dòng; 1001–1279px thu ô tìm kiếm thành icon + Ctrl K */
+.nav a,.lt,.sbtn{white-space:nowrap}
+.nav{flex:none}
+@media(min-width:1001px) and (max-width:1279px){
+  .hrow{gap:14px}
+  .nav{gap:2px}
+  .nav a{padding:7px 9px}
+  .sbtn{width:auto}
+  .sbtn span{display:none}
+  .sbtn kbd{margin-left:2px}
+}
+/* Trang chi tiết: nhóm nút Ghim/In/Copy link nằm dưới hàng nhãn để tiêu đề dùng hết bề ngang */
+.dh>div:first-child{flex:1;min-width:0}
+.dh .dact{margin-top:14px}
 @media(max-width:1000px){
   .in{padding:0 16px}
   .hrow{height:auto;flex-wrap:wrap;gap:8px 12px;padding-top:8px;padding-bottom:8px}
@@ -76,6 +90,7 @@ html{scroll-behavior:smooth;overflow-x:hidden}
 <div class="ov" id="ov" hidden><div class="pal"><div class="pin"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="pq" placeholder="Dán câu lỗi hoặc gõ triệu chứng… (có dấu/không dấu)" autocomplete="off"><kbd>Esc</kbd></div>
 <div class="pbody"><div class="pres" id="pres"></div><div class="pprev" id="pprev"></div></div><div class="pfoot"><span>↑↓ chọn</span><span>Enter mở</span><span>Esc đóng</span><span id="pcount" class="pc"></span></div></div></div>
 <script>/*__SEARCH_JS__*/</script>
+<script>/*__RISK_JS__*/</script>
 <script>
 const DATA=/*__DATA__*/null,CASES=/*__CASES__*/[],CASE_META=/*__CASE_META__*/{},COMMAND_RISK=/*__COMMAND_RISK__*/{},RUNBOOK_META=/*__RUNBOOK_META__*/{},HEALTH=/*__HEALTH_CODES__*/{},SCRIPTS=/*__SCRIPTS__*/[],GUIDES=/*__GUIDES__*/[],TRIAGE=/*__TRIAGE__*/[],SYNONYMS=/*__SYNONYMS__*/[],TOPICS=/*__TOPICS__*/{},LABELS=/*__LABELS__*/{},DATES=/*__DATES__*/{},REPO="/*__REPO__*/",BUILD="/*__BUILD_DATE__*/";
 const ENGINE=createSearch(SYNONYMS),INDEX=createIndex(ENGINE,{DATA,CASES,SCRIPTS,TRIAGE,GUIDES,TOPICS,LABELS});
@@ -109,7 +124,7 @@ const issueCases=CASES.filter(c=>c.kind!=='runbook'),runCases=CASES.filter(c=>c.
 const sevOf=id=>SEV[(CASE_META[id]||{}).severity]||'info',grpOf=id=>(CASE_META[id]||{}).group||'Khác';
 const scopeN=c=>c.scope==='ceph'?'Ceph':'Proxmox';
 const hrefOf=c=>(c.kind==='runbook'?'#runbook/':'#case/')+c.id;
-const cmdRisk=c=>COMMAND_RISK[c]||'chg';
+const cmdRisk=c=>COMMAND_RISK[c]||autoRisk(c);
 const BN=b=>(LABELS.branches||{})[b.id]||b.name,SN=n=>(LABELS.subs||{})[n]||n;
 const nc=ch=>ch.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d')||ch;
 const norm=s=>[...String(s||'')].map(c=>nc(c)[0]||c).join('');
@@ -277,7 +292,7 @@ function pCase(id){
   const cmds=(c.steps||[]).flatMap(x=>x.cmds||[]);
   return `<div class="in lay"><aside class="side no-print"><div class="sl">Cùng nhóm · ${esc(g)}</div>${same.map(x=>sideA(x.title,null,x.id===id,`href="${hrefOf(x)}"`,null,sevOf(x.id))).join('')}${relShow.length?`<div class="sl">Liên quan</div>${relShow.map(x=>sideA(x.title,null,false,`href="${hrefOf(x)}"`,'book')).join('')}`:''}</aside>
 <main class="mn doc">${crumb([['Trang chủ','#home'],['Sự cố','#cases'],[scopeN(c),'#cases-'+c.scope],[g,'#cases-g:'+encodeURIComponent(g)]])}
-<div class="dh"><div><h1>${esc(c.title)}</h1><div class="dmeta"><span class="sev ${s}">${SEVN[s]}</span><span class="pf">${scopeN(c)}</span><span class="pf">${esc(g)}</span>${m.applies_to?`<span>Áp dụng: ${esc(m.applies_to)}</span>`:''}${m.verified?`<span>${ic('check','s')} Đã kiểm chứng trên lab</span>`:''}${DATES[id]?`<span>Cập nhật ${fmtD(DATES[id])}</span>`:''}</div></div>${actions(c,true)}</div>
+<div class="dh"><div><h1>${esc(c.title)}</h1><div class="dmeta"><span class="sev ${s}">${SEVN[s]}</span><span class="pf">${scopeN(c)}</span><span class="pf">${esc(g)}</span>${m.applies_to?`<span>Áp dụng: ${esc(m.applies_to)}</span>`:''}${m.verified?`<span>${ic('check','s')} Đã kiểm chứng trên lab</span>`:''}${DATES[id]?`<span>Cập nhật ${fmtD(DATES[id])}</span>`:''}</div>${actions(c,true)}</div></div>
 ${varsBox(cmds)}${body}${c.tags?`<div class="kw"><b>Từ khóa:</b> ${esc(c.tags)}</div>`:''}${contrib(c)}</main>
 <aside class="rail no-print"><div class="rl">Trên trang này</div><nav class="toc">${sections.map(([i,l])=>`<a data-act="go" data-id="${i}">${l}</a>`).join('')}</nav>${ctaRisk}</aside></div>`}
 /* ================= CHI TIẾT RUNBOOK ================= */
@@ -294,7 +309,7 @@ function pRunbook(id){
   const cmds=steps.flatMap(x=>x.cmds||[]);
   return `<div class="in lay"><aside class="side no-print"><div class="sl">${esc(g)}</div>${same.map(x=>sideA(x.title,null,x.id===id,`href="${hrefOf(x)}"`,RB_ICON[g]||'file')).join('')}</aside>
 <main class="mn doc" data-runbook="${esc(id)}">${crumb([['Trang chủ','#home'],['Quy trình','#cases-run'],[g]])}
-<div class="dh"><div><h1>${esc(c.title)}</h1><div class="dmeta"><span class="rk2 ${r[0]}">${r[1]}</span>${DATES[id]?`<span>Cập nhật ${fmtD(DATES[id])}</span>`:''}</div></div>${actions(c,true)}</div>
+<div class="dh"><div><h1>${esc(c.title)}</h1><div class="dmeta"><span class="rk2 ${r[0]}">${r[1]}</span>${DATES[id]?`<span>Cập nhật ${fmtD(DATES[id])}</span>`:''}</div>${actions(c,true)}</div></div>
 ${c.goal?`<p class="sub2" style="margin-top:12px">${esc(c.goal)}</p>`:''}
 <div class="rbm"><div><span>Thời gian</span><b>${esc(m.duration||'—')}</b></div><div><span>Rủi ro</span><b${m.risk!=='thap'?' class="wtx"':''}>${r[2]}</b></div><div><span>Downtime</span><b>${esc(m.downtime||'Không')}</b></div><div><span>Số bước</span><b>${steps.length}</b></div></div>
 ${c.prereq?`<div class="callout warn" style="margin-top:16px">${ic('warn','s')}<div><b>Điều kiện trước khi làm:</b> ${esc(c.prereq)}</div></div>`:''}
