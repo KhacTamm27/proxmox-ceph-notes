@@ -5,9 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Proxmox + Ceph | Tra cứu vận hành</title>
 <meta name="description" content="Tra cứu lệnh, hướng dẫn xử lý sự cố, cấu hình mạng và runbook Proxmox VE + Ceph bằng tiếng Việt hoặc tiếng Anh.">
+<script>
+try{
+  const savedTheme=localStorage.getItem('pc-theme');
+  if(savedTheme==='light'||savedTheme==='dark')document.documentElement.dataset.theme=savedTheme;
+}catch(error){}
+</script>
 <style>
-:root{color-scheme:light;--bg:#f4f7fb;--panel:#fff;--panel-2:#f8fafc;--ink:#182230;--muted:#64748b;--line:#dce4ee;--brand:#2457d6;--brand-soft:#eaf0ff;--pve:#b45309;--pve-soft:#fff3e5;--ceph:#087e8b;--ceph-soft:#e7f7f8;--danger:#b42318;--warning:#fff7e6;--shadow:0 12px 32px rgba(24,34,48,.07)}
-@media(prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#0d1420;--panel:#141e2b;--panel-2:#192536;--ink:#e8eef7;--muted:#a7b4c5;--line:#2b394b;--brand:#8facff;--brand-soft:#202e4a;--pve:#ffb66e;--pve-soft:#35271b;--ceph:#6bd5d5;--ceph-soft:#173137;--danger:#ff938a;--warning:#332b19;--shadow:0 12px 32px rgba(0,0,0,.22)}}
+:root{color-scheme:light;--bg:#fff;--panel:#fff;--panel-2:#f6f8fa;--ink:#1f2328;--muted:#59636e;--line:#d0d7de;--brand:#0969da;--brand-soft:#ddf4ff;--pve:var(--brand);--pve-soft:var(--brand-soft);--ceph:var(--brand);--ceph-soft:var(--brand-soft);--danger:#cf222e;--warning:#9a6700;--success:#1a7f37;--warning-bg:#fff8c5;--danger-bg:#ffebe9;--success-bg:#dafbe1;--shadow:0 2px 8px rgba(31,35,40,.12);--radius:6px}
+@media(prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#0d1117;--panel:#0d1117;--panel-2:#161b22;--ink:#e6edf3;--muted:#9da7b3;--line:#30363d;--brand:#58a6ff;--brand-soft:#1f3a5f;--pve:var(--brand);--pve-soft:var(--brand-soft);--ceph:var(--brand);--ceph-soft:var(--brand-soft);--danger:#ff7b72;--warning:#d29922;--success:#3fb950;--warning-bg:#2d2305;--danger-bg:#3d1518;--success-bg:#102a18;--shadow:0 2px 8px rgba(0,0,0,.35)}}
+:root[data-theme="light"]{color-scheme:light;--bg:#fff;--panel:#fff;--panel-2:#f6f8fa;--ink:#1f2328;--muted:#59636e;--line:#d0d7de;--brand:#0969da;--brand-soft:#ddf4ff;--pve:var(--brand);--pve-soft:var(--brand-soft);--ceph:var(--brand);--ceph-soft:var(--brand-soft);--danger:#cf222e;--warning:#9a6700;--success:#1a7f37;--warning-bg:#fff8c5;--danger-bg:#ffebe9;--success-bg:#dafbe1;--shadow:0 2px 8px rgba(31,35,40,.12)}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0d1117;--panel:#0d1117;--panel-2:#161b22;--ink:#e6edf3;--muted:#9da7b3;--line:#30363d;--brand:#58a6ff;--brand-soft:#1f3a5f;--pve:var(--brand);--pve-soft:var(--brand-soft);--ceph:var(--brand);--ceph-soft:var(--brand-soft);--danger:#ff7b72;--warning:#d29922;--success:#3fb950;--warning-bg:#2d2305;--danger-bg:#3d1518;--success-bg:#102a18;--shadow:0 2px 8px rgba(0,0,0,.35)}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-padding-top:92px}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
@@ -203,6 +211,126 @@ details.case ol li{padding:7px 0}
 .cref{margin-left:6px;font-size:12px;color:var(--brand);text-decoration:none}
 .subname small{color:var(--muted);font-weight:500;margin-left:6px}
 .browse-branches{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.top{height:56px;min-height:56px;padding:0 max(20px,calc((100vw - 1200px)/2));gap:16px;background:var(--panel);backdrop-filter:none}
+.brand{flex:none;gap:8px}
+.brandmark{width:auto;height:auto;background:none;color:var(--ink);font-size:14px;letter-spacing:0;border-radius:0}
+.brandname{white-space:nowrap}
+.brandname small{display:none}
+.tools{gap:2px;flex-wrap:nowrap}
+.tools .tab{padding:7px 9px;border-radius:var(--radius);font-size:12px}
+.header-search{flex:0 1 190px;min-width:110px}
+.header-search input{width:100%;height:34px;padding:5px 9px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel-2);color:var(--ink);font-size:13px}
+.header-search input::placeholder{color:var(--muted)}
+.theme-toggle{flex:none;padding:6px 9px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);font-size:12px}
+.theme-toggle:hover{border-color:var(--brand);color:var(--brand)}
+.hero,.pagewrap{width:min(1200px,calc(100% - 40px))}
+.hero{padding:34px 0 16px}
+.hero-grid{display:block}
+h1{max-width:none;font-size:28px;line-height:1.25;letter-spacing:-.02em}
+.eyebrow{margin-bottom:5px;font-size:11px}
+.hero-copy{display:none}
+.search-panel{margin-top:16px;padding:6px;border-color:var(--line);border-radius:var(--radius);box-shadow:none}
+.search-popover{border-radius:var(--radius);box-shadow:var(--shadow)}
+.search-help{padding:2px 8px 4px;font-size:11px}
+.search-help span:first-child{display:none}
+#q{padding:10px 4px;font-size:16px}
+.stats{display:flex;align-items:center;gap:7px;min-width:0;margin:8px 0 0;color:var(--muted);font-size:12px}
+.stat{display:inline;padding:0;border:0;border-radius:0;background:transparent;color:var(--brand);font-size:12px;text-align:left}
+.stat:hover{transform:none;border:0;box-shadow:none;text-decoration:underline}
+.stat strong{display:inline;font-size:12px;line-height:inherit}
+.stat span{font-size:12px}
+.quick-searches{gap:0;margin-top:8px;font-size:12px}
+#chips .chip{padding:0 8px;border:0;border-radius:0;background:transparent;color:var(--brand);font-size:12px;text-decoration:none}
+#chips .chip:not(:last-of-type):after{content:"·";padding-left:14px;color:var(--muted)}
+#chips .chip:hover{background:transparent;color:var(--ink);text-decoration:underline}
+#chips .extra-chip{display:none}
+#chips.expanded .extra-chip{display:inline-block}
+.more-chips,.topic-toggle{padding:0 6px;border:0;border-radius:0;background:transparent;font-size:12px}
+.topic-row{margin-top:5px}
+.topic-row .chip{padding:2px 7px;border-radius:var(--radius)}
+.start-section,.content-section{margin:18px 0 28px}
+.section-heading{margin-bottom:8px}
+.section-heading h2{font-size:18px;letter-spacing:0}
+.section-heading p{margin:2px 0 8px;font-size:12px}
+.path-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 24px}
+.path-card{display:flex;min-height:0;flex-direction:column;gap:2px;padding:10px 0;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent}
+.path-card:hover{transform:none;border-color:var(--line);box-shadow:none}
+.path-card strong{color:var(--brand);font-size:14px}
+.path-card span:last-child{margin:0;color:var(--muted);font-size:12px}
+.learn-note{display:flex;flex-direction:row;gap:8px;margin:12px 0 0;padding:9px 0;border:0;border-top:1px solid var(--line);border-radius:0;background:transparent;font-size:12px}
+.learn-note strong{white-space:nowrap}
+.popular-section{margin-top:18px}
+.popular-section h2{margin:0 0 5px;font-size:16px}
+#popular-links{display:flex;flex-wrap:wrap;gap:5px 14px}
+#popular-links a{font-size:13px;text-decoration:none}
+#popular-links a:hover{text-decoration:underline}
+.content-nav{background:var(--panel);backdrop-filter:none}
+.side{grid-template-columns:minmax(0,1fr);gap:0}
+.sidehead{margin:16px 0 0;padding:8px 0;border-bottom:1px solid var(--line);color:var(--muted)}
+.branch,.branch.left,.branch.right{border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;box-shadow:none}
+.branch:target{border-color:var(--line);box-shadow:none}
+.bhead{min-height:48px;padding:8px 0}
+.bid{display:none}
+.bname{flex:1;font-size:14px}
+.bcount{border-radius:var(--radius);background:var(--panel-2)}
+.bbody{padding:8px 0 14px;border-top:1px solid var(--line)}
+.subname{font-size:13px}
+.sub li{padding:9px 0}
+.sub code{padding:0;border-radius:0;background:transparent}
+.sub li.danger code{background:transparent;color:var(--ink)}
+.command-line,.command-block{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;max-width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel-2)}
+.command-line code,.command-block .cmdline{min-width:0;width:auto;max-width:100%;margin:0;padding:0;border:0;border-radius:0;background:transparent;color:var(--ink);font:12px/1.6 ui-monospace,"JetBrains Mono","SF Mono",Consolas,monospace}
+.copy-btn{flex:none;padding:3px 7px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);color:var(--muted);font-size:11px;line-height:1.4}
+.copy-btn:hover{border-color:var(--brand);color:var(--brand)}
+.why,.vi{font-size:12px}
+.casesec{display:grid;grid-template-columns:minmax(0,1fr);gap:0}
+.casesec>.section-heading{grid-column:1}
+details.case{overflow:visible;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent}
+details.case[open]{border-color:var(--line);box-shadow:none}
+details.case summary{min-height:0;padding:12px 0;font-size:14px}
+details.case>p,details.case>ol,details.case>.diagram,details.case>.note,details.case>.refs,details.case>.pbtn,details.case>.quick-reference,details.case>pre,details.case>.fpath{margin-inline:0}
+details.case>p{margin-top:3px}
+.cmdline{font:12px/1.6 ui-monospace,"JetBrains Mono","SF Mono",Consolas,monospace}
+.command-block{margin:5px 0}
+.command-block .cmdline{display:block}
+pre.code{border-radius:var(--radius);background:var(--panel-2)}
+#results{border-radius:var(--radius);box-shadow:none}
+.triage-card,.triage-step{border-radius:var(--radius);box-shadow:none}
+.triage-step{background:var(--panel-2)}
+.rrow{align-items:flex-start}
+.rrow>a{background:transparent;color:var(--muted);font-family:inherit}
+.tag.ro{background:var(--success-bg);color:var(--success)}
+.tag.danger{background:var(--danger-bg);color:var(--danger)}
+.brand,.tools .tab,.pbtn,.topic-toggle,.more-chips,.chip,.path-card,.stat,.search-popover,.command-line,.command-block,.copy-btn,.theme-toggle,details.case,.branch,.triage-card,.triage-step,.learn-note,.search-panel,#results{border-radius:var(--radius)}
+@media(max-width:900px){
+  .top{position:sticky;top:0;align-items:center;flex-direction:row;flex-wrap:wrap;height:auto;min-height:56px;padding:8px 16px;gap:8px}
+  .brand{order:0}
+  .header-search{order:1;margin-left:auto}
+  .theme-toggle{order:2}
+  .tools{order:3;flex:1 0 100%;justify-content:flex-start;overflow-x:auto}
+  .content-nav{top:0}
+  .path-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:620px){
+  .hero,.pagewrap{width:calc(100% - 28px)}
+  .hero{padding-top:22px}
+  .top{padding-inline:14px}
+  .brand{min-width:0}
+  .header-search{flex:1 1 90px;min-width:80px}
+  .theme-toggle{padding:5px 7px}
+  .tools{gap:1px}
+  .tools .tab{padding:6px 8px}
+  .path-grid{grid-template-columns:minmax(0,1fr)}
+  .path-card{padding:9px 0}
+  .side,.casesec{grid-template-columns:minmax(0,1fr)}
+  .sidehead,.casesec>.section-heading{grid-column:1}
+  .bbody{grid-template-columns:minmax(0,1fr)}
+  .section-heading{align-items:flex-start;flex-direction:column}
+  .learn-note{flex-direction:row}
+  .search-help{align-items:center;flex-direction:row}
+  .content-nav{padding-inline:8px}
+}
 </style>
 </head>
 <body>
@@ -216,29 +344,31 @@ details.case ol li{padding:7px 0}
 <button id="tabscr" class="tab" type="button" aria-pressed="false">Script</button>
 <button id="tabguide" class="tab" type="button" aria-pressed="false">Bài viết</button>
 </nav>
+<label class="header-search"><span class="sr-only">Tìm nhanh</span><input id="header-q" type="search" placeholder="Tìm nhanh…" aria-label="Tìm nhanh"></label>
+<button id="theme-toggle" class="theme-toggle" type="button" aria-label="Chuyển chế độ sáng hoặc tối">Giao diện: Tối</button>
 </header>
 <section class="hero" aria-labelledby="welcome-title">
   <div class="hero-grid">
     <div>
-      <p class="eyebrow">Sổ tay vận hành · Proxmox VE & Ceph</p>
-      <h1 id="welcome-title">Bắt đầu từ điều bạn đang cần làm</h1>
-      <p class="hero-copy">Tìm lệnh, xử lý sự cố hoặc xem hướng dẫn cấu hình. Có thể tìm bằng tiếng Việt, tiếng Anh hay tên lệnh.</p>
-    </div>
-    <div class="stats" aria-label="Thống kê thư viện">
-      <button class="stat" type="button" data-stat="commands"><strong id="stat-commands">—</strong><span>lệnh</span></button>
-      <button class="stat" type="button" data-stat="cases" aria-controls="stat-case-choices"><strong id="stat-cases">—</strong><span>case</span></button>
-      <button class="stat" type="button" data-stat="runbooks"><strong id="stat-runbooks">—</strong><span>runbook</span></button>
-      <button class="stat" type="button" data-stat="scripts"><strong id="stat-scripts">—</strong><span>script</span></button>
+      <p class="eyebrow">Proxmox VE · Ceph</p>
+      <h1 id="welcome-title">Tra cứu vận hành</h1>
     </div>
   </div>
   <div class="search-panel">
     <div class="search-row">
       <svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      <input id="q" type="search" placeholder="Ví dụ: mất quorum, OSD latency, LACP, ceph -s..." aria-label="Tìm lệnh, case, runbook và script">
+      <input id="q" type="search" placeholder="Tìm sự cố, lệnh hoặc thông báo lỗi…" aria-label="Tìm lệnh, case, runbook và script">
       <span class="search-hint">/ để tìm</span>
     </div>
-    <div class="search-help"><span>Tìm đồng thời trong lệnh, mô tả, từ khóa, case, bài viết và hướng dẫn. Chọn chủ đề để thu hẹp.</span><span>Nhấn Esc để xóa nội dung tìm kiếm.</span></div>
+    <div class="search-help"><span>Tìm tiếng Việt không dấu, tiếng Anh hoặc tên lệnh.</span><span>Esc để xóa</span></div>
     <div id="search-popover" class="search-popover" hidden aria-live="polite"></div>
+  </div>
+  <div class="stats" aria-label="Số lượng tài liệu">
+    <button class="stat" type="button" data-stat="commands"><strong id="stat-commands">—</strong> lệnh</button>
+    <span aria-hidden="true">·</span>
+    <button class="stat" type="button" data-stat="cases" aria-controls="stat-case-choices"><strong id="stat-cases">—</strong> sự cố</button>
+    <span aria-hidden="true">·</span>
+    <button class="stat" type="button" data-stat="runbooks"><strong id="stat-runbooks">—</strong> quy trình</button>
   </div>
   <div class="quick-searches" id="chips" aria-label="Từ khóa gợi ý"></div>
   <div class="topic-row" id="topics" aria-label="Lọc theo chủ đề"><button id="topic-toggle" class="topic-toggle" type="button" aria-expanded="false">Chủ đề ▾</button></div>
@@ -253,14 +383,27 @@ details.case ol li{padding:7px 0}
   <nav aria-label="Breadcrumb"><a id="home-crumb" href="#map">Trang chủ</a><span aria-hidden="true">›</span><span id="section-crumb" class="crumb-current"></span></nav>
 </div>
 <section class="start-section" aria-labelledby="start-heading">
-  <div class="section-heading"><div><h2 id="start-heading">Bạn muốn làm gì?</h2><p>Chọn một lối đi nhanh, hoặc tìm kiếm theo vấn đề đang gặp.</p></div></div>
+  <div class="section-heading"><div><h2 id="start-heading">Bạn muốn làm gì?</h2></div></div>
   <div class="path-grid">
-    <a class="path-card" href="#q"><span class="path-icon">⌕</span><strong>Tìm một lệnh</strong><span>Tra cứu theo tác vụ, tên lệnh hoặc từ khóa Việt/Anh.</span></a>
-    <a class="path-card" href="#cases-pve"><span class="path-icon">P</span><strong>Sửa lỗi Proxmox</strong><span>Quorum, VM, storage, network và vận hành cluster.</span></a>
-    <a class="path-card" href="#cases-ceph"><span class="path-icon">C</span><strong>Sửa lỗi Ceph</strong><span>Health, OSD, PG, pool, RGW/S3 và hiệu năng.</span></a>
-    <a class="path-card" href="#case-pve-network-bridge-bond-vlan"><span class="path-icon">↔</span><strong>Cấu hình Network</strong><span>OVS, Linux bridge, bond mode, LACP và VLAN trunk.</span></a>
+    <a class="path-card" href="#q"><strong>Tìm một lệnh</strong><span>Tra cứu theo tác vụ, tên lệnh hoặc từ khóa Việt/Anh.</span></a>
+    <a class="path-card" href="#cases-pve"><strong>Sửa lỗi Proxmox</strong><span>Quorum, VM, storage, network và vận hành cluster.</span></a>
+    <a class="path-card" href="#cases-ceph"><strong>Sửa lỗi Ceph</strong><span>Health, OSD, PG, pool, RGW/S3 và hiệu năng.</span></a>
+    <a class="path-card" href="#case-pve-network-bridge-bond-vlan"><strong>Cấu hình Network</strong><span>OVS, Linux bridge, bond mode, LACP và VLAN trunk.</span></a>
   </div>
   <div class="learn-note"><strong>Mới bắt đầu?</strong><span>Trước khi chạy lệnh trên cluster thật, đọc phần mô tả và lưu ý an toàn. Lệnh có cảnh báo màu đỏ có thể làm gián đoạn dịch vụ hoặc thay đổi dữ liệu.</span></div>
+  <div class="popular-section">
+    <h2>Sự cố hay gặp</h2>
+    <nav id="popular-links" aria-label="Sự cố hay gặp">
+      <a href="#case-osd-down-flapping">OSD down</a>
+      <a href="#case-pve-quorum-lost">Mất quorum</a>
+      <a href="#case-rgw-503">RGW trả 503</a>
+      <a href="#case-pg-inconsistent">PG inconsistent</a>
+      <a href="#case-nearfull-full">Ceph gần đầy</a>
+      <a href="#case-migrate-fail">Migrate lỗi</a>
+      <a href="#case-backup-fail">Backup lỗi</a>
+      <a href="#case-mon-down">MON down</a>
+    </nav>
+  </div>
 </section>
 <div id="command-nav" class="content-nav" aria-label="Điều hướng thư viện lệnh">
   <span class="navlabel">Nhóm lệnh</span>
@@ -426,7 +569,7 @@ const BN=b=>(LABELS.branches||{})[b.id]||b.name,SN=n=>(LABELS.subs||{})[n]||n;
 const CASE_BY_ID=Object.fromEntries(CASES.map(c=>[c.id,c])),TOPIC_NAME=Object.fromEntries((TOPICS.topics||[]).map(t=>[t.id,t.name]));
 let TOPIC=null;
 const $=s=>document.querySelector(s);
-const map=$('#map'),wires=$('#wires'),root=$('#root'),q=$('#q');
+const map=$('#map'),wires=$('#wires'),root=$('#root'),q=$('#q'),headerQ=$('#header-q'),themeToggle=$('#theme-toggle');
 const popover=$('#search-popover');
 let searchTimer=0;
 let raf=0;
@@ -445,12 +588,34 @@ function paint(){
   wires.innerHTML=out;
 }
 function copy(el,text){
-  if(!navigator.clipboard)return;
-  navigator.clipboard.writeText(text).then(()=>{
-    const old=el.textContent;el.textContent='Copied';
-    setTimeout(()=>{el.textContent=old;draw()},700);
-  },()=>{});
+  const copied=()=>{const old=el.textContent;el.textContent='Đã chép';setTimeout(()=>{el.textContent=old;draw()},1500)};
+  const fallback=()=>{
+    const area=document.createElement('textarea');area.value=text;area.style.position='fixed';area.style.opacity='0';document.body.append(area);area.select();
+    const ok=document.execCommand('copy');area.remove();return ok;
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(copied,()=>{if(fallback())copied()});
+  else if(fallback())copied();
 }
+function copyButton(text){
+  const button=el('button','copy-btn','Sao chép');button.type='button';
+  button.addEventListener('click',()=>copy(button,text));
+  return button;
+}
+function currentTheme(){
+  return document.documentElement.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+}
+function updateThemeButton(){
+  const next=currentTheme()==='dark'?'sáng':'tối';
+  themeToggle.textContent='Giao diện: '+(currentTheme()==='dark'?'Tối':'Sáng');
+  themeToggle.setAttribute('aria-label','Chuyển sang chế độ '+next);
+}
+updateThemeButton();
+themeToggle.addEventListener('click',()=>{
+  const next=currentTheme()==='dark'?'light':'dark';
+  document.documentElement.dataset.theme=next;
+  try{localStorage.setItem('pc-theme',next)}catch(error){}
+  updateThemeButton();
+});
 function setOpen(sec,open){
   const btn=sec.querySelector('.bhead'),body=sec.querySelector('.bbody');
   body.hidden=!open;btn.setAttribute('aria-expanded',String(open));
@@ -483,11 +648,10 @@ function build(side,branches,holder,title){
       s.items.forEach(it=>{
         const li=document.createElement('li');if(it.d)li.className='danger';
         li.item=it;
-        const c=document.createElement('code');c.textContent=it.c;c.title='Click to copy';c.tabIndex=0;
-        c.addEventListener('click',()=>copy(c,it.c));
-        c.addEventListener('keydown',e=>{if(e.key==='Enter')copy(c,it.c)});
+        const c=document.createElement('code');c.textContent=it.c;
+        const command=el('div','command-line');command.append(c,copyButton(it.c));
         const w=document.createElement('span');w.className='why';w.textContent=it.p;
-        li.append(c,...badges(it));
+        li.append(command,...badges(it));
         if(it.v){const vv=document.createElement('span');vv.className='vi';vv.textContent=it.v;li.append(vv,w)}else li.append(w);
         const u=usesEl(it);if(u)li.append(u);ul.appendChild(li);
       });
@@ -524,7 +688,8 @@ function refresh(){
   history.replaceState(null,'',u);
   draw();
 }
-q.addEventListener('input',refresh);
+q.addEventListener('input',()=>{if(headerQ.value!==q.value)headerQ.value=q.value;refresh()});
+headerQ.addEventListener('input',()=>{q.value=headerQ.value;q.dispatchEvent(new Event('input'))});
 function setTopic(id){
   TOPIC=TOPIC===id?null:id;
   document.querySelectorAll('#topics .chip').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.topic===TOPIC)));
@@ -537,7 +702,7 @@ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
 const res=$('#results'),secs={ceph:$('#cases-ceph'),pve:$('#cases-pve'),run:$('#cases-run'),scr:$('#cases-scr'),guide:$('#cases-guide')},casesEl=document;
 function mkPrompt(title,sym,cmds){return 'Tôi đang xử lý trên cluster Proxmox + Ceph: '+title+'\n'+(sym?'Triệu chứng: '+sym+'\n':'')+'Các lệnh chẩn đoán liên quan:\n'+cmds.map(c=>'- '+c).join('\n')+'\n\nOutput lệnh thực tế của tôi (đã xóa IP, tên host, key):\n<<< dán output vào đây >>>\n\nHãy phân tích nguyên nhân khả dĩ nhất, nói rõ còn thiếu thông tin gì, và đề xuất bước tiếp theo theo thứ tự an toàn nhất. Cảnh báo trước nếu có lệnh nguy hiểm.'}
 function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
-function cmdEl(c){const e=el('code','cmdline',c);e.title='Bấm để copy';e.tabIndex=0;e.addEventListener('click',()=>copy(e,c));return e}
+function cmdEl(c){const block=el('div','command-block'),code=el('code','cmdline',c);block.append(code,copyButton(c));return block}
 CASES.forEach(c=>{
   const d=el('details','case');d.id='case-'+c.id;const rb=c.kind==='runbook';
   d.append(el('summary',null,c.title));
@@ -829,8 +994,9 @@ const commandCount=[...DATA.left,...DATA.right].reduce((n,b)=>n+b.subs.reduce((m
 $('#stat-commands').textContent=commandCount;
 $('#stat-cases').textContent=CASES.filter(c=>c.kind!=='runbook').length;
 $('#stat-runbooks').textContent=CASES.filter(c=>c.kind==='runbook').length;
-$('#stat-scripts').textContent=SCRIPTS.length;
-q.placeholder='Ví dụ: mất quorum, OSD latency, LACP, ceph -s...';
+$('#stat-runbooks').textContent=CASES.filter(c=>c.kind==='runbook').length+SCRIPTS.length;
+q.placeholder='Tìm sự cố, lệnh hoặc thông báo lỗi…';
+headerQ.value=q.value;
 openHash();
 draw();
 </script>
