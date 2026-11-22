@@ -1,122 +1,137 @@
 {
-  "MON_DOWN": {
-    "severity": "Nghiêm trọng",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "mon-down"
-  },
-  "MON_CLOCK_SKEW": {
-    "severity": "Cảnh báo",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "clock-skew"
-  },
-  "MON_DISK_LOW": {
-    "severity": "Cảnh báo",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "nearfull-full"
-  },
-  "OSD_DOWN": {
-    "severity": "Nghiêm trọng",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "osd-down-flapping"
-  },
-  "OSD_NEARFULL": {
-    "severity": "Cảnh báo",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "nearfull-full"
-  },
-  "OSD_BACKFILLFULL": {
-    "severity": "Nghiêm trọng",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "cluster-full-emergency"
-  },
-  "OSD_FULL": {
-    "severity": "Nghiêm trọng",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "cluster-full-emergency"
-  },
-  "OSDMAP_FLAGS": {
-    "severity": "Cảnh báo",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "maintenance-flags-left"
-  },
-  "OSD_SCRUB_ERRORS": {
-    "severity": "Nghiêm trọng",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "pg-inconsistent"
-  },
-  "PG_DAMAGED": {
-    "severity": "Nghiêm trọng",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "pg-down-incomplete"
-  },
-  "PG_AVAILABILITY": {
-    "severity": "Nghiêm trọng",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "pg-down-incomplete"
-  },
-  "PG_DEGRADED": {
-    "severity": "Cảnh báo",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "pg-degraded-recovery"
-  },
-  "PG_NOT_SCRUBBED": {
-    "severity": "Cảnh báo",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "deep-scrub-late"
-  },
-  "PG_NOT_DEEP_SCRUBBED": {
-    "severity": "Cảnh báo",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "deep-scrub-late"
-  },
-  "POOL_NEARFULL": {
-    "severity": "Cảnh báo",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "nearfull-full"
-  },
-  "SLOW_OPS": {
-    "severity": "Cảnh báo",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "slow-ops"
-  },
-  "BLUESTORE_SLOW_OP_ALERT": {
-    "severity": "Cảnh báo",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "bluefs-spillover"
-  },
-  "LARGE_OMAP_OBJECTS": {
-    "severity": "Cảnh báo",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "large-omap"
-  },
-  "DEVICE_HEALTH": {
-    "severity": "Cảnh báo",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "osd-device-health-warning"
-  },
-  "RECENT_CRASH": {
-    "severity": "Cảnh báo",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "osd-wont-start"
-  },
-  "TOO_MANY_PGS": {
-    "severity": "Cảnh báo",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "pg-count"
-  },
-  "AUTH_INSECURE_CLIENT_KEY_TYPE": {
-    "severity": "Nghiêm trọng",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "clustertamm-su-co-2026-11"
-  },
-  "AUTH_INSECURE_GLOBAL_ID_RECLAIM": {
-    "severity": "Cảnh báo",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "clustertamm-su-co-2026-11"
-  },
-  "AUTH_INSECURE_SERVICE_KEY_TYPE": {
-    "severity": "Nghiêm trọng",
-    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
-    "case_id": "clustertamm-su-co-2026-11"
-  }
+ "AUTH_INSECURE_CLIENT_KEY_TYPE": {
+  "severity": "Cảnh báo",
+  "desc": "Key client còn loại aes cũ",
+  "case_id": "clustertamm-su-co-2026-11"
+ },
+ "AUTH_INSECURE_GLOBAL_ID_RECLAIM": {
+  "severity": "Cảnh báo",
+  "desc": "Client cũ còn dùng cơ chế global_id không an toàn",
+  "case_id": "clustertamm-su-co-2026-11"
+ },
+ "AUTH_INSECURE_KEYS_ALLOWED": {
+  "severity": "Cảnh báo",
+  "desc": "Monitor vẫn cho phép key loại cũ",
+  "case_id": "clustertamm-su-co-2026-11"
+ },
+ "AUTH_INSECURE_ROTATING_SERVICE_KEY_TYPE": {
+  "severity": "Hướng dẫn",
+  "desc": "Key xoay vòng cũ, tự hết sau vài giờ",
+  "case_id": "clustertamm-su-co-2026-11"
+ },
+ "AUTH_INSECURE_SERVICE_KEY_TYPE": {
+  "severity": "Nghiêm trọng",
+  "desc": "Key dịch vụ mon/mgr/osd/mds loại aes",
+  "case_id": "clustertamm-su-co-2026-11"
+ },
+ "AUTH_INSECURE_SERVICE_TICKETS": {
+  "severity": "Nghiêm trọng",
+  "desc": "Monitor cấp vé dịch vụ loại cũ",
+  "case_id": "clustertamm-su-co-2026-11"
+ },
+ "BLUESTORE_SLOW_OP_ALERT": {
+  "severity": "Cảnh báo",
+  "desc": "OSD có thao tác BlueStore chậm",
+  "case_id": "slow-ops"
+ },
+ "DEVICE_HEALTH": {
+  "severity": "Cảnh báo",
+  "desc": "Thiết bị dự báo sắp hỏng",
+  "case_id": "osd-device-health-warning"
+ },
+ "LARGE_OMAP_OBJECTS": {
+  "severity": "Hướng dẫn",
+  "desc": "Object omap lớn (thường bucket index RGW)",
+  "case_id": "large-omap"
+ },
+ "MON_CLOCK_SKEW": {
+  "severity": "Cảnh báo",
+  "desc": "Lệch giờ giữa các monitor",
+  "case_id": "clock-skew"
+ },
+ "MON_DISK_LOW": {
+  "severity": "Cảnh báo",
+  "desc": "Ổ chứa dữ liệu monitor sắp đầy",
+  "case_id": ""
+ },
+ "MON_DOWN": {
+  "severity": "Nghiêm trọng",
+  "desc": "Có monitor ngoài quorum",
+  "case_id": "mon-down"
+ },
+ "OSDMAP_FLAGS": {
+  "severity": "Cảnh báo",
+  "desc": "Cờ noout/norecover… đang bật",
+  "case_id": "maintenance-flags-left"
+ },
+ "OSD_BACKFILLFULL": {
+  "severity": "Cảnh báo",
+  "desc": "OSD vượt ngưỡng backfillfull",
+  "case_id": "nearfull-full"
+ },
+ "OSD_DOWN": {
+  "severity": "Nghiêm trọng",
+  "desc": "Có OSD down",
+  "case_id": "osd-down-flapping"
+ },
+ "OSD_FULL": {
+  "severity": "Nghiêm trọng",
+  "desc": "OSD đầy, cụm ngừng ghi",
+  "case_id": "cluster-full-emergency"
+ },
+ "OSD_NEARFULL": {
+  "severity": "Cảnh báo",
+  "desc": "OSD gần đầy",
+  "case_id": "nearfull-full"
+ },
+ "OSD_SCRUB_ERRORS": {
+  "severity": "Nghiêm trọng",
+  "desc": "Scrub phát hiện lỗi dữ liệu",
+  "case_id": "pg-inconsistent"
+ },
+ "PG_AVAILABILITY": {
+  "severity": "Nghiêm trọng",
+  "desc": "PG inactive, dữ liệu không truy cập được",
+  "case_id": "pg-down-incomplete"
+ },
+ "PG_DAMAGED": {
+  "severity": "Nghiêm trọng",
+  "desc": "PG inconsistent, có thể hỏng dữ liệu",
+  "case_id": "pg-inconsistent"
+ },
+ "PG_DEGRADED": {
+  "severity": "Cảnh báo",
+  "desc": "Thiếu bản sao dữ liệu",
+  "case_id": "pg-degraded-recovery"
+ },
+ "PG_NOT_DEEP_SCRUBBED": {
+  "severity": "Hướng dẫn",
+  "desc": "PG chưa deep-scrub đúng hạn",
+  "case_id": "deep-scrub-late"
+ },
+ "PG_NOT_SCRUBBED": {
+  "severity": "Hướng dẫn",
+  "desc": "PG chưa scrub đúng hạn",
+  "case_id": "deep-scrub-late"
+ },
+ "POOL_NEARFULL": {
+  "severity": "Cảnh báo",
+  "desc": "Pool gần đầy",
+  "case_id": "nearfull-full"
+ },
+ "RECENT_CRASH": {
+  "severity": "Cảnh báo",
+  "desc": "Daemon crash gần đây",
+  "case_id": "osd-wont-start"
+ },
+ "SLOW_OPS": {
+  "severity": "Cảnh báo",
+  "desc": "Request bị chặn quá lâu",
+  "case_id": "slow-ops"
+ },
+ "TOO_MANY_PGS": {
+  "severity": "Hướng dẫn",
+  "desc": "Quá nhiều PG trên mỗi OSD",
+  "case_id": "pg-count"
+ }
 }

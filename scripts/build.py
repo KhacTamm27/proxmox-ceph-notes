@@ -363,6 +363,47 @@ for c in cases:
     c.pop("_attachments", None)
 tpl = (ROOT / "scripts/template.html").read_text(encoding="utf-8")
 search_js = (ROOT / "scripts/search.js").read_text(encoding="utf-8")
+v6_styles = []
+for prototype in sorted((ROOT / "prototype/ui-v6").glob("*.html")):
+    source = prototype.read_text(encoding="utf-8")
+    for style in re.findall(r"<style>(.*?)</style>", source, flags=re.S):
+        v6_styles.append(style)
+# Gộp CSS mẫu, bỏ dòng trùng (các file mẫu dùng chung một bộ CSS), giữ thứ tự xuất hiện đầu tiên.
+_seen, _lines = set(), []
+for _style in v6_styles:
+    for _line in _style.splitlines():
+        if _line.strip() and _line in _seen:
+            continue
+        _seen.add(_line)
+        _lines.append(_line)
+merged_v6_css = "/* --- merged prototype/ui-v6 CSS --- */\n" + "\n".join(_lines)
+_extra = re.search(r"<style>(.*?)</style>", tpl, flags=re.S)
+if _extra:
+    merged_v6_css += "\n/* --- site extras (responsive, trang Lệnh) --- */\n" + _extra.group(1)
+
+# Ngày cập nhật: commit mới nhất chạm tới từng file .md (không có git thì dùng ngày build).
+import datetime
+_today = datetime.date.today().isoformat()
+file_dates, _head = {}, _today
+try:
+    _log = subprocess.run(["git", "log", "--format=@@%cs", "--name-only", "--", "docs/cases", "docs/runbooks", "docs/guides"],
+                          cwd=ROOT, capture_output=True, text=True, encoding="utf-8", check=True).stdout
+    _cur = _today
+    for _l in _log.splitlines():
+        if _l.startswith("@@"):
+            _cur = _l[2:]
+        elif _l.strip():
+            file_dates.setdefault(_l.strip(), _cur)
+    _head = subprocess.run(["git", "log", "-1", "--format=%cs"], cwd=ROOT, capture_output=True, text=True, encoding="utf-8").stdout.strip() or _today
+except Exception:
+    pass
+dates = {}
+for c in cases:
+    f = f"docs/runbooks/{c['id']}.md" if c.get("kind") == "runbook" else f"docs/cases/{c['scope']}/{c['id']}.md"
+    dates[c["id"]] = file_dates.get(f, _head)
+for g in guides:
+    dates[g["id"]] = g.get("updated") or file_dates.get(g["file"], _head)
+build_date = max([_head, *dates.values()])
 html = (tpl.replace("/*__SEARCH_JS__*/", search_js)
            .replace("/*__SYNONYMS__*/[]", json.dumps(synonyms, ensure_ascii=False))
            .replace("/*__DATA__*/null", json.dumps(data, ensure_ascii=False))
@@ -370,6 +411,8 @@ html = (tpl.replace("/*__SEARCH_JS__*/", search_js)
            .replace("/*__RUNBOOK_META__*/{}", json.dumps(runbook_meta, ensure_ascii=False).replace("</", "<\\/"))
            .replace("/*__HEALTH_CODES__*/{}", json.dumps(health_codes, ensure_ascii=False).replace("</", "<\\/"))
            .replace("/*__REPO__*/", args.repo)
+           .replace("/*__DATES__*/{}", json.dumps(dates))
+           .replace("/*__BUILD_DATE__*/", build_date)
            .replace("/*__SLUGS__*/{}", json.dumps(slugs))
            .replace("/*__CASES__*/[]", json.dumps(cases, ensure_ascii=False).replace("</", "<\\/"))
            .replace("/*__CASE_META__*/{}", json.dumps(case_meta, ensure_ascii=False).replace("</", "<\\/"))
@@ -378,6 +421,10 @@ html = (tpl.replace("/*__SEARCH_JS__*/", search_js)
            .replace("/*__TOPICS__*/{}", json.dumps(topics, ensure_ascii=False))
            .replace("/*__LABELS__*/{}", json.dumps(labels, ensure_ascii=False))
            .replace("/*__GUIDES__*/[]", json.dumps(guides, ensure_ascii=False).replace("</", "<\\/")))
+style_match = re.search(r"<style>.*?</style>", html, flags=re.S)
+if style_match:
+    html = html[:style_match.start()] + "<style>/*__V6_CSS__*/</style>" + html[style_match.end():]
+html = html.replace("/*__V6_CSS__*/", merged_v6_css)
 (ROOT / "docs/index.html").write_text(html, encoding="utf-8")
 prototype_tpl = (ROOT / "prototype/template.html").read_text(encoding="utf-8")
 prototype_html = (prototype_tpl

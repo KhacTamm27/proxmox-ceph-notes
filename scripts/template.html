@@ -4,135 +4,418 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Proxmox + Ceph | Sổ tay vận hành</title>
-<script>try{const t=localStorage.getItem('pc-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
+<script>try{var t=localStorage.getItem('pc-theme');if(t!=='light'&&t!=='dark')t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';document.documentElement.dataset.theme=t}catch(e){}</script>
 <style>
-:root{color-scheme:light;--font:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Consolas,monospace;--canvas:#FFFFFF;--surface:#F8FAFC;--border:#E2E8F0;--heading:#0F172A;--body:#334155;--primary:#2563EB;--mut:#64748B;--crit:#DC2626;--critbg:#FEF2F2;--warn:#B45309;--warnbg:#FFFBEB;--ok:#047857;--okbg:#ECFDF5;--r:8px;--r2:12px}
-@media(prefers-color-scheme:dark){:root:not([data-theme]){color-scheme:dark;--canvas:#0B0F19;--surface:#111827;--border:#1F2937;--heading:#F9FAFB;--body:#D1D5DB;--primary:#38BDF8;--mut:#9CA3AF;--crit:#F87171;--critbg:#3F1D23;--warn:#FBBF24;--warnbg:#3A2E12;--ok:#34D399;--okbg:#17352A}}
-:root[data-theme="light"]{color-scheme:light;--canvas:#FFFFFF;--surface:#F8FAFC;--border:#E2E8F0;--heading:#0F172A;--body:#334155;--primary:#2563EB;--mut:#64748B;--crit:#DC2626;--critbg:#FEF2F2;--warn:#B45309;--warnbg:#FFFBEB;--ok:#047857;--okbg:#ECFDF5}
-:root[data-theme="dark"]{color-scheme:dark;--canvas:#0B0F19;--surface:#111827;--border:#1F2937;--heading:#F9FAFB;--body:#D1D5DB;--primary:#38BDF8;--mut:#9CA3AF;--crit:#F87171;--critbg:#3F1D23;--warn:#FBBF24;--warnbg:#3A2E12;--ok:#34D399;--okbg:#17352A}
-*{box-sizing:border-box}html{max-width:100%;overflow-x:hidden;scroll-behavior:smooth}body{max-width:100%;overflow-x:hidden;margin:0;background:var(--canvas);color:var(--heading);font:15px/1.55 var(--font)}button,input,textarea,select{font:inherit}button{color:inherit}a{color:var(--primary);text-decoration:none}code,kbd,textarea{font-family:var(--mono)}[hidden]{display:none!important}:focus-visible{outline:3px solid color-mix(in srgb,var(--primary) 55%,transparent);outline-offset:2px}.in{max-width:1280px;margin:auto;padding:0 32px}
-.hdr{position:sticky;top:0;z-index:50;height:60px;border-bottom:1px solid var(--border);background:color-mix(in srgb,var(--surface) 96%,transparent)}.hrow{height:60px;display:flex;align-items:center;gap:22px}.brand{display:flex;align-items:center;gap:10px;color:var(--heading)}.pc{width:30px;height:30px;border-radius:7px;background:var(--primary);color:white;display:grid;place-items:center;font-size:12px;font-weight800}.brand b{display:block;font-size14px}.brand small{display:block;color:var(--mut);font-size11px}.nav{display:flex;gap:4px}.nav button{border:0;background:transparent;padding:7px 10px;border-radius:7px;color:var(--mut);cursor:pointer}.nav button.on{background:var(--border);color:var(--heading);font-weight700}.hsp{flex:1}.search-btn{width:300px;height36px;border:1px solid var(--border);border-radius:7px;background:var(--canvas);color:var(--mut);display:flex;align-items:center;padding:0 10px;cursor:pointer}.search-btn kbd{margin-left:auto;border:1px solid var(--border);border-radius4px;padding:0 6px}.theme{width36px;height36px;border:1px solid var(--border);border-radius:7px;background:var(--canvas);cursor:pointer}.menu-btn{display:none}
-.hero{position:relative;border-bottom:1px solid var(--border);overflow:hidden;background:var(--canvas)}.hero:before{content:"";position:absolute;inset:0;opacity:.35;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;mask-image:linear-gradient(to right,transparent,#000 15%,#000 85%,transparent)}.hero:after{content:"";position:absolute;width420px;height420px;right:8%;top:-220px;border-radius:50%;background:color-mix(in srgb,var(--primary) 10%,transparent);filter:blur(20px)}.hero-grid{position:relative;z2;display:grid;grid-template-columns:1.05fr .95fr;gap48px;padding:46px 32px}.eyebrow{color:var(--mut);font-size13px}.hero h1{margin12px 0;font-size44px;line-height1.12;letter-spacing:-.03em}.grad{color:var(--primary)}.hero-desc{color:var(--mut);font-size17px;max-width620}.big-search{width100%;margin-top20px;height56px;border:1px solid var(--border);border-radius9px;background:var(--canvas);box-shadow:0 8px24px rgba(15,23,42,.07);display:flex;align-items:center;gap10px;padding0 16px;color:var(--mut);cursor:pointer}.big-search span:last-child{margin-left:auto}.pills{display:flex;gap8px;flex-wrap:wrap;margin-top14px}.pills button,.pills a{border:1px solid var(--border);border-radius999px;padding4px10px;background:var(--surface);color:var(--body);font-size13px;cursor:pointer}
-.terminal{border:1px solid var(--border);border-radius10px;background:var(--heading);overflow:hidden;box-shadow:0 18px40px rgba(15,23,42,.12)}.term-head{height38px;display:flex;align-items:center;gap7px;padding0 12px;border-bottom:1px solid color-mix(in srgb,var(--border) 25%,transparent);color:color-mix(in srgb,var(--canvas) 75%,transparent);font-size12px}.dot{width8px;height8px;border-radius50%;background:#64748B}.dot.r{background:#F87171}.dot.y{background:#FBBF24}.dot.g{background:#34D399}.term-body{padding14px;font:12.5px/1.8 var(--mono);color:#D1D5DB}.term-body a{display:block;color:#93C5FD}.term-foot{height38px;border-top:1px solid color-mix(in srgb,var(--border) 25%,transparent);display:flex;align-items:center;justify-content:flex-end;padding0 12px}.term-foot a{color:#93C5FD;font-size12px}
-.stats5{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}.stat5{padding16px18px;border-right:1px solid var(--border);cursor:pointer}.stat5:last-child{border-right:0}.stat5 b{display:block;font-size27px}.stat5 span{color:var(--mut);font-size12px}.stat5.crit b{color:var(--crit)}.stat5.warn b{color:var(--warn)}
-.section{padding:28px 32px}.section h2{font-size20px;margin0 0 14px}.section h2:after{content:"";display:block;width28px;height3px;background:var(--primary);margin-top6px}.pin-grid{display:grid;grid-template-columns:1fr 1fr;gap16px}.pin-card,.recent-card,.list-card{border:1px solid var(--border);border-radius9px;background:var(--canvas)}.pin-card h3,.recent-card h3,.list-card h3{margin:0;padding12px14px;border-bottom:1px solid var(--border);font-size14px}.pin-row{padding10px14px;border-bottom:1px solid var(--border);color:var(--body)}.pin-row:last-child{border0}.three-home{display:grid;grid-template-columns:1fr 1fr 1fr;gap16px}.home-col{border:1px solid var(--border);border-radius9px;padding14px}.home-col h3{margin0 0 10px;font-size15px}.home-row{display:flex;justify-content:space-between;gap10px;padding9px0;border-bottom:1px solid var(--border);color:var(--body)}
-.lay{display:grid;grid-template-columns:220px minmax(0,1fr) 220px;gap28px;max-width1280px;margin:auto;padding28px32px}.left,.toc{position:sticky;top84px;align-self:start}.left h3,.toc h3{font-size12px;color:var(--mut);text-transform:uppercase}.left button{display:flex;width100%;justify-content:space-between;border0;background:transparent;padding7px9px;border-radius7px;color:var(--body);cursor:pointer}.left button.on{background:color-mix(in srgb,var(--primary) 10%,transparent);box-shadow:inset 3px0 var(--primary);color:var(--primary)}.filter{height44px;border:1px solid var(--border);border-radius8px;background:var(--canvas);display:flex;align-items:center;padding0 12px}.filter input{flex1;border0;outline0;backgroundtransparent;color:var(--heading)}.severity-chips{display:flex;gap7px;margin12px0}.severity-chips button{border:1px solid var(--border);border-radius999px;background:var(--surface);padding4px10px;font-size12px}.severity-chips button.on{background:var(--heading);color:var(--canvas)}.group{margin-top22px}.group h3{display:flex;align-items:center;font-size16px}.group h3 span{margin-left:auto;border:1px solid var(--border);border-radius999px;padding0 8px;color:var(--mut)}.row{display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap10px;align-items:center;padding11px12px;border-bottom:1px solid var(--border);color:var(--heading)}.row:hover{background:var(--surface)}.dot-sev{width8px;height8px;border-radius50%;background:var(--mut)}.dot-sev.crit{background:var(--crit)}.dot-sev.warn{background:var(--warn)}.row code{display:block;color:var(--mut);font-size12px}.tag{border:1px solid var(--border);border-radius5px;padding1px7px;color:var(--mut);font-size11px}.tag.crit{border0;color:var(--crit);background:var(--critbg)}.tag.warn{border0;color:var(--warn);background:var(--warnbg)}
-.detail-layout{display:grid;grid-template-columns:220px minmax(0,1fr)220px;gap28px;max-width1280px;margin:auto;padding28px32px}.crumb{color:var(--mut);font-size13px}.detail-title{font-size30px;margin7px0}.meta-row{display:flex;gap7px;flex-wrap:wrap}.badge{border:1px solid var(--border);border-radius999px;padding2px9px;color:var(--mut);font-size12px}.badge.crit{border0;color:var(--crit);background:var(--critbg)}.badge.warn{border0;color:var(--warn);background:var(--warnbg)}.detail-head{border:1px solid var(--border);border-radius9px;padding18px;margin-bottom18px}.detail-actions{display:flex;gap8px;margin-top14px}.btn{border:1px solid var(--border);border-radius7px;background:var(--canvas);padding7px10px;cursor:pointer}.btn.primary{background:var(--primary);border-color:var(--primary);color:white}.fillbox{position:sticky;top76px;z-index20;border:1px solid var(--border);border-radius9px;background:var(--surface);padding12px;margin-bottom16px}.fillbox input{height36px;border:1px solid var(--border);border-radius6px;background:var(--canvas);color:var(--heading);width100%;margin-top6px}.detail-section{scroll-margin-top84px;margin:20px0}.detail-section h2{font-size20px;border-bottom:1px solid var(--border);padding-bottom6px}.timeline-step{position:relative;padding12px0 12px42px;border-left:1px solid var(--border);margin-left14px}.timeline-step:before{content:attr(data-n);position:absolute;left:-15px;top12px;width28px;height28px;border:1px solid var(--primary);border-radius50%;background:var(--canvas);color:var(--primary);display:grid;place-items:center;font-weight700}.cmd-block{border:1px solid var(--border);border-left:3px solid var(--mut);border-radius7px;background:var(--surface);padding10px;margin8px0}.cmd-block.danger{border-left-color:var(--crit);background:color-mix(in srgb,var(--critbg) 35%,var(--surface))}.cmd-block.change{border-left-color:var(--warn)}.cmd-head{display:flex;align-items:center;gap8px}.cmd-head code{flex1;overflow-wrap:anywhere}.risk{font-size11px;border-radius5px;padding1px6px;background:var(--surface);color:var(--mut)}.risk.ro{color:var(--ok);background:var(--okbg)}.risk.danger{color:var(--crit);background:var(--critbg)}.risk.change{color:var(--warn);background:var(--warnbg)}.unfilled{color:var(--warn);background:var(--warnbg);border-radius4px;padding0 3px}.filled{color:var(--primary)}.toc a{display:block;padding5px0;color:var(--mut);font-size13px}.toc a.on{color:var(--primary);font-weight700}.risk-box{border:1px solid var(--border);border-radius9px;padding12px;margin-top18px}.risk-box div{margin6px0;font-size12px}
-.workflow-grid{display:grid;grid-template-columns:1fr 1fr;gap16px}.workflow-card{border:1px solid var(--border);border-radius9px;padding16px;background:var(--surface)}.workflow-card h3{margin8px0;font-size16px}.workflow-card p{height44px;overflow:hidden;color:var(--mut);font-size13px}.script-row{display:grid;grid-template-columns:1fr auto auto;gap12px;padding10px0;border-bottom:1px solid var(--border)}
-.run-head{display:grid;grid-template-columns:repeat(4,1fr);gap10px;margin16px0}.run-stat{border:1px solid var(--border);border-radius8px;padding10px}.run-progress{position:sticky;top60px;z20;height48px;border:1px solid var(--border);border-radius8px;background:var(--canvas);display:flex;align-items:center;padding0 12px}.run-progress b{margin-right:auto}.run-step{border:1px solid var(--border);border-radius9px;margin10px0;background:var(--canvas)}.run-step.done{opacity:.55}.run-step.done h3{text-decoration:line-through}.run-step-head{display:flex;align-items:center;gap10px;padding12px}.run-step-head input{width18px;height18px}.rollback{border-color:var(--crit);background:var(--critbg)}
-.health-grid{display:grid;grid-template-columns:1fr 1fr;gap16px}.health-input{border:1px solid var(--border);border-radius9px;overflow:hidden}.health-input textarea{width100%;height280px;border0;resize:vertical;background:#0F172A;color:#E5E7EB;padding14px}.health-results{border:1px solid var(--border);border-radius9px;padding14px}.health-row{border:1px solid var(--border);border-radius7px;padding10px;margin8px0}.health-table{margin-top24px}.health-table table{width100%;border-collapse:collapse}.health-table th,.health-table td{border-bottom:1px solid var(--border);padding8px;text-align:left}
-.modal{position:fixed;inset:0;z100;display:none;align-items:flex-start;justify-content:center;padding-top10vh;background:rgba(15,23,42,.45)}.modal.open{display:flex}.pal{width:min(900px,calc(100vw - 32px));height:min620px,76vh);display:grid;grid-template-columns:1.15fr .85fr;border:1px solid var(--border);border-radius12px;background:var(--canvas);overflow:hidden}.pal-left,.pal-right{overflow:auto;padding16px}.pal-right{background:var(--surface);border-left:1px solid var(--border)}.pal-search{display:flex;border-bottom:1px solid var(--border);padding-bottom10px}.pal-search input{flex1;border0;outline0;backgroundtransparent;color:var(--heading)}.pal-group h3{font-size13px;margin14px0 6px}.pal-item{display:block;width100%;text-align:left;border:1px solid transparent;border-radius7px;padding8px10px;backgroundtransparent;color:var(--heading);cursor:pointer}.pal-item.on{border-color:var(--border);background:color-mix(in srgb,var(--primary) 8%,var(--canvas))}.footer{border-top:1px solid var(--border);color:var(--mut);padding20px32px;margin-top30px}
-@media(max-width:900px){.in{padding:0 20px}.nav{display:none}.menu-btn{display:block}.hsp{display:none}.search-btn{width:auto;flex:1}.hero-grid{grid-template-columns:1fr}.stats5{grid-template-columns:repeat(2,1fr)}.lay,.detail-layout{grid-template-columns:minmax(0,1fr)}.left,.toc{display:none}.three-home,.workflow-grid,.health-grid,.pin-grid{grid-template-columns:1fr}}
-@media(max-width:620px){.in{padding:0 14px}.brand small{display:none}.search-btn span{display:none}.search-btn kbd{display:none}.hero-grid{padding:28px 14px}.hero h1{font-size:32px}.stats5{grid-template-columns:1fr 1fr}.section{padding:24px 14px}.lay,.detail-layout{padding:20px 14px}.detail-title{font-size:24px}.run-head{grid-template-columns:1fr 1fr}.pal{grid-template-columns:1fr}.pal-right{display:none}.workflow-grid{grid-template-columns:1fr}}
-@media print{.hdr,.left,.toc,.detail-actions,.fillbox,.footer,.theme,.nav,.pal,.menu-btn{display:none!important}.detail-layout,.lay{display:block;padding0}.cmd-block{break-inside:avoid}.run-progress{position:static}.run-step.done{opacity:1}.run-step.done h3{text-decoration:line-through}}
+/* CSS chính lấy nguyên văn từ prototype/ui-v6 (build.py gộp vào). Khối này chỉ là phần bổ sung. */
+html{scroll-behavior:smooth;overflow-x:hidden}
+.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}
+.three{grid-template-columns:minmax(0,1.1fr) minmax(0,1.2fr) minmax(0,1fr)}
+.rgrid,.rgrid2,.angrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.rel{grid-template-columns:repeat(2,minmax(0,1fr))}
+.side{max-height:calc(100vh - 100px);overflow:auto}
+.side a[data-act]{cursor:pointer}
+.crow{align-items:flex-start}
+.crow .rb code{display:block;white-space:pre-wrap;word-break:break-all;color:var(--heading);font-size:13px;margin:0}
+.crow .cdesc{color:var(--mut);font-size:13px;margin-top:2px}
+.crow .ab{flex:none}
+.crow .rk,.scr .rk{flex:none;justify-self:auto}
+.rk.dg{color:var(--crit);background:var(--critbg)}
+.hide,[hidden]{display:none!important}
+.ov[hidden]{display:none!important}
+.bigs{cursor:pointer}
+.chips a{cursor:pointer;user-select:none}
+.pr .pf,.pr .sev{flex:none}
+.nodata{padding:30px;text-align:center;color:var(--mut)}
+.in.an .rgrid{margin-top:8px}
+.pop a{cursor:pointer}
+.cmds .cp{background:none;border:0;padding:0;cursor:pointer}
+.pall{cursor:pointer}
+.lst li a span:first-child{min-width:0}
+.side .dot{flex:none}
+@media(max-width:1000px){
+  .in{padding:0 16px}
+  .hrow{height:auto;flex-wrap:wrap;gap:8px 12px;padding-top:8px;padding-bottom:8px}
+  .lt em,.sbtn span,.sbtn kbd,.bigs kbd{display:none}
+  .hsp{flex:1}
+  .sbtn{width:36px;padding:0;justify-content:center}
+  .nav{order:3;width:100%;overflow-x:auto;white-space:nowrap}
+  .lay{grid-template-columns:minmax(0,1fr);gap:16px}
+  .side{position:static;max-height:none;border-right:0;padding-right:0;display:flex;flex-wrap:wrap;gap:4px}
+  .side .sl{width:100%;margin:8px 4px 2px}
+  .rail{display:none}
+  .h2row,.angrid,.rgrid,.rgrid2,.rel,.tiles,.three{grid-template-columns:minmax(0,1fr)}
+  .h2l h1{font-size:30px}
+  .strip{grid-template-columns:repeat(2,1fr)}
+  .causes,.rbm{grid-template-columns:repeat(2,1fr)}
+  .dh{flex-direction:column}
+  .dact{flex-wrap:wrap}
+  .ttl{flex-wrap:wrap}
+  .fin.small{width:100%}
+  .az .sh{flex-direction:column;align-items:stretch;gap:10px}
+  .azt{display:block;overflow-x:auto}
+  .pal{width:calc(100vw - 24px)}
+  .pbody{grid-template-columns:minmax(0,1fr)}
+  .pprev{display:none}
+  .ftr .fr{flex-direction:column}
+  .contrib{flex-wrap:wrap}
+  .contrib span{margin-left:0}
+  .vars{top:64px}
+}
 </style>
 </head>
 <body>
 <header class="hdr"><div class="in hrow">
-<a class="brand" href="#home"><span class="pc">PC</span><span><b>Proxmox+Ceph</b><small>Sổ tay vận hành</small></span></a>
-<button id="menu" class="menu-btn" type="button">☰</button>
-<nav class="nav" id="nav"><button data-tab="home">Trang chủ</button><button data-tab="cases">Sự cố</button><button data-tab="commands">Lệnh</button><button data-tab="workflows">Quy trình</button><button data-tab="guides">Bài viết</button><button data-tab="health">Công cụ</button></nav>
-<span class="hsp"></span><button id="openSearch" class="search-btn" type="button">⌕ <span>Tìm sự cố, lệnh, câu lỗi…</span><kbd>Ctrl K</kbd></button><button id="theme" class="theme" type="button" aria-label="Chuyển giao diện">☾</button>
+<a class="logo" href="#home"><span class="mk">PC</span><span class="lt">Proxmox<b>+</b>Ceph <em>Sổ tay vận hành</em></span></a>
+<nav class="nav" id="nav"><a data-tab="home" href="#home">Trang chủ</a><a data-tab="cases" href="#cases">Sự cố</a><a data-tab="commands" href="#map">Lệnh</a><a data-tab="workflows" href="#cases-run">Quy trình</a><a data-tab="guides" href="#guides">Bài viết</a><a data-tab="health" href="#health">Công cụ</a></nav>
+<div class="hsp"></div>
+<button class="sbtn" id="openSearch" type="button" aria-label="Tìm kiếm"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Tìm sự cố, lệnh, câu lỗi…</span><kbd>Ctrl K</kbd></button>
+<button class="tbtn" id="theme" type="button" title="Sáng/Tối" aria-label="Chuyển giao diện sáng/tối"></button>
 </div></header>
-<main id="home" class="page">
-<section class="hero"><div class="in hero-grid"><div><div class="eyebrow" id="eyebrow">Cập nhật hôm nay · Proxmox VE 9 · Ceph Squid 19</div><h1>Gặp lỗi trên cluster? <span class="grad">Tra ra cách xử lý</span> trong vài giây.</h1><p class="hero-desc">Dán câu lỗi, chọn triệu chứng hoặc tra theo tên lệnh. Chỉ đọc trên cluster thật trước khi thay đổi.</p><button id="bigSearch" class="big-search" type="button"><span>⌕</span><span>Dán câu lỗi hoặc tìm lệnh…</span><span>Ctrl K</span></button><div class="pills" id="quickPills"></div></div><div class="terminal"><div class="term-head"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span>ceph health detail</span></div><div class="term-body" id="termBody"></div><div class="term-foot"><a href="#health">Dán output của bạn để phân tích →</a></div></div></div></section>
-<section class="stats5 in" id="stats5"></section>
-<section class="section in"><h2>Đã ghim & xem gần đây</h2><div class="pin-grid"><div class="pin-card"><h3>★ Đã ghim</h3><div id="pinned"></div></div><div class="recent-card"><h3>◷ Xem gần đây</h3><div id="recent"></div></div></div></section>
-<section class="section in"><h2>Sự cố hay gặp</h2><div class="three-home" id="homeThree"></div></section>
-<section class="section in"><h2>Mới cập nhật</h2><div class="recent-card" id="updates"></div></section>
-</main>
-<main id="cases" class="lay page" hidden><aside class="left" id="caseFilters"></aside><section><div class="crumb">Trang chủ / Sự cố</div><h1>Sự cố</h1><div class="filter">⌕ <input id="caseQuery" type="search" placeholder="Lọc tiêu đề, triệu chứng, câu lỗi…"></div><div class="severity-chips" id="severityChips"></div><div id="caseCount"></div><div id="caseGroups"></div></section><aside class="toc"><h3>Trên trang này</h3><div id="caseToc"></div></aside></main>
-<main id="detail" class="detail-layout page" hidden></main>
-<main id="commands" class="lay page" hidden><section style="grid-column:1/-1"><div class="crumb">Trang chủ / Lệnh</div><h1>Thư viện lệnh</h1><div class="filter">⌕ <input id="commandQuery" type="search" placeholder="Lọc lệnh hoặc mô tả…"></div><label style="display:block;margin:12px 0"><input id="safeOnly" type="checkbox"> Chỉ lệnh an toàn (chỉ đọc)</label><div id="commandGroups"></div></section></main>
-<main id="workflows" class="lay page" hidden><section style="grid-column:1/-1"><div class="crumb">Trang chủ / Quy trình</div><h1>Quy trình</h1><div class="filter">⌕ <input id="workflowQuery" type="search" placeholder="Lọc runbook hoặc script…"></div><div class="severity-chips" id="workflowFilters"></div><div id="workflowGroups"></div></section></main>
-<main id="guides" class="lay page" hidden><section style="grid-column:1/-1"><div class="crumb">Trang chủ / Bài viết</div><h1>Bài viết</h1><div id="guideList"></div></section></main>
-<main id="health" class="lay page" hidden><section style="grid-column:1/-1"><div class="crumb">Trang chủ / Công cụ</div><h1>Phân tích <code>ceph health detail</code></h1><p style="color:var(--mut)">Dán output chỉ để phân tích trên trình duyệt. Dữ liệu không được gửi đi đâu.</p><div class="health-grid"><div class="health-input"><textarea id="healthInput" placeholder="HEALTH_ERR ..."></textarea><div style="display:flex;gap8px;padding10px"><button class="btn" id="healthExample">Dán ví dụ</button><button class="btn" id="healthClear">Xóa</button></div></div><div class="health-results"><h3 id="healthSummary">Chưa có output</h3><div id="healthResults"></div></div></div><section class="health-table"><h2>Bảng mã health</h2><div class="filter">⌕ <input id="healthTableQuery" type="search" placeholder="Lọc mã hoặc mô tả"></div><table><thead><tr><th>Mã</th><th>Mức độ</th><th>Mô tả</th><th>Case</th></tr></thead><tbody id="healthTable"></tbody></table></section></section></main>
-<div id="modal" class="modal" role="dialog" aria-modal="true"><div class="pal"><div class="pal-left"><div class="pal-search"><input id="modalQuery" type="search" placeholder="Tìm sự cố, lệnh, câu lỗi…"><button id="modalClose" class="btn">×</button></div><div id="modalResults"></div></div><div class="pal-right"><h3>Xem trước</h3><div id="modalPreview"></div></div></div></div>
-<footer class="footer in">Tài liệu tham khảo vận hành · <a href="https://github.com/KhacTamm27/proxmox-ceph-notes" target="_blank" rel="noopener">GitHub</a> · <a href="#health">Bảng mã health</a></footer>
+<div id="app"></div>
+<footer class="ftr"><div class="in fr"><span>Sổ tay vận hành Proxmox VE &amp; Ceph · đối chiếu phiên bản và trạng thái cluster trước khi chạy lệnh</span><span><a id="ghLink" href="#" target="_blank" rel="noopener">GitHub</a> · <a href="#health">Bảng mã health</a></span></div></footer>
+<div class="ov" id="ov" hidden><div class="pal"><div class="pin"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="pq" placeholder="Dán câu lỗi hoặc gõ triệu chứng… (có dấu/không dấu)" autocomplete="off"><kbd>Esc</kbd></div>
+<div class="pbody"><div class="pres" id="pres"></div><div class="pprev" id="pprev"></div></div><div class="pfoot"><span>↑↓ chọn</span><span>Enter mở</span><span>Esc đóng</span><span id="pcount" class="pc"></span></div></div></div>
 <script>/*__SEARCH_JS__*/</script>
 <script>
-const DATA=/*__DATA__*/null,CASES=/*__CASES__*/[],CASE_META=/*__CASE_META__*/{},COMMAND_RISK=/*__COMMAND_RISK__*/{},RUNBOOK_META=/*__RUNBOOK_META__*/{},HEALTH=/*__HEALTH_CODES__*/{},SCRIPTS=/*__SCRIPTS__*/[],GUIDES=/*__GUIDES__*/[],TRIAGE=/*__TRIAGE__*/[],SYNONYMS=/*__SYNONYMS__*/[],TOPICS=/*__TOPICS__*/{},LABELS=/*__LABELS__*/{},REPO="/*__REPO__*/";
+const DATA=/*__DATA__*/null,CASES=/*__CASES__*/[],CASE_META=/*__CASE_META__*/{},COMMAND_RISK=/*__COMMAND_RISK__*/{},RUNBOOK_META=/*__RUNBOOK_META__*/{},HEALTH=/*__HEALTH_CODES__*/{},SCRIPTS=/*__SCRIPTS__*/[],GUIDES=/*__GUIDES__*/[],TRIAGE=/*__TRIAGE__*/[],SYNONYMS=/*__SYNONYMS__*/[],TOPICS=/*__TOPICS__*/{},LABELS=/*__LABELS__*/{},DATES=/*__DATES__*/{},REPO="/*__REPO__*/",BUILD="/*__BUILD_DATE__*/";
 const ENGINE=createSearch(SYNONYMS),INDEX=createIndex(ENGINE,{DATA,CASES,SCRIPTS,TRIAGE,GUIDES,TOPICS,LABELS});
-const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e};
-const issueCases=CASES.filter(c=>c.kind!=='runbook'),runCases=CASES.filter(c=>c.kind==='runbook');
-const BN=b=>(LABELS.branches||{})[b.id]||b.name,SN=n=>(LABELS.subs||{})[n]||n,norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');
-function safeGet(k,f){try{return JSON.parse(localStorage.getItem(k))||f}catch(e){return f}}function safeSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
-function currentTheme(){return document.documentElement.dataset.theme||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')}function syncTheme(){$('#theme').textContent=currentTheme()==='dark'?'☀':'☾'}syncTheme();$('#theme').onclick=()=>{const n=currentTheme()==='dark'?'light':'dark';document.documentElement.dataset.theme=n;try{localStorage.setItem('pc-theme',n)}catch(e){}syncTheme()};
-function copyText(text,button){const done=()=>{if(button){const old=button.textContent;button.textContent='Đã chép';setTimeout(()=>button.textContent=old,1500)}};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(done);else{const a=document.createElement('textarea');a.value=text;document.body.append(a);a.select();document.execCommand('copy');a.remove();done()}}
-function show(tab,hash=true){$$('.page').forEach(p=>p.hidden=true);if($('#'+tab))$('#'+tab).hidden=false;$$('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));if(hash)history.pushState({tab},'',tab==='home'?'#home':tab==='cases'?'#cases':tab==='commands'?'#map':tab==='workflows'?'#cases-run':tab==='guides'?'#cases-guide':tab==='health'?'#health':'#'+tab);window.scrollTo({top:0})}
-$$('.nav button').forEach(b=>b.onclick=()=>show(b.dataset.tab,true));$('#menu').onclick=()=>$('#nav').classList.toggle('open');
-const commandCount=[...DATA.left,...DATA.right].reduce((n,b)=>n+b.subs.reduce((m,s)=>m+s.items.length,0),0);
-function recentAdd(id,kind){const k='v6-recent',a=safeGet(k,[]).filter(x=>x.id!==id);a.unshift({id,kind,at:Date.now()});safeSet(k,a.slice(0,8))}
-function pinToggle(id,kind){const k='v6-pins',a=safeGet(k,[]),i=a.findIndex(x=>x.id===id);i>=0?a.splice(i,1):a.unshift({id,kind});safeSet(k,a);return i<0}
-function itemTitle(x){return CASE_BY_ID[x.id]?.title||x.title||x.id}
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const GH='https://github.com/'+(REPO||'KhacTamm27/proxmox-ceph-notes');
+$('#ghLink').href=GH;
+/* ---------- icon ---------- */
+const IC={search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+cluster:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="8.5" y="14" width="7" height="7" rx="1.5"/><path d="M6.5 10v2h11v-2M12 12v2"/>',
+vm:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',host:'<rect x="3" y="3" width="18" height="7" rx="1.5"/><rect x="3" y="14" width="18" height="7" rx="1.5"/><path d="M7 6.5h.01M7 17.5h.01"/>',
+net:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',db:'<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',
+layers:'<path d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>',key:'<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3"/>',gauge:'<path d="m12 14 4-4"/><path d="M3.3 19a10 10 0 1 1 17.4 0"/>',
+cloud:'<path d="M17.5 19H7a5 5 0 1 1 .9-9.9A6 6 0 0 1 19 11a4 4 0 0 1-1.5 8z"/>',term:'<path d="m4 17 6-6-6-6M12 19h8"/>',book:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14z"/>',
+chev:'<path d="m9 18 6-6-6-6"/>',arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
+pin:'<path d="M12 17v5M5 17h14l-2-4V5H7v8l-2 4z"/>',print:'<path d="M6 9V3h12v6M6 18H4v-7h16v7h-2M8 14h8v7H8z"/>',link:'<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>',
+edit:'<path d="M12 20h9M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>',flag:'<path d="M4 22V4h12l-2 4 2 4H4"/>',shield:'<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3z"/>',
+warn:'<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',check:'<path d="m5 12 5 5 9-10"/>',
+file:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9l-6-6z"/><path d="M14 3v6h6"/>',wrench:'<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.4 2.4-2.4-.6-.6-2.4 2.4-2.4z"/>',
+up:'<path d="M12 19V5M5 12l7-7 7 7"/>',zfs:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18"/>',move:'<path d="M4 12h16M14 6l6 6-6 6M10 18l-6-6 6-6"/>',pulse:'<path d="M3 12h4l3-8 4 16 3-8h4"/>'};
+const ic=(n,c='')=>`<svg class="ic ${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IC[n]||''}</svg>`;
+/* ---------- dữ liệu dùng chung ---------- */
+const SEVN={crit:'Nghiêm trọng',warn:'Cảnh báo',info:'Hướng dẫn'},SEV={'Nghiêm trọng':'crit','Cảnh báo':'warn','Hướng dẫn':'info'},RKL={ro:'chỉ đọc',chg:'thay đổi',dg:'nguy hiểm'};
+const CASE_ICON={'OSD':'db','PG':'layers','MON':'key','Cluster & HA':'cluster','VM & Container':'vm','Storage & Backup':'host','Mạng':'net','RGW/S3':'cloud','Nâng cấp & di chuyển':'up','Khác':'file'};
+const GDESC={'OSD':'OSD down, nearfull, thay đĩa','PG':'Inconsistent, degraded, recovery chậm','MON':'Mất quorum, lệch giờ','Cluster & HA':'Node offline, mất quorum, HA','VM & Container':'Bị lock, không start, console lỗi','Storage & Backup':'Đầy ổ, backup lỗi, NFS/iSCSI','Mạng':'MTU, bridge, bond, VLAN','RGW/S3':'503, 403, bucket index, key S3','Nâng cấp & di chuyển':'Nâng cấp, migrate lỗi','Khác':'Các sự cố khác'};
+const RB_ICON={'Nâng cấp':'up','Bảo trì':'wrench','ZFS':'zfs','Storage':'db','Di chuyển VM':'move','Console':'vm'},RB_ORDER=['Nâng cấp','Bảo trì','ZFS','Storage','Di chuyển VM','Console'];
+const RISKN={thap:['ok','Rủi ro thấp','Thấp'],tb:['warn','Rủi ro TB','Trung bình'],cao:['crit','Rủi ro cao','Cao']};
+const HINT={'osd-id':'3',dev:'sdc','if':'bond0',ip:'10.10.10.12',node:'pve2',vmid:'100',pgid:'2.1f',user:'tên-user',pool:'rbd'};
 const CASE_BY_ID=Object.fromEntries(CASES.map(c=>[c.id,c]));
-function buildHome(){const crit=issueCases.filter(c=>CASE_META[c.id]?.severity==='Nghiêm trọng').length,warn=issueCases.filter(c=>CASE_META[c.id]?.severity==='Cảnh báo').length;const stats=[['Nghiêm trọng',crit,'cases','crit'],['Cảnh báo',warn,'cases','warn'],['Lệnh',commandCount,'commands',''],['Quy trình & script',runCases.length+SCRIPTS.length,'workflows',''],['Bài viết',GUIDES.length,'guides','']];$('#stats5').replaceChildren();stats.forEach(([l,n,t,c])=>{const b=el('button','stat5 '+c);b.append(el('b',null,n),el('span',null,l));b.onclick=()=>show(t);$('#stats5').append(b)});
-$('#quickPills').replaceChildren();['mất quorum','OSD down','PG_DAMAGED','RGW 503','AUTH_INSECURE'].forEach(v=>{const b=el('button',null,v);b.onclick=()=>openSearch(v);$('#quickPills').append(b)});
-const hc=[['HEALTH_ERR','PG_DAMAGED','PG bị hỏng'],['HEALTH_WARN','OSD_DOWN','OSD không phản hồi'],['HEALTH_WARN','MON_CLOCK_SKEW','Lệch giờ monitor']];$('#termBody').replaceChildren();hc.forEach(([h,c,d])=>{const cse=CASE_BY_ID[HEALTH[c]?.case_id];const a=el('a',null,h+' · '+c+' — '+d);a.href=cse?'#case/'+cse.id:'#health';$('#termBody').append(a)});
-const pinned=safeGet('v6-pins',[]),recent=safeGet('v6-recent',[]);$('#pinned').replaceChildren();$('#recent').replaceChildren();if(!pinned.length)$('#pinned').append(el('div','pin-row','Chưa ghim mục nào. Mở một case hoặc runbook rồi bấm Ghim.'));
-else pinned.forEach(x=>{const c=CASE_BY_ID[x.id];if(c){const a=el('a','pin-row',c.title);a.href=c.kind==='runbook'?'#runbook/'+c.id:'#case/'+c.id;$('#pinned').append(a)}});if(!recent.length)$('#recent').append(el('div','pin-row','Chưa mở mục nào. Các mục gần đây sẽ hiện ở đây.'));
-else recent.forEach(x=>{const c=CASE_BY_ID[x.id];if(c){const a=el('a','pin-row',c.title);a.href=c.kind==='runbook'?'#runbook/'+c.id:'#case/'+c.id;$('#recent').append(a)}});
-const hot=[issueCases[0],issueCases.find(c=>c.id==='pve-quorum-lost'),issueCases.find(c=>c.id==='pg-inconsistent')].filter(Boolean);$('#homeThree').replaceChildren();
-const cols=[['Sự cố hay gặp',hot],['Lệnh kiểm tra nhanh',null],['Quy trình',runCases.slice(0,4)]];cols.forEach(([title,items])=>{const c=el('div','home-col');c.append(el('h3',null,title));if(title==='Lệnh kiểm tra nhanh'){[['ceph -s','ro'],['ceph health detail','ro'],['ceph osd df','ro'],['ceph pg stat','ro']].forEach(([cmd,risk])=>{const r=el('div','home-row');r.append(el('code',null,cmd),el('span','tag',risk==='ro'?'chỉ đọc':''));c.append(r)})}else items.forEach(x=>{const r=el('div','home-row'),a=el('a',null,x.title);a.href=x.kind==='runbook'?'#runbook/'+x.id:'#case/'+x.id;r.append(a,el('span','tag',x.scope==='ceph'?'Ceph':'Proxmox'));c.append(r)});$('#homeThree').append(c)});
-$('#updates').replaceChildren();issueCases.slice(-5).reverse().forEach(c=>{const r=el('div','pin-row'),a=el('a',null,c.title);a.href='#case/'+c.id;r.append(el('span',null,'Gần đây'),a);$('#updates').append(r)});
+const issueCases=CASES.filter(c=>c.kind!=='runbook'),runCases=CASES.filter(c=>c.kind==='runbook');
+const sevOf=id=>SEV[(CASE_META[id]||{}).severity]||'info',grpOf=id=>(CASE_META[id]||{}).group||'Khác';
+const scopeN=c=>c.scope==='ceph'?'Ceph':'Proxmox';
+const hrefOf=c=>(c.kind==='runbook'?'#runbook/':'#case/')+c.id;
+const cmdRisk=c=>COMMAND_RISK[c]||'chg';
+const BN=b=>(LABELS.branches||{})[b.id]||b.name,SN=n=>(LABELS.subs||{})[n]||n;
+const nc=ch=>ch.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d')||ch;
+const norm=s=>[...String(s||'')].map(c=>nc(c)[0]||c).join('');
+const fmtD=d=>{const p=String(d||'').split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:''},fmtS=d=>{const p=String(d||'').split('-');return p.length===3?p[2]+'/'+p[1]:''};
+const codesOf={};Object.entries(HEALTH).forEach(([k,v])=>{if(v.case_id)(codesOf[v.case_id]=codesOf[v.case_id]||[]).push(k)});
+const allCmds=[];DATA.left.concat(DATA.right).forEach(b=>b.subs.forEach(s=>s.items.forEach(it=>allCmds.push({b,s,it}))));
+const cmdInfo=c=>(allCmds.find(x=>x.it.c===c)||{}).it;
+function hl(text,toks){const n=norm(text),mark=new Array(text.length).fill(false);toks.forEach(t=>{if(!t)return;let i=n.indexOf(t);while(i>-1){for(let k=i;k<i+t.length;k++)mark[k]=true;i=n.indexOf(t,i+1)}});let o='',on=false;[...text].forEach((c,i)=>{if(mark[i]&&!on){o+='<mark>';on=true}if(!mark[i]&&on){o+='</mark>';on=false}o+=esc(c)});return o+(on?'</mark>':'')}
+const toksOf=q=>norm(q.trim()).split(/\s+/).filter(Boolean);
+function lsGet(k,f){try{const v=JSON.parse(localStorage.getItem(k));return v==null?f:v}catch(e){return f}}function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+let VARS=lsGet('v6-vars',{});if(typeof VARS!=='object'||Array.isArray(VARS))VARS={};
+const pinsGet=()=>lsGet('v6-pins',[]),recentGet=()=>lsGet('v6-recent',[]);
+function recentAdd(id){const k=CASE_BY_ID[id]&&CASE_BY_ID[id].kind==='runbook'?'runbook':'case';lsSet('v6-recent',[{id,kind:k}].concat(recentGet().filter(x=>x.id!==id)).slice(0,8))}
+function pinToggle(id){const a=pinsGet(),i=a.findIndex(x=>x.id===id);if(i>=0)a.splice(i,1);else a.unshift({id,kind:CASE_BY_ID[id].kind==='runbook'?'runbook':'case'});lsSet('v6-pins',a);return i<0}
+const lstHTML=(arr,empty)=>{const li=arr.map(x=>CASE_BY_ID[x.id]).filter(Boolean).map(c=>`<li><a href="${hrefOf(c)}"><span>${esc(c.title)}</span><span class="k">${c.kind==='runbook'?'Quy trình':'Sự cố'}</span></a></li>`).join('');return li||`<li class="emp">${empty}</li>`};
+/* ---------- khối lệnh + biến ---------- */
+function cb(cmd,note){const r=cmdRisk(cmd);return `<div class="cb ${r}"><div class="cbh"><span class="rk ${r}">${RKL[r]}</span><button class="cpy" type="button" data-act="copyc">${ic('copy','s')}<span>Sao chép</span></button></div><pre data-tpl="${esc(cmd)}">${esc(cmd)}</pre>${note?`<div class="cnote">${esc(note)}</div>`:''}</div>`}
+const PH=/<([A-Za-z][\w.-]*)>/g;
+function varsBox(cmds){const names=[...new Set(cmds.flatMap(c=>[...c.matchAll(PH)].map(m=>m[1])))];if(!names.length)return '';return `<section class="vars no-print" id="vars"><div class="vh">${ic('term','s')}<b>Điền giá trị một lần</b><span>mọi lệnh trên trang tự cập nhật, bấm Sao chép là ra lệnh đúng</span><button type="button" id="vreset">Xóa</button></div><div class="vg">${names.map(n=>`<label>${esc(n)}<input data-var="${esc(n)}" placeholder="${HINT[n]?'vd: '+esc(HINT[n]):''}" autocomplete="off" spellcheck="false"></label>`).join('')}</div></section>`}
+function renderVars(){$$('pre[data-tpl]').forEach(p=>{const h=esc(p.dataset.tpl).replace(/&lt;([A-Za-z][\w.-]*)&gt;/g,(m,k)=>VARS[k]?`<span class="v">${esc(VARS[k])}</span>`:`<span class="vp">&lt;${k}&gt;</span>`);p.innerHTML=h})}
+function bindVars(){$$('[data-var]').forEach(i=>{i.value=VARS[i.dataset.var]||'';i.oninput=()=>{VARS[i.dataset.var]=i.value.trim();lsSet('v6-vars',VARS);renderVars()}});const r=$('#vreset');if(r)r.onclick=()=>{$$('[data-var]').forEach(i=>i.value='');VARS={};try{localStorage.removeItem('v6-vars')}catch(e){}renderVars()};renderVars()}
+function copyText(t,done){const ok=()=>done&&done();if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,()=>{});else{const a=document.createElement('textarea');a.value=t;document.body.append(a);a.select();try{document.execCommand('copy')}catch(e){}a.remove();ok()}}
+function flash(btn,label){const s=btn.querySelector('span')||btn,old=s.textContent;btn.classList.add('ok');s.textContent=label||'Đã chép';setTimeout(()=>{btn.classList.remove('ok');s.textContent=old},1500)}
+/* ---------- khung chung ---------- */
+const crumb=a=>`<div class="crumb">${a.map(x=>x[1]?`<a href="${x[1]}">${esc(x[0])}</a>`:esc(x[0])).join(' <span>/</span> ')}</div>`;
+const sideA=(label,count,on,attrs,icon,dot)=>`<a ${on?'class="on" ':''}${attrs}>${dot?`<span class="dot ${dot}"></span>`:''}${icon?ic(icon,'s'):''}<span>${esc(label)}</span>${count!=null?`<i>${count}</i>`:''}</a>`;
+const ctaRisk=`<div class="cta"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IC.shield}</svg><div><b>Mức rủi ro lệnh</b><p class="lg"><span><span class="rk ro">chỉ đọc</span> an toàn</span><span><span class="rk chg">thay đổi</span> cần cân nhắc</span><span><span class="rk dg">nguy hiểm</span> ảnh hưởng dữ liệu</span></p></div></div>`;
+const ctaSearch=`<div class="cta">${ic('search')}<div><b>Không thấy case?</b><p>Nhấn <kbd>Ctrl K</kbd> rồi dán nguyên câu lỗi.</p></div></div>`;
+/* ================= TRANG CHỦ ================= */
+function pHome(){
+  const crit=issueCases.filter(c=>sevOf(c.id)==='crit').length,warn=issueCases.filter(c=>sevOf(c.id)==='warn').length;
+  const tl=['PG_DAMAGED','MON_DOWN','OSD_NEARFULL','SLOW_OPS'].filter(k=>HEALTH[k]&&CASE_BY_ID[HEALTH[k].case_id]).map(k=>{const h=HEALTH[k],c=CASE_BY_ID[h.case_id];return `<div class="tl"><span class="tk ${SEV[h.severity]==='crit'?'crit':'warn'}">${k}</span><span class="tm">${esc(h.desc)}</span><a class="tcase" href="${hrefOf(c)}">${ic('arrow','s')}<span>${esc(c.title)}</span></a></div>`}).join('');
+  const strip=[['crit',crit,'Sự cố nghiêm trọng','#cases-crit'],['warn',warn,'Cảnh báo','#cases-warn'],['',allCmds.length,'Lệnh · '+(DATA.left.length+DATA.right.length)+' nhóm','#map'],['',runCases.length+SCRIPTS.length,'Quy trình &amp; script','#cases-run'],['',GUIDES.length,'Bài viết chuyên đề','#guides']].map(([c,n,l,h])=>`<a class="si ${c}" href="${h}"><span class="sv">${n}</span><span class="sl2">${l}</span></a>`).join('');
+  const groups={};issueCases.forEach(c=>(groups[grpOf(c.id)]=groups[grpOf(c.id)]||[]).push(c));
+  const tiles=Object.entries(groups).filter(([,a])=>a.length>=2).sort((a,b)=>b[1].length-a[1].length).slice(0,6).map(([g,a])=>`<div class="tile"><div class="th"><span class="ti">${ic(CASE_ICON[g]||'file')}</span><div><h3>${esc(g)}</h3><p>${esc(GDESC[g]||'')}</p></div><span class="tc">${a.length}</span></div><ul>${a.slice(0,3).map(c=>`<li><a href="${hrefOf(c)}">${esc(c.title)}</a></li>`).join('')}</ul><a class="more" href="#cases-g:${encodeURIComponent(g)}">Xem tất cả ${ic('chev','s')}</a></div>`).join('');
+  const hot=issueCases.filter(c=>sevOf(c.id)==='crit').slice(0,6).map(c=>`<li><a href="${hrefOf(c)}"><span class="dot crit"></span><span class="tt">${esc(c.title)}</span><span class="pf">${scopeN(c)}</span></a></li>`).join('');
+  const quick=['ceph -s','ceph health detail','ceph osd df tree','pvecm status','ceph osd set noout'].map(c=>({c,it:cmdInfo(c)})).filter(x=>x.it).map(({c,it})=>{const r=cmdRisk(c);return `<li><code>${esc(c)}</code><span class="cd">${esc(it.v||it.p||'')}</span><span class="rk ${r}">${RKL[r]}</span><button class="cp" type="button" data-act="copy" data-cmd="${esc(c)}" aria-label="Sao chép">${ic('copy')}</button></li>`}).join('');
+  const rbs=runCases.slice(0,4).map(c=>{const m=RUNBOOK_META[c.id]||{};return `<li><a href="${hrefOf(c)}">${esc(c.title)}</a><span class="mt">${esc(m.group||'Quy trình')}${m.duration?' · '+esc(m.duration):''}</span></li>`}).join('');
+  const ups=[...issueCases.map(c=>({t:c.title,d:DATES[c.id],h:hrefOf(c),k:'Sự cố · '+scopeN(c)})),...runCases.map(c=>({t:c.title,d:DATES[c.id],h:hrefOf(c),k:'Quy trình'})),...GUIDES.map(g=>({t:g.title,d:DATES[g.id]||g.updated,h:(REPO?GH+'/blob/main/':'../')+g.file,k:'Bài viết',x:1}))].filter(x=>x.d).sort((a,b)=>b.d.localeCompare(a.d)).slice(0,5).map(x=>`<li><span class="ud">${fmtS(x.d)}</span><a href="${x.h}"${x.x?' target="_blank" rel="noopener"':''}>${esc(x.t)}</a><span class="mt">${esc(x.k)}</span></li>`).join('');
+  return `<section class="hero2"><div class="grid-bg"></div><div class="in h2row">
+<div class="h2l"><span class="pill"><span class="pdot"></span>Cập nhật ${fmtS(BUILD)} · Proxmox VE 9 · Ceph Squid 19</span>
+<h1>Gặp lỗi trên cluster?<br><span class="grad">Tra ra cách xử lý</span> trong vài giây.</h1>
+<p class="sub">Dán nguyên câu lỗi từ terminal: sổ tay trả về đúng sự cố, các bước kiểm tra an toàn và lệnh cần chạy.</p>
+<div class="bigs" id="bigSearch" role="button" tabindex="0">${ic('search')}<span>Dán câu lỗi, ví dụ: <code>no quorum</code> <code>PG_DAMAGED</code></span><kbd>Ctrl K</kbd></div>
+<div class="pop"><span>Hay tìm:</span>${['mất quorum','OSD down','PG inconsistent','VM locked','RGW 503'].map(q=>`<a data-act="q" data-q="${esc(q)}">${esc(q)}</a>`).join('')}</div></div>
+<div class="h2r"><div class="term"><div class="tbar"><i></i><i></i><i></i><span>root@pve1: ~ ceph health detail</span></div><div class="tbody"><div class="tcmd"><b>$</b> ceph health detail</div>${tl}<div class="tfoot"><a class="tan" href="#health">Dán output của bạn để phân tích →</a>${ic('shield','s')} Mỗi cảnh báo đều có case tương ứng · bấm để mở</div></div></div></div></div>
+<div class="in"><div class="strip">${strip}</div></div></section>
+<section class="in sec"><div class="sh"><h2>Bạn đang thấy gì?</h2><a href="#cases">Tất cả sự cố ${ic('chev','s')}</a></div><div class="tiles">${tiles}</div></section>
+<section class="in sec" id="recent"><div class="sh"><h2>Đã ghim &amp; xem gần đây</h2><span class="mut small2">Lưu trên trình duyệt này</span></div><div class="rgrid2"><div class="col"><div class="ch">${ic('pin')}<h2>Đã ghim</h2></div><ul class="lst" id="pinned">${lstHTML(pinsGet(),'Chưa ghim gì. Bấm nút Ghim trên trang case hoặc quy trình.')}</ul></div><div class="col"><div class="ch">${ic('clock')}<h2>Xem gần đây</h2></div><ul class="lst" id="recentl">${lstHTML(recentGet(),'Chưa xem case nào. Mở một case, nó sẽ hiện ở đây.')}</ul></div></div></section>
+<section class="in sec three"><div class="col"><div class="ch">${ic('warn')}<h2>Sự cố hay gặp</h2></div><ul class="hot">${hot}</ul></div>
+<div class="col"><div class="ch">${ic('term')}<h2>Lệnh kiểm tra nhanh</h2></div><ul class="cmds">${quick}</ul></div>
+<div class="col"><div class="ch">${ic('book')}<h2>Quy trình</h2></div><ul class="rbs">${rbs}</ul></div></section>
+<section class="in sec"><div class="sh"><h2>Mới cập nhật</h2></div><ul class="ups">${ups}</ul></section>`}
+/* ================= SỰ CỐ ================= */
+const ST={plat:'all',grp:'all',sev:'all',q:''};
+const caseText=c=>norm([c.title,c.symptoms,c.tags,c.causes,(CASE_META[c.id]||{}).error_line,(codesOf[c.id]||[]).join(' ')].join(' '));
+const CASE_TEXT=Object.fromEntries(issueCases.map(c=>[c.id,caseText(c)]));
+function caseRow(c,toks){const m=CASE_META[c.id]||{},s=sevOf(c.id);return `<a class="row" href="${hrefOf(c)}"><span class="dot ${s}"></span><div class="rb"><div class="rt">${hl(c.title,toks)}</div><code>${hl(m.error_line||c.symptoms||'',toks)}</code></div><span class="pf">${scopeN(c)}</span><span class="sev ${s}">${SEVN[s]}</span>${ic('chev','s ch')}</a>`}
+function visibleCases(){const toks=toksOf(ST.q);return{toks,list:issueCases.filter(c=>(ST.plat==='all'||c.scope===ST.plat)&&(ST.sev==='all'||sevOf(c.id)===ST.sev)&&(ST.grp==='all'||grpOf(c.id)===ST.grp)&&toks.every(t=>CASE_TEXT[c.id].includes(t)))}}
+function pCases(){
+  const gs=[...new Set(issueCases.map(c=>grpOf(c.id)))];
+  const side=`<aside class="side"><div class="sl">Nền tảng</div><div id="sidePlat"></div><div class="sl">Thành phần</div><div id="sideGrp"></div></aside>`;
+  const n=s=>issueCases.filter(c=>sevOf(c.id)===SEV[s]).length;
+  return `<div class="in lay">${side}<main class="mn"><div id="casesCrumb">${crumb([['Trang chủ','#home'],['Sự cố']])}</div><div class="ttl"><h1>Sự cố</h1><span class="tct" id="tct"></span></div><p class="sub2">Chọn theo thành phần, hoặc dán câu lỗi để lọc ngay.</p>
+<div class="tool"><div class="fin">${ic('search')}<input id="fi" value="${esc(ST.q)}" placeholder="Lọc theo tiêu đề hoặc câu lỗi… (vd: AUTH_INSECURE, rgw, quorum)" autocomplete="off"></div>
+<div class="chips" id="sevChips">${[['all','Tất cả mức độ',''],['crit','Nghiêm trọng '+n('Nghiêm trọng'),'crit'],['warn','Cảnh báo '+n('Cảnh báo'),'warn'],['info','Hướng dẫn '+n('Hướng dẫn'),'info']].map(([v,l,d])=>`<a data-act="sev" data-v="${v}">${d?`<span class="dot ${d}"></span>`:''}${l}</a>`).join('')}</div></div>
+<div id="caseGroups"></div><div class="fempty" id="fempty" hidden><b>Không có sự cố nào khớp.</b><br>Thử từ khác, hoặc nhấn Ctrl K để tìm cả lệnh và quy trình.</div></main>
+<aside class="rail" id="caseRail"></aside></div>`}
+function updCases(){
+  const {toks,list}=visibleCases(),gs={};list.forEach(c=>(gs[grpOf(c.id)]=gs[grpOf(c.id)]||[]).push(c));
+  $('#caseGroups').innerHTML=Object.keys(gs).map(g=>`<section class="grp" id="grp-${esc(g)}"><h3>${ic(CASE_ICON[g]||'file','gi')}${esc(g)}<span>${gs[g].length}</span></h3><div class="rows">${gs[g].map(c=>caseRow(c,toks)).join('')}</div></section>`).join('');
+  $('#fempty').hidden=!!list.length;
+  $('#tct').textContent=(ST.q||ST.plat!=='all'||ST.sev!=='all'||ST.grp!=='all')?`Hiện ${list.length} / ${issueCases.length} sự cố`+(ST.q?` cho “${ST.q}”`:''):`${issueCases.length} sự cố · cập nhật ${fmtD(BUILD)}`;
+  const pc=p=>issueCases.filter(c=>p==='all'||c.scope===p).length;
+  $('#sidePlat').innerHTML=[['all','Tất cả'],['pve','Proxmox'],['ceph','Ceph']].map(([v,l])=>sideA(l,pc(v),ST.plat===v,`data-act="plat" data-v="${v}"`)).join('');
+  const gall=[...new Set(issueCases.map(c=>grpOf(c.id)))];
+  $('#sideGrp').innerHTML=gall.map(g=>sideA(g,issueCases.filter(c=>grpOf(c.id)===g).length,ST.grp===g,`data-act="grp" data-v="${esc(g)}"`,CASE_ICON[g]||'file')).join('');
+  $$('#sevChips a').forEach(a=>a.classList.toggle('on',a.dataset.v===ST.sev));
+  $('#caseRail').innerHTML=`<div class="rl">Trên trang này</div>${Object.keys(gs).map(g=>`<a data-act="go" data-id="grp-${esc(g)}">${esc(g)} <i>${gs[g].length}</i></a>`).join('')}${ctaSearch}`;
 }
-buildHome();
-let platform='all',severity='all';
-function buildCaseFilters(){const c=$('#caseFilters');c.replaceChildren();c.append(el('h3',null,'Nền tảng'));[['all','Tất cả',issueCases.length],['pve','Proxmox',issueCases.filter(x=>x.scope==='pve').length],['ceph','Ceph',issueCases.filter(x=>x.scope==='ceph').length]].forEach(([id,label,n])=>{const b=el('button',platform===id?'on':'');b.append(el('span',null,label),el('span',null,n));b.onclick=()=>{platform=id;buildCaseFilters();renderCases()};c.append(b)});c.append(el('h3',null,'Thành phần'));const groups=[...new Set(issueCases.map(c=>CASE_META[c.id]?.group||'Khác'))];groups.forEach(g=>{const b=el('button','');b.append(el('span',null,g),el('span',null,issueCases.filter(c=>(CASE_META[c.id]?.group||'Khác')===g).length));b.onclick=()=>{const q=CASE_META[c.id]?.group;filterGroup=g;renderCases()};c.append(b)})}
-let filterGroup='all';
-function renderCases(){buildCaseFilters();const q=norm($('#caseQuery').value),visible=issueCases.filter(c=>{const m=CASE_META[c.id]||{},text=norm([c.title,c.symptoms,c.tags,c.causes,m.error_line].join(' '));return(platform==='all'||c.scope===platform)&&(severity==='all'||m.severity===severity)&&(filterGroup==='all'||(m.group||'Khác')===filterGroup)&&(!q||q.split(/\s+/).every(t=>text.includes(t)))});
-$('#caseCount').textContent='Hiện '+visible.length+' / '+issueCases.length+' sự cố';const groups={};visible.forEach(c=>{const g=CASE_META[c.id]?.group||'Khác';(groups[g]||(groups[g]=[])).push(c)});$('#caseGroups').replaceChildren();$('#caseToc').replaceChildren();Object.keys(groups).forEach(g=>{const a=el('a',null,g);$('#caseToc').append(a);const sec=el('section','group'),h=el('h3',null,g+' '+groups[g].length);sec.append(h);groups[g].forEach(c=>{const m=CASE_META[c.id]||{},r=el('a','row');r.href='#case/'+c.id;const dot=el('span','dot-sev '+(m.severity==='Nghiêm trọng'?'crit':m.severity==='Cảnh báo'?'warn':''));const rt=el('div',null);rt.append(el('b',null,c.title),el('code',null,m.error_line||c.symptoms||''));const tags=el('div',null);tags.append(el('span','tag',c.scope==='ceph'?'Ceph':'Proxmox'),el('span','tag '+(m.severity==='Nghiêm trọng'?'crit':m.severity==='Cảnh báo'?'warn':''),m.severity||''));r.append(dot,rt,tags);sec.append(r)});$('#caseGroups').append(sec)});if(!visible.length)$('#caseGroups').append(el('div','pin-row','Không có kết quả. Hãy thử từ khóa ngắn hơn hoặc bỏ bộ lọc.'))}
-const sevLabels=[['all','Tất cả'],['Nghiêm trọng','Nghiêm trọng'],['Cảnh báo','Cảnh báo'],['Hướng dẫn','Hướng dẫn']];$('#severityChips').replaceChildren();sevLabels.forEach(([v,l])=>{const b=el('button',severity===v?'on':'',l);b.onclick=()=>{severity=v;renderCases();$('#severityChips').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.textContent===l))};$('#severityChips').append(b)});$('#caseQuery').oninput=renderCases;renderCases();
-function placeholders(commands){const names=new Set();commands.forEach(c=>(c.match(/<[^>]+>/g)||[]).forEach(p=>names.add(p.slice(1,-1))));return [...names]}
-function replacePlaceholders(command,values){let s=command;Object.entries(values).forEach(([k,v])=>{if(v)s=s.replaceAll('<'+k+'>',v)});return s}
-function commandRisk(c){return COMMAND_RISK[c]||'chg'}
-function renderCommandBlock(command,values,onCopy){const risk=commandRisk(command),b=el('div','cmd-block '+(risk==='dg'?'danger':risk==='chg'?'change':'')),head=el('div','cmd-head'),code=el('code');code.dataset.cmd=command;code.textContent=replacePlaceholders(command,values);const lab=el('span','risk '+(risk==='ro'?'ro':risk==='dg'?'danger':'change'),risk==='ro'?'chỉ đọc':risk==='dg'?'nguy hiểm':'thay đổi');const copy=el('button','btn','Sao chép');copy.onclick=()=>copyText(code.textContent,copy);head.append(code,lab,copy);b.append(head);return b}
-function renderDetail(id){const c=CASE_BY_ID[id];if(!c)return;recentAdd(id,c.kind==='runbook'?'runbook':'case');const m=CASE_META[id]||{},run=c.kind==='runbook';show(run?'workflows':'cases',false);const d=$('#detail');d.hidden=false;const left=el('aside','left'),same=issueCases.filter(x=>x.id!==id&&(CASE_META[x.id]?.group===m.group)).slice(0,8);left.append(el('h3',null,'Cùng nhóm'));same.forEach(x=>{const a=el('a','pin-row',x.title);a.href='#case/'+x.id;left.append(a)});left.append(el('h3',null,'Liên quan'));(m.related||[]).forEach(r=>{const x=CASE_BY_ID[r];if(x){const a=el('a','pin-row',x.title);a.href='#case/'+r;left.append(a)}})
-const mid=el('section'),breadcrumb=el('div','crumb','Trang chủ / '+(run?'Quy trình':'Sự cố')+' / '+(c.scope==='ceph'?'Ceph':'Proxmox'));mid.append(breadcrumb);const head=el('div','detail-head');head.append(el('h1','detail-title',c.title));const meta=el('div','meta-row');meta.append(el('span','badge '+(m.severity==='Nghiêm trọng'?'crit':m.severity==='Cảnh báo'?'warn':''),m.severity||'Cảnh báo'),el('span','badge',c.scope==='ceph'?'Ceph':'Proxmox'),el('span','badge',m.group||''),el('span','badge','Áp dụng: '+(m.applies_to||'Không rõ')));head.append(meta);const actions=el('div','detail-actions');const pin=el('button','btn','Ghim');pin.onclick=()=>pin.textContent=pinToggle(id,run?'runbook':'case')?'Đã ghim':'Ghim';const print=el('button','btn','In / PDF');print.onclick=()=>window.print();const link=el('button','btn','Copy link');link.onclick=()=>copyText(location.href,link);actions.append(pin,print,link);head.append(actions);mid.append(head);
-const ghFile=run?'docs/runbooks/'+id+'.md':'docs/cases/'+(c.scope||'pve')+'/'+id+'.md';
-if(REPO){const ghLinks=el('div','detail-actions'),edit=el('a','btn','Sửa trên GitHub'),issue=el('a','btn','Báo sai / góp ý');edit.href='https://github.com/'+REPO+'/edit/main/'+ghFile;edit.target='_blank';issue.href='https://github.com/'+REPO+'/issues/new?title='+encodeURIComponent('Sai trong: '+c.title);issue.target='_blank';ghLinks.append(edit,issue);mid.append(ghLinks)}
-const commands=(c.steps||[]).flatMap(s=>s.cmds||[]),names=placeholders(commands),values=safeGet('v6-values-'+id,{});
-if(names.length){const box=el('div','fillbox');box.append(el('b',null,'Điền giá trị một lần'));names.forEach(n=>{const input=el('input');input.placeholder=n;input.value=values[n]||'';input.oninput=()=>{values[n]=input.value;safeSet('v6-values-'+id,values);renderValueCommands()};box.append(input)});const clear=el('button','btn','Xóa');clear.onclick=()=>{Object.keys(values).forEach(k=>delete values[k]);safeSet('v6-values-'+id,{});box.querySelectorAll('input').forEach(i=>i.value='');renderValueCommands()};box.append(clear);mid.append(box)}
-if(c.symptoms){const sec=el('section','detail-section');sec.id='trieuchung';sec.append(el('h2',null,'Triệu chứng'),el('p',null,c.symptoms));mid.append(sec)}
-if(c.causes||c.prereq){const sec=el('section','detail-section');sec.id='nguyennhan';sec.append(el('h2',null,'Nguyên nhân hay gặp'),el('p',null,c.causes||c.prereq||''));mid.append(sec)}
-const steps=el('section','detail-section');steps.id='xuly';steps.append(el('h2',null,'Các bước xử lý'));(c.steps||[]).forEach((st,i)=>{const s=el('div','timeline-step');s.dataset.n=i+1;s.append(el('h3',null,st.t));(st.cmds||[]).forEach(cmd=>s.append(renderCommandBlock(cmd,values)));steps.append(s)});mid.append(steps);
-const sections=[['trieuchung','Triệu chứng'],['nguyennhan','Nguyên nhân'],['xuly','Các bước xử lý']];
-if(c.notes){const sec=el('section','detail-section');sec.id='luuy';sec.append(el('h2',null,'Lưu ý'),el('p',null,c.notes));mid.append(sec);sections.push(['luuy','Lưu ý'])}
-const kw=el('section','detail-section');kw.id='tukhoa';kw.append(el('h2',null,'Từ khóa'),el('p',null,c.tags||''));mid.append(kw);sections.push(['tukhoa','Từ khóa']);
-const toc=el('aside','toc');toc.append(el('h3',null,'Trên trang này'));sections.forEach(([sid,label])=>{const a=el('a',null,label);a.href='#'+sid;toc.append(a)});const rb=el('div','risk-box');rb.append(el('div',null,'Rủi ro lệnh'));rb.append(el('div',null,'chỉ đọc: an toàn để tra cứu'),el('div',null,'thay đổi: có tác động cấu hình'),el('div',null,'nguy hiểm: cần xác nhận'));toc.append(rb);d.replaceChildren(left,mid,toc);
-function renderValueCommands(){d.querySelectorAll('.cmd-block code').forEach(code=>code.textContent=replacePlaceholders(code.dataset.cmd||'',values))}
+/* ================= LỆNH ================= */
+const SC={br:'all',risk:'all',q:''};
+function pCommands(){return `<div class="in lay"><aside class="side"><div class="sl">Nhóm lệnh</div><div id="cmdSide"></div></aside><main class="mn">${crumb([['Trang chủ','#home'],['Lệnh']])}<div class="ttl"><h1>Lệnh</h1><span class="tct" id="cmdCount"></span></div><p class="sub2">Thư viện lệnh theo nhóm, mỗi lệnh có nhãn rủi ro. Nhấn Sao chép để lấy lệnh.</p>
+<div class="tool"><div class="fin">${ic('search')}<input id="cfi" value="${esc(SC.q)}" placeholder="Lọc lệnh hoặc mô tả… (vd: osd tree, pvecm, noout)" autocomplete="off"></div><div class="chips" id="riskChips"></div></div>
+<div id="cmdGroups"></div><div class="fempty" id="cempty" hidden><b>Không có lệnh nào khớp.</b></div></main><aside class="rail"><div class="rl">Mức rủi ro</div>${ctaRisk}</aside></div>`}
+function updCommands(){
+  const toks=toksOf(SC.q),tx=x=>norm([x.it.c,x.it.p,x.it.v,x.it.k,x.s.name,SN(x.s.name),x.b.name,BN(x.b)].join(' '));
+  const base=allCmds.filter(x=>toks.every(t=>(x._t||(x._t=tx(x))).includes(t))&&(SC.br==='all'||x.b.id===SC.br));
+  const cnt=r=>base.filter(x=>r==='all'||cmdRisk(x.it.c)===r).length;
+  const list=base.filter(x=>SC.risk==='all'||cmdRisk(x.it.c)===SC.risk);
+  const by={};list.forEach(x=>(by[x.b.id]=by[x.b.id]||{b:x.b,rows:[]}).rows.push(x));
+  $('#cmdGroups').innerHTML=Object.values(by).map(({b,rows})=>`<section class="grp" id="cmd-${esc(b.id)}"><h3>${ic('term','gi')}${esc(BN(b))}<span>${rows.length}</span></h3><div class="rows">${rows.map(x=>{const r=cmdRisk(x.it.c);return `<div class="row crow"><div class="rb"><code>${hl(x.it.c,toks)}</code><div class="cdesc">${hl(x.it.v||x.it.p||'',toks)}</div></div><span class="pf">${esc(SN(x.s.name))}</span><span class="rk ${r}">${RKL[r]}</span><button class="ab" type="button" data-act="copy" data-cmd="${esc(x.it.c)}">${ic('copy','s')}<span>Sao chép</span></button></div>`}).join('')}</div></section>`).join('');
+  $('#cempty').hidden=!!list.length;
+  $('#cmdCount').textContent=(SC.q||SC.br!=='all'||SC.risk!=='all')?`Hiện ${list.length} / ${allCmds.length} lệnh`:`${allCmds.length} lệnh · ${DATA.left.length+DATA.right.length} nhóm`;
+  $('#riskChips').innerHTML=[['all','Tất cả'],['ro','chỉ đọc'],['chg','thay đổi'],['dg','nguy hiểm']].map(([v,l])=>`<a data-act="crisk" data-v="${v}" class="${SC.risk===v?'on':''}">${v==='all'?'':`<span class="dot ${v==='ro'?'':v==='chg'?'warn':'crit'}" ${v==='ro'?'style="background:var(--ok)"':''}></span>`}${l} ${cnt(v)}</a>`).join('');
+  const all=allCmds.filter(x=>toks.every(t=>(x._t||(x._t=tx(x))).includes(t))&&(SC.risk==='all'||cmdRisk(x.it.c)===SC.risk));
+  const bc={};all.forEach(x=>bc[x.b.id]=(bc[x.b.id]||0)+1);
+  const branches=DATA.left.concat(DATA.right);
+  $('#cmdSide').innerHTML=sideA('Tất cả',all.length,SC.br==='all','data-act="cbr" data-v="all"')+branches.filter(b=>bc[b.id]).map(b=>sideA(BN(b),bc[b.id],SC.br===b.id,`data-act="cbr" data-v="${esc(b.id)}"`)).join('');
 }
-function renderRunbookDetail(id){const c=CASE_BY_ID[id];if(!c||c.kind!=='runbook')return;recentAdd(id,'runbook');const d=$('#detail');d.hidden=false;show('workflows',false);const rm=RUNBOOK_META[id]||{},steps=c.steps||[],values=safeGet('v6-values-'+id,{}),done=safeGet('v6-run-'+id,[]);
-const mid=el('section'),crumb=el('div','crumb','Trang chủ / Quy trình / '+c.title);mid.append(crumb);const head=el('div','detail-head');head.append(el('h1','detail-title',c.title),el('p',null,c.goal||c.notes||''));const stats=el('div','run-head');[['Thời gian',rm.duration||'~30 phút'],['Rủi ro',rm.risk||'tb'],['Downtime',rm.downtime||'Không'],['Số bước',steps.length]].forEach(([k,v])=>{const x=el('div','run-stat');x.append(el('span','tag',k),el('b',null,' '+v));stats.append(x)});head.append(stats);const actions=el('div','detail-actions');const pin=el('button','btn','Ghim');pin.onclick=()=>pin.textContent=pinToggle(id,'runbook')?'Đã ghim':'Ghim';const print=el('button','btn','In / PDF');print.onclick=()=>window.print();actions.append(pin,print);head.append(actions);mid.append(head);
-if(REPO){const ghLinks=el('div','detail-actions'),edit=el('a','btn','Sửa trên GitHub'),issue=el('a','btn','Báo sai / góp ý');edit.href='https://github.com/'+REPO+'/edit/main/docs/runbooks/'+id+'.md';edit.target='_blank';issue.href='https://github.com/'+REPO+'/issues/new?title='+encodeURIComponent('Sai trong: '+c.title);issue.target='_blank';ghLinks.append(edit,issue);mid.append(ghLinks)}
-const progress=el('div','run-progress'),ptext=el('b',null,'0 / '+steps.length+' bước đã xong'),reset=el('button','btn','Làm lại từ đầu');progress.append(ptext,reset);mid.append(progress);
-const names=placeholders(steps.flatMap(s=>s.cmds||[]));if(names.length){const box=el('div','fillbox');box.append(el('b',null,'Điền giá trị một lần'));names.forEach(n=>{const i=el('input');i.placeholder=n;i.value=values[n]||'';i.oninput=()=>{values[n]=i.value;safeSet('v6-values-'+id,values);d.querySelectorAll('.cmd-block code').forEach(code=>code.textContent=replacePlaceholders(code.dataset.cmd||'',values))};box.append(i)});mid.append(box)}
-const groups=[['Chuẩn bị','Chuẩn bị'],['Thực hiện','Thực hiện'],['Kiểm tra','Kiểm tra'],['Rollback','Rollback']];
-let n=0;groups.forEach(([name,match])=>{const has=steps.filter(s=>norm(s.t).includes(norm(match)));if(!has.length&&name==='Rollback')return;const list=name==='Chuẩn bị'||name==='Thực hiện'||name==='Kiểm tra'||name==='Rollback'?has:steps;if(!list.length)return;const sec=el('section','detail-section');sec.append(el('h2',null,name));if(name==='Rollback')sec.className='detail-section rollback';list.forEach(st=>{n++;const idx=c.steps.indexOf(st),step=el('div','run-step'+(done.includes(idx)?' done':''));const head=el('div','run-step-head'),tick=el('input');tick.type='checkbox';tick.checked=done.includes(idx);const title=el('h3',null,st.t);head.append(tick,title);tick.onchange=()=>{if(tick.checked&&!done.includes(idx))done.push(idx);if(!tick.checked){const j=done.indexOf(idx);if(j>=0)done.splice(j,1)}safeSet('v6-run-'+id,done);step.classList.toggle('done',tick.checked);ptext.textContent=done.length+' / '+steps.length+' bước đã xong'};step.append(head);(st.cmds||[]).forEach(cmd=>step.append(renderCommandBlock(cmd,values)));sec.append(step)});mid.append(sec)});
-if(!n){const sec=el('section','detail-section');sec.append(el('h2',null,'Các bước'));steps.forEach((st,i)=>{const step=el('div','run-step'+(done.includes(i)?' done':'')),head=el('div','run-step-head'),tick=el('input');tick.type='checkbox';tick.checked=done.includes(i);tick.onchange=()=>{if(tick.checked&&!done.includes(i))done.push(i);if(!tick.checked){const j=done.indexOf(i);if(j>=0)done.splice(j,1)}safeSet('v6-run-'+id,done);step.classList.toggle('done',tick.checked);ptext.textContent=done.length+' / '+steps.length+' bước đã xong'};head.append(tick,el('h3',null,st.t));step.append(head);(st.cmds||[]).forEach(cmd=>step.append(renderCommandBlock(cmd,values)));sec.append(step)});mid.append(sec)}
-ptext.textContent=done.length+' / '+steps.length+' bước đã xong';reset.onclick=()=>{safeSet('v6-run-'+id,[]);renderRunbookDetail(id)}
-const left=el('aside','left');left.append(el('h3',null,'Quy trình'),el('div','pin-row',c.title));const toc=el('aside','toc');toc.append(el('h3',null,'Trên trang này'),el('a','', 'Các bước').href='#');d.replaceChildren(left,mid,toc)}
-function renderWorkflows(){const q=norm($('#workflowQuery').value),filter=$('#workflowQuery').dataset.filter||'all',risk=$('#workflowQuery').dataset.risk||'all';const groups={};runCases.forEach(c=>{const m=RUNBOOK_META[c.id]||{},text=norm([c.title,c.goal,c.tags].join(' '));if(q&&!q.split(/\s+/).every(t=>text.includes(t)))return;if(filter!=='all'&&(m.group||'Bảo trì')!==filter)return;if(risk!=='all'&&(m.risk||'tb')!==risk)return;const g=m.group||'Bảo trì';(groups[g]||(groups[g]=[])).push(c)});$('#workflowGroups').replaceChildren();Object.keys(groups).forEach(g=>{const sec=el('section');sec.append(el('h3',null,g));const grid=el('div','workflow-grid');groups[g].forEach(c=>{const m=RUNBOOK_META[c.id]||{},card=el('div','workflow-card'),meta=el('div','meta-row');card.append(el('h3',null,c.title),el('p',null,c.goal||c.notes||''));meta.append(el('span','badge','⏱ '+(m.duration||'~30 phút')),el('span','badge',(m.steps||c.steps?.length||0)+' bước'),el('span','badge','Rủi ro '+(m.risk||'tb')),el('span','badge','Downtime: '+(m.downtime||'Không')));card.append(meta);const a=el('a','btn','Xem quy trình →');a.href='#runbook/'+c.id;card.append(a);grid.append(card)});sec.append(grid);$('#workflowGroups').append(sec)});const scripts=SCRIPTS.filter(s=>norm([s.title,s.goal,s.tags,s.notes].join(' ')).includes(q));if(scripts.length){const sec=el('section');sec.append(el('h3',null,'Script kiểm tra'));scripts.forEach(s=>{const r=el('div','script-row'),copy=el('button','btn','Sao chép');r.append(el('code',null,s.file||s.id),el('span',null,s.goal||''),copy);copy.onclick=()=>copyText(s.code||'',copy);sec.append(r)});$('#workflowGroups').append(sec)}}
-function renderGuides(){$('#guideList').replaceChildren();GUIDES.forEach(g=>{const r=el('div','list-card');r.append(el('h3',null,g.title),el('p',null,g.summary));const a=el('a','btn','Mở bài viết');a.href=(REPO?'https://github.com/'+REPO+'/blob/main/':'../')+g.file;a.target='_blank';r.append(a);$('#guideList').append(r)})}
-function renderHealthTable(){const q=norm($('#healthTableQuery').value);$('#healthTable').replaceChildren();Object.entries(HEALTH).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([code,h])=>{if(q&&!norm(code+' '+h.desc).includes(q))return;const tr=el('tr'),cid=h.case_id||'';tr.append(el('td',null,code),el('td',null,h.severity||'Cảnh báo'),el('td',null,h.desc||''));const c=CASE_BY_ID[cid],a=el('a',null,c?c.title:'Chưa có trong sổ tay');a.href=c?'#case/'+cid:'#health';tr.append(el('td',null));tr.lastElementChild.append(a);$('#healthTable').append(tr)})}
-function analyzeHealth(text){const codes=[...new Set((text.match(/\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b/g)||[]).map(x=>x))].filter(c=>!/^HEALTH_(OK|WARN|ERR)$/.test(c));const err=/HEALTH_ERR/i.test(text),warn=/HEALTH_WARN/i.test(text);$('#healthSummary').text='';$('#healthSummary').textContent=(err?'HEALTH_ERR':warn?'HEALTH_WARN':'HEALTH_OK')+' · '+codes.length+' mã';$('#healthResults').replaceChildren();codes.sort((a,b)=>{const rank={ 'Nghiêm trọng':0,'Cảnh báo':1,'Hướng dẫn':2};return(rank[HEALTH[a]?.severity]??3)-(rank[HEALTH[b]?.severity]??3)||a.localeCompare(b)}).forEach(code=>{const h=HEALTH[code],r=el('div','health-row');r.append(el('b',null,code),el('div',null,h?.desc||'Chưa có trong sổ tay'));if(h){const a=el('a',null,'→ '+(CASE_BY_ID[h.case_id]?.title||h.case_id));a.href='#case/'+h.case_id;r.append(a)}else r.append(el('div',null,'Gợi ý: bổ sung mã này vào health_codes.json'));$('#healthResults').append(r)});if(!codes.length)$('#healthResults').append(el('div','pin-row','Không tìm thấy mã health. Hãy dán output từ ceph health detail.'))}
-function renderWorkflowFilters(){const box=$('#workflowFilters');if(!box)return;box.replaceChildren();[['all','Tất cả'],['Nâng cấp','Nâng cấp'],['Bảo trì','Bảo trì'],['ZFS','ZFS'],['Storage','Storage'],['Di chuyển VM','Di chuyển VM'],['Console','Console']].forEach(([v,l])=>{const b=el('button',null,l);b.onclick=()=>{$('#workflowQuery').dataset.filter=v;renderWorkflows();box.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))};box.append(b)});const risks=[['all','Tất cả rủi ro'],['thap','Rủi ro thấp'],['tb','Rủi ro trung bình'],['cao','Rủi ro cao']];risks.forEach(([v,l])=>{const b=el('button',null,l);b.onclick=()=>{$('#workflowQuery').dataset.risk=v;renderWorkflows();};box.append(b)})}
-$('#workflowQuery').oninput=renderWorkflows;renderWorkflowFilters();renderWorkflows();renderGuides();
-$('#healthInput').oninput=()=>analyzeHealth($('#healthInput').value);$('#healthTableQuery').oninput=renderHealthTable;$('#healthExample').onclick=()=>{const t='HEALTH_ERR 1 monitor, 1 osd down, PG_DAMAGED, PG_DEGRADED, OSDMAP_FLAGS, MON_DISK_LOW, AUTH_INSECURE_SERVICE_KEY_TYPE';$('#healthInput').value=t;analyzeHealth(t)};$('#healthClear').onclick=()=>{$('#healthInput').value='';analyzeHealth('')};renderHealthTable();
-let modalItems=[],modalIndex=-1;
-function openSearch(q){if(q!=null)$('#modalQuery').value=q;$('#modal').classList.add('open');renderModal();setTimeout(()=>$('#modalQuery').focus(),0)}function closeSearch(){$('#modal').classList.remove('open')}$('#openSearch').onclick=()=>openSearch();$('#bigSearch').onclick=()=>openSearch();$('#modalClose').onclick=closeSearch;$('#modal').onclick=e=>{if(e.target===e.currentTarget)closeSearch()};
-function renderModal(){const q=$('#modalQuery').value.trim(),r=q?INDEX.query(q):null,$res=$('#modalResults'),preview=$('#modalPreview');$res.replaceChildren();preview.replaceChildren();modalItems=[];
-if(!q){const pins=safeGet('v6-pins',[]),recent=safeGet('v6-recent',[]);const g1=el('div','pal-group');g1.append(el('h3',null,'Gần đây'));recent.slice(0,5).forEach(x=>{const c=CASE_BY_ID[x.id];if(c){const b=el('button','pal-item',c.title);b.onclick=()=>activate({type:c.kind==='runbook'?'runbook':'case',value:c});g1.append(b);modalItems.push({type:c.kind==='runbook'?'runbook':'case',value:c})}});$res.append(g1);const g2=el('div','pal-group');g2.append(el('h3',null,'Đã ghim'));pins.slice(0,5).forEach(x=>{const c=CASE_BY_ID[x.id];if(c){const b=el('button','pal-item',c.title);b.onclick=()=>activate({type:c.kind==='runbook'?'runbook':'case',value:c});g2.append(b);modalItems.push({type:c.kind==='runbook'?'runbook':'case',value:c})}});$res.append(g2);if(!recent.length&&!pins.length)preview.textContent='Chưa có mục ghim hoặc đã xem.';return}
-if(/pg.?damaged/.test(norm(q))&&CASE_BY_ID['pg-down-incomplete'])r.cases=[{c:CASE_BY_ID['pg-down-incomplete']}];
-const groups=[['Sự cố',(r.cases||[]).map(x=>({type:x.c.kind==='runbook'?'runbook':'case',value:x.c}))],['Lệnh',(r.commands||[]).map(x=>({type:'command',value:x}))],['Quy trình',[...(r.cases||[]).filter(x=>x.c.kind==='runbook').map(x=>({type:'runbook',value:x.c})),...(r.scripts||[]).map(x=>({type:'script',value:x.s}))]],['Bài viết',(r.guides||[]).map(x=>({type:'guide',value:x.g}))]];
-const total=groups.reduce((n,[,a])=>n+a.length,0);$res.append(el('div','pin-row',total+' kết quả cho “'+q+'”'));if(!total)$res.append(el('div','pin-row','Không tìm thấy. Thử bỏ bớt từ hoặc gõ không dấu.'));
-groups.forEach(([title,items])=>{if(!items.length)return;const g=el('div','pal-group');g.append(el('h3',null,title));items.slice(0,6).forEach(item=>{const label=item.type==='command'?item.value.it.c:(item.value.title||item.value.name||'');const b=el('button','pal-item',label);b.onclick=()=>activate(item);b.onmouseenter=()=>previewItem(item);modalItems.push(item);g.append(b)});if(items.length>6){const b=el('button','pal-item','Xem tất cả '+items.length);b.onclick=()=>{closeSearch();show(title==='Sự cố'?'cases':title==='Lệnh'?'commands':title==='Quy trình'?'workflows':'guides')};g.append(b)}$res.append(g)});
-if(modalItems.length)previewItem(modalItems[0])}
-function previewItem(item){const p=$('#modalPreview');p.replaceChildren();const v=item.value;if(item.type==='command'){p.append(el('b',null,v.it.c),el('code',null,v.it.v||v.it.p||''))}else{p.append(el('b',null,v.title||v.name||''),el('p',null,v.symptoms||v.goal||v.summary||''))}}
-function activate(item){closeSearch();if(item.type==='command'){copyText(item.value.it.c);return}if(item.type==='case'||item.type==='runbook')renderDetail(item.value.id);else if(item.type==='guide')window.open((REPO?'https://github.com/'+REPO+'/blob/main/':'../')+item.value.file,'_blank');else show('workflows')}
-$('#modalQuery').oninput=renderModal;$('#modalQuery').onkeydown=e=>{if(e.key==='Enter'&&modalItems.length)activate(modalItems[0])};document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openSearch()}else if(e.key==='Escape')closeSearch()});
-function openHash(){let id=decodeURIComponent(location.hash.slice(1));if(!id||id==='home'){show('home',false);return}if(id==='health'){show('health',false);return}if(id==='map'||/^A\d+$/.test(id)||/^B\d+$/.test(id)){show('commands',false);setTimeout(()=>document.getElementById(id)?.scrollIntoView({block:'start'}),0);return}if(id==='cases'||id==='cases-ceph'||id==='cases-pve'){platform=id==='cases-ceph'?'ceph':id==='cases-pve'?'pve':'all';severity='all';filterGroup='all';show('cases',false);renderCases();return}if(id==='cases-run'||id==='runbooks'||id==='scripts'||id==='cases-scr'||id==='guides'||id==='cases-guide'){show(id==='guides'||id==='cases-guide'?'guides':'workflows',false);return}if(id.startsWith('case/')||id.startsWith('case-')){const rid=id.startsWith('case/')?id.slice(5):id.slice(5),c=CASE_BY_ID[rid];if(c&&c.kind==='runbook')renderRunbookDetail(rid);else renderDetail(rid);return}if(id.startsWith('runbook/')){renderRunbookDetail(id.slice(8));return}if(id.startsWith('script-')){show('workflows',false);return}show('home',false)}
-window.addEventListener('hashchange',openHash);openHash();
+/* ================= QUY TRÌNH ================= */
+const SW={type:'all',grp:'all',risk:'all',nodt:false,q:''};
+const hasDt=m=>/^có/i.test(m.downtime||'');
+function scriptRisk(s){const rs=(s.usage||[]).map(u=>COMMAND_RISK[u.c]).filter(Boolean);return rs.includes('dg')?'dg':rs.includes('chg')?'chg':rs.length?'ro':''}
+function scriptHref(s){return(REPO?GH+'/blob/main/docs/':'')+'scripts/'+s.id+'.md'}
+function pWorkflows(){return `<div class="in lay"><aside class="side"><div class="sl">Loại</div><div id="wType"></div><div class="sl">Chủ đề</div><div id="wGrp"></div></aside><main class="mn">${crumb([['Trang chủ','#home'],['Quy trình']])}<div class="ttl"><h1>Quy trình</h1><span class="tct">${runCases.length} runbook · ${SCRIPTS.length} script</span></div><p class="sub2">Hướng dẫn từng bước cho thao tác có kế hoạch: nâng cấp, bảo trì, di chuyển VM, storage.</p>
+<div class="tool"><div class="fin">${ic('search')}<input id="wfi" value="${esc(SW.q)}" placeholder="Lọc quy trình… (vd: ceph, zfs, esxi, iscsi)" autocomplete="off"></div><div class="chips" id="wChips"></div></div><div id="wList"></div><div class="fempty" id="wempty" hidden><b>Không có quy trình nào khớp.</b></div></main><aside class="rail" id="wRail"></aside></div>`}
+function updWorkflows(){
+  const toks=toksOf(SW.q),match=t=>toks.every(k=>norm(t).includes(k));
+  const rbAll=runCases.filter(c=>{const m=RUNBOOK_META[c.id]||{};return match([c.title,c.goal,c.tags,m.group].join(' '))});
+  const rbs=rbAll.filter(c=>{const m=RUNBOOK_META[c.id]||{};return(SW.grp==='all'||m.group===SW.grp)&&(SW.risk==='all'||m.risk===SW.risk)&&(!SW.nodt||!hasDt(m))});
+  const showRb=SW.type!=='script',showSc=SW.type!=='runbook'&&SW.grp==='all'&&SW.risk==='all'&&!SW.nodt;
+  const scs=showSc?SCRIPTS.filter(s=>match([s.title,s.goal,s.tags,s.file].join(' '))):[];
+  const gs={};(showRb?rbs:[]).forEach(c=>{const g=(RUNBOOK_META[c.id]||{}).group||'Khác';(gs[g]=gs[g]||[]).push(c)});
+  const order=[...RB_ORDER.filter(g=>gs[g]),...Object.keys(gs).filter(g=>!RB_ORDER.includes(g))];
+  let h=order.map(g=>`<section class="grp" id="wg-${esc(g)}"><h3>${ic(RB_ICON[g]||'file','gi')}${esc(g)}<span>${gs[g].length}</span></h3><div class="rgrid">${gs[g].map(c=>{const m=RUNBOOK_META[c.id]||{},r=RISKN[m.risk]||RISKN.tb,st=m.steps||(c.steps||[]).length;return `<a class="rc" href="${hrefOf(c)}"><div class="rch"><span class="rci">${ic(RB_ICON[g]||'file')}</span><span class="rk2 ${r[0]}">${r[1]}</span></div><h4>${esc(c.title)}</h4><p>${esc(c.goal||'')}</p><div class="rcm"><span>${ic('clock','s')}${esc(m.duration||'')}</span><span>${st} bước</span><span class="${hasDt(m)?'dt':''}">Downtime: ${esc(m.downtime||'Không')}</span></div><span class="rgo">Xem quy trình ${ic('arrow','s')}</span></a>`}).join('')}</div></section>`).join('');
+  if(scs.length)h+=`<section class="grp" id="wg-scripts"><h3>${ic('term','gi')}Script kiểm tra<span>${scs.length}</span></h3><div class="rows">${scs.map(s=>{const r=scriptRisk(s);return `<a class="scr" href="${scriptHref(s)}" target="_blank" rel="noopener">${ic('file','s')}<code>${esc(s.file)}</code><span class="scd">${esc(s.goal||s.title)}</span>${r?`<span class="rk ${r}">${RKL[r]}</span>`:''}${ic('chev','s ch')}</a>`}).join('')}</div></section>`;
+  $('#wList').innerHTML=h;$('#wempty').hidden=!!h;
+  const grpAll=[...new Set(runCases.map(c=>(RUNBOOK_META[c.id]||{}).group||'Khác'))].sort((a,b)=>(RB_ORDER.indexOf(a)+1||99)-(RB_ORDER.indexOf(b)+1||99));
+  $('#wType').innerHTML=[['all','Tất cả',runCases.length+SCRIPTS.length],['runbook','Runbook',runCases.length],['script','Script',SCRIPTS.length]].map(([v,l,n])=>sideA(l,n,SW.type===v,`data-act="wtype" data-v="${v}"`)).join('');
+  $('#wGrp').innerHTML=grpAll.map(g=>sideA(g,runCases.filter(c=>((RUNBOOK_META[c.id]||{}).group||'Khác')===g).length,SW.grp===g,`data-act="wgrp" data-v="${esc(g)}"`,RB_ICON[g]||'file')).join('');
+  const rc=r=>rbAll.filter(c=>(RUNBOOK_META[c.id]||{}).risk===r).length;
+  $('#wChips').innerHTML=[['all','Tất cả',''],['thap','Rủi ro thấp','ok'],['tb','Rủi ro TB','warn'],['cao','Rủi ro cao','crit']].map(([v,l,d])=>`<a data-act="wrisk" data-v="${v}" class="${SW.risk===v?'on':''}">${d?`<span class="dot ${d==='ok'?'':d}" ${d==='ok'?'style="background:var(--ok)"':''}></span>`:''}${l}</a>`).join('')+`<a data-act="wdt" class="${SW.nodt?'on':''}">Không downtime</a>`;
+  $('#wRail').innerHTML=`<div class="rl">Trên trang này</div>${order.map(g=>`<a data-act="go" data-id="wg-${esc(g)}">${esc(g)} <i>${gs[g].length}</i></a>`).join('')}${scs.length?`<a data-act="go" data-id="wg-scripts">Script kiểm tra <i>${scs.length}</i></a>`:''}<div class="cta">${ic('shield')}<div><b>Trước khi chạy</b><p>Đọc phần Chuẩn bị, backup cấu hình, đặt cờ bảo trì nếu có Ceph.</p></div></div>`;
+}
+/* ================= BÀI VIẾT ================= */
+function pGuides(){return `<div class="in an">${crumb([['Trang chủ','#home'],['Bài viết']])}<div class="ttl"><h1>Bài viết</h1><span class="tct">${GUIDES.length} bài chuyên đề</span></div><p class="sub2">Bài dài về mô hình, cơ chế, triển khai và lỗi thường gặp.</p><div class="rgrid">${GUIDES.map(g=>`<a class="rc" href="${(REPO?GH+'/blob/main/':'../')+g.file}" target="_blank" rel="noopener"><div class="rch"><span class="rci">${ic('book')}</span>${g.status?`<span class="rk2 ok">${esc(g.status)}</span>`:''}</div><h4>${esc(g.title)}</h4><p>${esc(g.summary)}</p><div class="rcm"><span>${esc(scopeN(g))}</span>${DATES[g.id]||g.updated?`<span>Cập nhật ${fmtD(DATES[g.id]||g.updated)}</span>`:''}</div><span class="rgo">Mở bài viết ${ic('arrow','s')}</span></a>`).join('')}</div></div>`}
+/* ================= PHÂN TÍCH HEALTH ================= */
+const HSAMPLE="HEALTH_ERR 11 auth client entities with insecure key types; 1 pg inconsistent; 3 scrub errors\n[WRN] AUTH_INSECURE_CLIENT_KEY_TYPE: 11 auth client entities with insecure key types\n[ERR] AUTH_INSECURE_SERVICE_KEY_TYPE: 9 auth service entities with insecure key types\n[ERR] AUTH_INSECURE_SERVICE_TICKETS: Monitors are configured to issue insecure service tickets\n[WRN] BLUESTORE_SLOW_OP_ALERT: 1 OSD(s) experiencing slow operations in BlueStore\n[WRN] OSDMAP_FLAGS: noout,nobackfill,norebalance,norecover,noscrub,nodeep-scrub flag(s) set\n[ERR] OSD_SCRUB_ERRORS: 3 scrub errors\n[ERR] PG_DAMAGED: Possible data damage: 1 pg inconsistent\n    pg 15.19 is active+clean+inconsistent, acting [5,0]\n[WRN] CEPHADM_FOO_BAR: unknown example code";
+const caseLink=id=>CASE_BY_ID[id]?`<a href="${hrefOf(CASE_BY_ID[id])}">${esc(CASE_BY_ID[id].title)}</a>`:'<span class="mut">Chưa có case</span>';
+function pHealth(){
+  const rows=Object.entries(HEALTH).sort((a,b)=>a[0].localeCompare(b[0])).map(([k,h])=>{const s=SEV[h.severity]||'info',c=CASE_BY_ID[h.case_id];return `<tr data-h="${esc(k+' '+h.desc+' '+(c?c.title:''))}"><td><code>${esc(k)}</code></td><td><span class="sev ${s}">${esc(h.severity)}</span></td><td>${esc(h.desc)}</td><td>${caseLink(h.case_id)}</td></tr>`}).join('');
+  return `<div class="in an">${crumb([['Trang chủ','#home'],['Công cụ'],['Phân tích health']])}<div class="ttl"><h1>Phân tích <code class="h1c">ceph health detail</code></h1></div><p class="sub2">Dán nguyên output. Trang tự nhận ra từng mã cảnh báo, xếp theo mức nghiêm trọng và đưa link case xử lý. Chạy hoàn toàn trên trình duyệt, không gửi dữ liệu đi đâu.</p>
+<div class="angrid"><div class="anin"><div class="anh"><b>Output của bạn</b><button type="button" id="sample">Dán ví dụ</button><button type="button" id="clear">Xóa</button></div><textarea id="hin" spellcheck="false" placeholder="root@pve1:~# ceph health detail&#10;HEALTH_WARN ...&#10;[WRN] OSD_NEARFULL: 1 nearfull osd(s)"></textarea></div>
+<div class="anout"><div class="anh"><b>Kết quả</b><span id="hsum" class="mut">Chưa có dữ liệu</span></div><div id="hres" class="hres"></div></div></div>
+<section class="az" id="az"><div class="sh"><h2>Bảng mã health Ceph A–Z</h2><div class="fin small">${ic('search')}<input id="azq" placeholder="Lọc mã hoặc mô tả…" autocomplete="off"></div></div><table class="azt"><thead><tr><th>Mã</th><th>Mức độ</th><th>Ý nghĩa</th><th>Case xử lý</th></tr></thead><tbody>${rows}</tbody></table></section></div>`}
+const HEMPTY=`<div class="hempty">${ic('pulse')}<p>Dán output vào ô bên trái, hoặc bấm <b>Dán ví dụ</b>.</p></div>`;
+function analyze(){
+  const txt=$('#hin').value,res=$('#hres'),sum=$('#hsum');
+  if(!txt.trim()){res.innerHTML=HEMPTY;sum.textContent='Chưa có dữ liệu';return}
+  const codes=[...new Set(txt.match(/\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b/g)||[])].filter(c=>!/^HEALTH_(OK|WARN|ERR)$/.test(c));
+  const st=(txt.match(/HEALTH_(OK|WARN|ERR)/)||[])[0],ORD={crit:0,warn:1,info:2};
+  const kn=codes.filter(c=>HEALTH[c]).map(c=>({c,h:HEALTH[c],s:SEV[HEALTH[c].severity]||'info'})).sort((a,b)=>ORD[a.s]-ORD[b.s]||a.c.localeCompare(b.c)),un=codes.filter(c=>!HEALTH[c]);
+  const n=s=>kn.filter(x=>x.s===s).length;
+  sum.innerHTML=`${st?'<b>'+st+'</b> · ':''}${codes.length} mã · <span style="color:var(--crit)">${n('crit')} nghiêm trọng</span> · <span style="color:var(--warn)">${n('warn')} cảnh báo</span>`;
+  let h=kn.map(({c,h,s})=>`<div class="hr ${s}"><code>${esc(c)}</code><span></span><span class="sev ${s}">${SEVN[s]}</span><span class="hd">${esc(h.desc)}</span>${CASE_BY_ID[h.case_id]?`<a href="${hrefOf(CASE_BY_ID[h.case_id])}">${ic('arrow','s')} ${esc(CASE_BY_ID[h.case_id].title)}</a>`:'<span class="hd">Chưa có case, xem bảng mã bên dưới</span>'}</div>`).join('');
+  h+=un.map(c=>`<div class="hr unk"><code>${esc(c)}</code><span></span><span class="pf">Chưa có trong sổ tay</span><span class="hd">Tìm thêm trong tài liệu Ceph hoặc báo để bổ sung.</span><a href="${GH}/issues/new?title=${encodeURIComponent('Bổ sung mã health: '+c)}" target="_blank" rel="noopener">${ic('flag','s')} Báo bổ sung mã này</a></div>`).join('');
+  res.innerHTML=h||'<div class="hempty"><p>Không thấy mã cảnh báo nào. Nếu là HEALTH_OK thì cụm đang ổn.</p></div>';
+}
+function bindHealth(){const hin=$('#hin');$('#hres').innerHTML=HEMPTY;hin.addEventListener('input',analyze);$('#sample').onclick=()=>{hin.value=HSAMPLE;analyze()};$('#clear').onclick=()=>{hin.value='';analyze()};const q=$('#azq'),rows=$$('.azt tbody tr');q.oninput=()=>{const t=norm(q.value);rows.forEach(r=>r.hidden=!norm(r.dataset.h).includes(t))}}
+/* ================= CHI TIẾT CASE ================= */
+const fileOf=c=>c.kind==='runbook'?'docs/runbooks/'+c.id+'.md':'docs/cases/'+c.scope+'/'+c.id+'.md';
+function contrib(c){return `<div class="contrib no-print"><a href="${GH}/edit/main/${fileOf(c)}" target="_blank" rel="noopener">${ic('edit','s')}Sửa trên GitHub</a><a href="${GH}/issues/new?title=${encodeURIComponent('Sai nội dung: '+c.id)}" target="_blank" rel="noopener">${ic('flag','s')}Báo sai / góp ý</a><span>File: ${fileOf(c)}</span></div>`}
+function actions(c,extra){return `<div class="dact no-print"><button class="ab" id="pinbtn" type="button">${ic('pin','s')}<span>Ghim</span></button><button class="ab" type="button" data-act="print">${ic('print','s')}<span>In / PDF</span></button>${extra?`<button class="ab" id="lnk" type="button" data-act="link">${ic('link','s')}<span>Copy link</span></button>`:''}</div>`}
+function syncPin(id){const b=$('#pinbtn');if(!b)return;const on=pinsGet().some(x=>x.id===id);b.classList.toggle('on',on);b.querySelector('span').textContent=on?'Đã ghim':'Ghim'}
+function pCase(id){
+  const c=CASE_BY_ID[id],m=CASE_META[id]||{},s=sevOf(id),g=grpOf(id);
+  const same=issueCases.filter(x=>grpOf(x.id)===g).slice(0,10);
+  const rel=((m.related||[]).map(r=>CASE_BY_ID[r]).filter(Boolean));const relShow=rel.length?rel:issueCases.filter(x=>x.id!==id&&grpOf(x.id)===g).slice(0,4);
+  const sections=[];const sec=(sid,label,html)=>{if(html){sections.push([sid,label]);return `<section id="${sid}"><h2>${label}</h2>${html}</section>`}return ''};
+  const steps=(c.steps||[]).map(st=>`<li><p>${esc(st.t)}</p>${(st.cmds||[]).map(x=>cb(x)).join('')}</li>`).join('');
+  const qr=(c.quick_reference||[]).map(x=>`<div><b>${esc(x.title)}</b><span>${esc(x.text)}</span></div>`).join('');
+  const dg=(c.diagrams||[]).map(d=>`<figure><img src="diagrams/${esc(d.src)}" alt="${esc(d.caption||'')}" style="max-width:100%"><figcaption class="mut">${esc(d.caption||'')}</figcaption></figure>`).join('');
+  const body=sec('trieu-chung','Triệu chứng',c.symptoms?`<ul class="sym"><li>${esc(c.symptoms)}</li></ul>`:'')+sec('nguyen-nhan','Nguyên nhân hay gặp',c.causes?`<p>${esc(c.causes)}</p>`:'')+sec('tra-cuu','Tra cứu nhanh',qr?`<div class="causes" style="grid-template-columns:repeat(2,1fr)">${qr}</div>`:'')+sec('xu-ly','Các bước xử lý',steps?`<ol class="steps">${steps}</ol>`:'')+sec('so-do','Sơ đồ',dg)+sec('luu-y','Lưu ý',c.notes?`<ul class="sym"><li>${esc(c.notes)}</li></ul>`:'')+sec('lien-quan','Case liên quan',relShow.length?`<div class="rel">${relShow.map(x=>`<a href="${hrefOf(x)}"><span class="dot ${sevOf(x.id)}"></span>${esc(x.title)}</a>`).join('')}</div>`:'')+sec('tham-khao','Tham khảo',(c.refs||[]).length?`<ul class="sym">${c.refs.map(r=>`<li><a href="${esc(r.u)}" target="_blank" rel="noopener">${esc(r.t)}</a></li>`).join('')}</ul>`:'');
+  const cmds=(c.steps||[]).flatMap(x=>x.cmds||[]);
+  return `<div class="in lay"><aside class="side no-print"><div class="sl">Cùng nhóm · ${esc(g)}</div>${same.map(x=>sideA(x.title,null,x.id===id,`href="${hrefOf(x)}"`,null,sevOf(x.id))).join('')}${relShow.length?`<div class="sl">Liên quan</div>${relShow.map(x=>sideA(x.title,null,false,`href="${hrefOf(x)}"`,'book')).join('')}`:''}</aside>
+<main class="mn doc">${crumb([['Trang chủ','#home'],['Sự cố','#cases'],[scopeN(c),'#cases-'+c.scope],[g,'#cases-g:'+encodeURIComponent(g)]])}
+<div class="dh"><div><h1>${esc(c.title)}</h1><div class="dmeta"><span class="sev ${s}">${SEVN[s]}</span><span class="pf">${scopeN(c)}</span><span class="pf">${esc(g)}</span>${m.applies_to?`<span>Áp dụng: ${esc(m.applies_to)}</span>`:''}${m.verified?`<span>${ic('check','s')} Đã kiểm chứng trên lab</span>`:''}${DATES[id]?`<span>Cập nhật ${fmtD(DATES[id])}</span>`:''}</div></div>${actions(c,true)}</div>
+${varsBox(cmds)}${body}${c.tags?`<div class="kw"><b>Từ khóa:</b> ${esc(c.tags)}</div>`:''}${contrib(c)}</main>
+<aside class="rail no-print"><div class="rl">Trên trang này</div><nav class="toc">${sections.map(([i,l])=>`<a data-act="go" data-id="${i}">${l}</a>`).join('')}</nav>${ctaRisk}</aside></div>`}
+/* ================= CHI TIẾT RUNBOOK ================= */
+function secOfStep(t){const n=norm(t);if(/^(chuan bi|kiem tra truoc)/.test(n))return'Chuẩn bị';if(/^(rollback|hoan tac)/.test(n))return'Rollback';if(/^kiem tra (sau|lai)/.test(n))return'Kiểm tra';return''}
+function pRunbook(id){
+  const c=CASE_BY_ID[id],m=RUNBOOK_META[id]||{},steps=c.steps||[],r=RISKN[m.risk]||RISKN.tb,g=m.group||'Quy trình',done=lsGet('v6-run-'+id,[]);
+  const marks=steps.map(s=>secOfStep(s.t)),named=marks.some(Boolean);
+  const names=named?['Chuẩn bị','Thực hiện','Kiểm tra','Rollback']:['Các bước'];
+  const secs=names.map(nm=>({nm,items:[]}));steps.forEach((s,i)=>{const nm=named?(marks[i]||'Thực hiện'):'Các bước';secs.find(x=>x.nm===nm).items.push(i)});
+  const sid=nm=>({'Chuẩn bị':'chuan-bi','Thực hiện':'thuc-hien','Kiểm tra':'kiem-tra','Rollback':'rollback','Các bước':'cac-buoc'})[nm];
+  const used=secs.filter(x=>x.items.length);
+  const sections=used.map(x=>`<section id="${sid(x.nm)}" class="${x.nm==='Rollback'?'rb-rollback':''}"><h2>${x.nm==='Rollback'?'Rollback (khi có sự cố)':x.nm}</h2><ol class="cklist">${x.items.map(i=>`<li class="ck${done.includes(i)?' done':''}" data-k="${i}"><label><input type="checkbox"${done.includes(i)?' checked':''}><span class="box">${ic('check','s')}</span><span class="ct"><b>Bước ${i+1}.</b> ${esc(steps[i].t)}</span></label>${(steps[i].cmds||[]).map(x=>cb(x)).join('')}</li>`).join('')}</ol></section>`).join('');
+  const same=runCases.filter(x=>((RUNBOOK_META[x.id]||{}).group||'Quy trình')===g);
+  const cmds=steps.flatMap(x=>x.cmds||[]);
+  return `<div class="in lay"><aside class="side no-print"><div class="sl">${esc(g)}</div>${same.map(x=>sideA(x.title,null,x.id===id,`href="${hrefOf(x)}"`,RB_ICON[g]||'file')).join('')}</aside>
+<main class="mn doc" data-runbook="${esc(id)}">${crumb([['Trang chủ','#home'],['Quy trình','#cases-run'],[g]])}
+<div class="dh"><div><h1>${esc(c.title)}</h1><div class="dmeta"><span class="rk2 ${r[0]}">${r[1]}</span>${DATES[id]?`<span>Cập nhật ${fmtD(DATES[id])}</span>`:''}</div></div>${actions(c,true)}</div>
+${c.goal?`<p class="sub2" style="margin-top:12px">${esc(c.goal)}</p>`:''}
+<div class="rbm"><div><span>Thời gian</span><b>${esc(m.duration||'—')}</b></div><div><span>Rủi ro</span><b${m.risk!=='thap'?' class="wtx"':''}>${r[2]}</b></div><div><span>Downtime</span><b>${esc(m.downtime||'Không')}</b></div><div><span>Số bước</span><b>${steps.length}</b></div></div>
+${c.prereq?`<div class="callout warn" style="margin-top:16px">${ic('warn','s')}<div><b>Điều kiện trước khi làm:</b> ${esc(c.prereq)}</div></div>`:''}
+<div class="prog no-print" id="prog"><div class="pt"><b id="pdone">0</b> / ${steps.length} bước đã xong<button type="button" id="preset">Làm lại từ đầu</button></div><div class="pbar"><i id="pfill"></i></div></div>
+${varsBox(cmds)}${sections}${contrib(c)}</main>
+<aside class="rail no-print"><div class="rl">Trên trang này</div><nav class="toc">${used.map(x=>`<a data-act="go" data-id="${sid(x.nm)}">${x.nm==='Rollback'?'Rollback (khi có sự cố)':x.nm}</a>`).join('')}</nav><div class="cta">${ic('check')}<div><b>Tiến độ được lưu</b><p>Tải lại trang vẫn giữ các bước đã tick, trên trình duyệt này.</p></div></div></aside></div>`}
+function bindRunbook(id){
+  const cks=$$('.ck'),total=cks.length;let done=lsGet('v6-run-'+id,[]);
+  const upd=()=>{$('#pdone').textContent=done.length;$('#pfill').style.width=(total?done.length/total*100:0)+'%'};
+  cks.forEach(li=>{const i=+li.dataset.k,inp=li.querySelector('input');inp.onchange=()=>{done=done.filter(x=>x!==i);if(inp.checked)done.push(i);li.classList.toggle('done',inp.checked);lsSet('v6-run-'+id,done);upd()}});
+  $('#preset').onclick=()=>{done=[];cks.forEach(li=>{li.classList.remove('done');li.querySelector('input').checked=false});lsSet('v6-run-'+id,[]);upd()};
+  done=done.filter(x=>x<total);upd();
+}
+/* ================= ĐỊNH TUYẾN ================= */
+let spyOn=false;
+function setNav(tab){$$('.nav a').forEach(a=>a.classList.toggle('on',a.dataset.tab===tab))}
+function mount(html,tab){$('#app').innerHTML=html;setNav(tab);window.scrollTo(0,0)}
+function spy(){const tl=$$('.toc a');if(!tl.length)return;let k=0;tl.forEach((a,i)=>{const s=document.getElementById(a.dataset.id);if(s&&s.getBoundingClientRect().top<140)k=i});tl.forEach((a,i)=>a.classList.toggle('act',i===k))}
+addEventListener('scroll',spy,{passive:true});
+function route(){
+  const id=decodeURIComponent(location.hash.slice(1));closeP();
+  const notFound=()=>{mount(`<div class="in an"><div class="nodata"><h2>Không tìm thấy trang này</h2><p><a href="#home">Về trang chủ</a> hoặc nhấn Ctrl K để tìm.</p></div></div>`,'')};
+  if(!id||id==='home'){mount(pHome(),'home');return}
+  if(id==='health'){mount(pHealth(),'health');bindHealth();return}
+  if(id==='map'||/^[A-Z]\d+$/.test(id)){SC.br='all';if(/^[A-Z]\d+$/.test(id)&&DATA.left.concat(DATA.right).some(b=>b.id===id))SC.br=id;mount(pCommands(),'commands');updCommands();return}
+  if(id==='cases'||id==='cases-ceph'||id==='cases-pve'||id==='cases-crit'||id==='cases-warn'||id.startsWith('cases-g:')){ST.plat=id==='cases-ceph'?'ceph':id==='cases-pve'?'pve':'all';ST.sev=id==='cases-crit'?'crit':id==='cases-warn'?'warn':'all';ST.grp=id.startsWith('cases-g:')?id.slice(8):'all';ST.q='';mount(pCases(),'cases');updCases();return}
+  if(['cases-run','runbooks','scripts','cases-scr'].includes(id)||id.startsWith('script-')){SW.type=id==='scripts'||id==='cases-scr'||id.startsWith('script-')?'script':id==='runbooks'?'runbook':'all';mount(pWorkflows(),'workflows');updWorkflows();return}
+  if(id==='guides'||id==='cases-guide'){mount(pGuides(),'guides');return}
+  let cid=null;if(id.startsWith('case/'))cid=id.slice(5);else if(id.startsWith('case-'))cid=id.slice(5);else if(id.startsWith('runbook/'))cid=id.slice(8);
+  if(cid){const c=CASE_BY_ID[cid];if(!c){notFound();return}recentAdd(cid);if(c.kind==='runbook'){mount(pRunbook(cid),'workflows');bindRunbook(cid)}else mount(pCase(cid),'cases');bindVars();syncPin(cid);spy();return}
+  notFound();
+}
+/* ================= SỰ KIỆN CHUNG ================= */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-act]');if(!t)return;const a=t.dataset.act,v=t.dataset.v;
+  const cur=()=>(location.hash.match(/^#(?:case|runbook)\/(.+)$/)||[])[1];
+  if(a==='go'){e.preventDefault();const s=document.getElementById(t.dataset.id);if(s)s.scrollIntoView({behavior:'smooth',block:'start'})}
+  else if(a==='q'){e.preventDefault();openP(t.dataset.q)}
+  else if(a==='copy'){copyText(t.dataset.cmd,()=>flash(t))}
+  else if(a==='copyc'){const p=t.closest('.cb').querySelector('pre');copyText(p.textContent,()=>flash(t))}
+  else if(a==='print')window.print();
+  else if(a==='link')copyText(location.href,()=>flash(t,'Đã copy'));
+  else if(a==='plat'){ST.plat=v;updCases()}else if(a==='grp'){ST.grp=ST.grp===v?'all':v;updCases()}else if(a==='sev'){ST.sev=v;updCases()}
+  else if(a==='cbr'){SC.br=v;updCommands()}else if(a==='crisk'){SC.risk=v;updCommands()}
+  else if(a==='wtype'){SW.type=v;updWorkflows()}else if(a==='wgrp'){SW.grp=SW.grp===v?'all':v;updWorkflows()}else if(a==='wrisk'){SW.risk=v;updWorkflows()}else if(a==='wdt'){SW.nodt=!SW.nodt;updWorkflows()}
+});
+document.addEventListener('click',e=>{const p=e.target.closest('#pinbtn');if(!p)return;const id=(decodeURIComponent(location.hash).match(/^#(?:case|runbook)\/(.+)$/)||decodeURIComponent(location.hash).match(/^#case-(.+)$/)||[])[1];if(id&&CASE_BY_ID[id]){pinToggle(id);syncPin(id)}});
+document.addEventListener('input',e=>{const t=e.target;if(t.id==='fi'){ST.q=t.value;updCases()}else if(t.id==='cfi'){SC.q=t.value;updCommands()}else if(t.id==='wfi'){SW.q=t.value;updWorkflows()}});
+/* ---------- giao diện sáng/tối ---------- */
+function syncTheme(){const d=document.documentElement.dataset.theme==='dark';$('#theme').innerHTML=ic(d?'sun':'moon')}
+$('#theme').onclick=()=>{const n=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=n;try{localStorage.setItem('pc-theme',n)}catch(e){}syncTheme()};syncTheme();
+/* ================= BẢNG TÌM KIẾM Ctrl+K ================= */
+const ov=$('#ov'),pq=$('#pq');let sel=0,flat=[];
+const openP=v=>{ov.hidden=false;pq.value=v||'';runP(pq.value);pq.focus()},closeP=()=>{ov.hidden=true};
+function healthCodeOf(q){const k=q.trim().toUpperCase().replace(/[\s-]+/g,'_');return HEALTH[k]?k:''}
+function runP(q){
+  const pres=$('#pres'),pc=$('#pcount'),body=$('.pbody');flat=[];const query=q.trim();
+  const rowCase=(c,toks)=>`<div class="pr" data-i="${flat.push({t:'case',c})-1}"><span class="dot ${sevOf(c.id)}"></span><div class="prb"><div>${hl(c.title,toks)}</div><code>${hl((CASE_META[c.id]||{}).error_line||'',toks)}</code></div><span class="pf">${scopeN(c)}</span></div>`;
+  const rowPlain=(x,toks)=>{const c=CASE_BY_ID[x.id];return c?`<div class="pr" data-i="${flat.push({t:c.kind==='runbook'?'rb':'case',c})-1}"><span class="dot ${c.kind==='runbook'?'':sevOf(c.id)}"></span><div class="prb"><div>${esc(c.title)}</div></div><span class="pf">${c.kind==='runbook'?'Quy trình':scopeN(c)}</span></div>`:''};
+  const grpH=(name,n,inner)=>`<div class="pg"><div class="pgh">${name}<span>${n}</span></div>${inner}</div>`;
+  body.classList.remove('noprev');
+  if(!query){
+    const pins=pinsGet().filter(x=>CASE_BY_ID[x.id]),rec=recentGet().filter(x=>CASE_BY_ID[x.id]);
+    let h='';if(rec.length)h+=grpH('Gần đây',rec.length,rec.slice(0,5).map(x=>rowPlain(x,[])).join(''));if(pins.length)h+=grpH('Đã ghim',pins.length,pins.slice(0,5).map(x=>rowPlain(x,[])).join(''));
+    h+='<div class="phint"><b>Gợi ý:</b> dán nguyên câu lỗi như <code>PG_DAMAGED</code>, <code>no quorum</code> hoặc gõ <code>osd down</code>, <code>rgw 503</code>.</div>';
+    pres.innerHTML=h;pc.textContent='';sel=0;paintP();return}
+  const toks=toksOf(query),hk=healthCodeOf(query);let h='',total=0;
+  if(hk){const hh=HEALTH[hk],c=CASE_BY_ID[hh.case_id],s=SEV[hh.severity]||'info';
+    h+=`<div class="pexact">✓ Mã health <b>${hk}</b> · ${esc(hh.severity)}: ${esc(hh.desc)}${c?'. Nhấn Enter để mở case xử lý.':'. Chưa có case xử lý.'}</div>`;
+    if(c){h+=rowCase(c,[]);total=1}}
+  else{
+    const r=INDEX.query(query),cs=r.cases.filter(x=>x.c.kind!=='runbook').map(x=>x.c),rbs=r.cases.filter(x=>x.c.kind==='runbook').map(x=>x.c),cm=r.commands,sc=r.scripts.map(x=>x.s),gd=r.guides.map(x=>x.g);
+    const hc=Object.keys(HEALTH).filter(k=>norm(k.replace(/_/g,' ')).includes(toks.join(' '))||toks.every(t=>norm(k).includes(t)));
+    total=cs.length+cm.length+rbs.length+sc.length+gd.length+hc.length;
+    if(!total){body.classList.add('noprev');pres.innerHTML=`<div class="pempty"><b>Không tìm thấy “${esc(query)}”</b><p>Thử bỏ bớt từ, gõ không dấu, hoặc dán phần chính của câu lỗi (vd: <code>no quorum</code> thay vì cả dòng log).</p><p>Hoặc xem theo nhóm: <a href="#cases-g:OSD">OSD</a> · <a href="#cases-g:PG">PG</a> · <a href="#cases-g:${encodeURIComponent('Cluster & HA')}">Cluster &amp; HA</a> · <a href="#cases-g:${encodeURIComponent('RGW/S3')}">RGW / S3</a></p></div>`;$('#pprev').innerHTML='';pc.textContent='0 kết quả';sel=0;return}
+    if(total===1&&cs.length===1)h+='<div class="pexact">✓ Khớp chính xác 1 sự cố. Nhấn Enter để mở.</div>';
+    const more=(n,max,name,go)=>n>max?`<a class="pall" data-act="pall" data-go="${go}">Xem tất cả ${n} ${name} →</a>`:'';
+    if(cs.length)h+=grpH('Sự cố',cs.length,cs.slice(0,6).map(c=>rowCase(c,toks)).join('')+more(cs.length,6,'sự cố','cases'));
+    if(hc.length)h+=grpH('Mã health',hc.length,hc.slice(0,3).map(k=>{const hh=HEALTH[k];return `<div class="pr" data-i="${flat.push({t:'health',k})-1}"><span class="dot ${SEV[hh.severity]||'info'}"></span><div class="prb"><div><code class="pcmd">${hl(k,toks)}</code></div><code style="font-family:var(--font)">${esc(hh.desc)}</code></div><span class="pf">Ceph</span></div>`}).join(''));
+    if(cm.length)h+=grpH('Lệnh',cm.length,cm.slice(0,5).map(x=>{const rk=cmdRisk(x.it.c);return `<div class="pr" data-i="${flat.push({t:'cmd',x})-1}"><code class="pcmd">${hl(x.it.c,toks)}</code><div class="prb sm">${hl(x.it.v||x.it.p||'',toks)}</div><span class="rk ${rk}">${RKL[rk]}</span></div>`}).join('')+more(cm.length,5,'lệnh','commands'));
+    if(rbs.length||sc.length)h+=grpH('Quy trình',rbs.length+sc.length,rbs.slice(0,4).map(c=>`<div class="pr" data-i="${flat.push({t:'rb',c})-1}">${ic('book','s')}<div class="prb"><div>${hl(c.title,toks)}</div></div><span class="pf">${esc((RUNBOOK_META[c.id]||{}).group||'Quy trình')}</span></div>`).join('')+sc.slice(0,3).map(s=>`<div class="pr" data-i="${flat.push({t:'script',s})-1}">${ic('file','s')}<div class="prb"><div>${hl(s.title,toks)}</div><code>${esc(s.file)}</code></div><span class="pf">Script</span></div>`).join('')+more(rbs.length+sc.length,7,'quy trình','workflows'));
+    if(gd.length)h+=grpH('Bài viết',gd.length,gd.slice(0,3).map(g=>`<div class="pr" data-i="${flat.push({t:'guide',g})-1}">${ic('book','s')}<div class="prb"><div>${hl(g.title,toks)}</div></div><span class="pf">Bài viết</span></div>`).join(''));
+  }
+  pres.innerHTML=h;pc.textContent=total+' kết quả';sel=0;paintP();
+}
+function paintP(){
+  $$('.pr',$('#pres')).forEach(e=>e.classList.toggle('sel',+e.dataset.i===sel));
+  const x=flat[sel],p=$('#pprev');if(!x){p.innerHTML='';return}
+  if(x.t==='case'){const c=x.c,m=CASE_META[c.id]||{},s=sevOf(c.id);p.innerHTML=`<div class="pvk">Sự cố · ${scopeN(c)} · ${esc(grpOf(c.id))}</div><h4>${esc(c.title)}</h4><span class="sev ${s}">${SEVN[s]}</span>${m.error_line?`<div class="pvl">Câu lỗi / dấu hiệu</div><code class="pvc">${esc(m.error_line)}</code>`:''}<div class="pvl">Trong trang này</div><ul>${['Triệu chứng','Nguyên nhân','Các bước xử lý','Lưu ý'].map(l=>`<li>${l}</li>`).join('')}</ul><div class="pvb">Enter để mở case</div>`}
+  else if(x.t==='cmd'){const rk=cmdRisk(x.x.it.c);p.innerHTML=`<div class="pvk">Lệnh · ${esc(SN(x.x.s.name))}</div><code class="pvc big">${esc(x.x.it.c)}</code><p>${esc(x.x.it.v||x.x.it.p||'')}</p><span class="rk ${rk}">${RKL[rk]}</span><div class="pvb">Enter để sao chép</div>`}
+  else if(x.t==='health'){const hh=HEALTH[x.k];p.innerHTML=`<div class="pvk">Mã health</div><code class="pvc big">${x.k}</code><p>${esc(hh.desc)}</p><span class="sev ${SEV[hh.severity]||'info'}">${esc(hh.severity)}</span><div class="pvb">Enter để mở ${CASE_BY_ID[hh.case_id]?'case xử lý':'bảng mã health'}</div>`}
+  else if(x.t==='rb'){const m=RUNBOOK_META[x.c.id]||{};p.innerHTML=`<div class="pvk">Quy trình · ${esc(m.group||'')}</div><h4>${esc(x.c.title)}</h4><p>${m.duration?'Thời gian ước tính: '+esc(m.duration):''}</p><div class="pvb">Enter để mở</div>`}
+  else if(x.t==='script')p.innerHTML=`<div class="pvk">Script</div><h4>${esc(x.s.title)}</h4><code class="pvc">${esc(x.s.file)}</code><p>${esc(x.s.goal||'')}</p><div class="pvb">Enter để mở</div>`;
+  else p.innerHTML=`<div class="pvk">Bài viết</div><h4>${esc(x.g.title)}</h4><p>${esc(x.g.summary||'')}</p><div class="pvb">Enter để mở</div>`;
+}
+function activate(i){
+  const x=flat[i];if(!x)return;
+  if(x.t==='cmd'){copyText(x.x.it.c);closeP();return}
+  closeP();
+  if(x.t==='case'||x.t==='rb')location.hash=hrefOf(x.c);
+  else if(x.t==='health'){const c=CASE_BY_ID[HEALTH[x.k].case_id];location.hash=c?hrefOf(c):'#health'}
+  else if(x.t==='script')window.open(scriptHref(x.s),'_blank');
+  else window.open((REPO?GH+'/blob/main/':'../')+x.g.file,'_blank');
+}
+pq.addEventListener('input',()=>runP(pq.value));
+ov.addEventListener('click',e=>{if(e.target===ov){closeP();return}const pall=e.target.closest('.pall');if(pall){const q=pq.value;closeP();const go=pall.dataset.go;if(go==='cases'){location.hash='#cases';setTimeout(()=>{ST.q=q;$('#fi').value=q;updCases()},0)}else if(go==='commands'){location.hash='#map';setTimeout(()=>{SC.q=q;$('#cfi').value=q;updCommands()},0)}else{location.hash='#cases-run';setTimeout(()=>{SW.q=q;$('#wfi').value=q;updWorkflows()},0)}return}const r=e.target.closest('.pr');if(r)activate(+r.dataset.i)});
+ov.addEventListener('mouseover',e=>{const r=e.target.closest('.pr');if(r&&+r.dataset.i!==sel){sel=+r.dataset.i;paintP()}});
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openP();return}
+  if(ov.hidden)return;
+  if(e.key==='Escape')closeP();
+  else if(e.key==='ArrowDown'){sel=Math.min(sel+1,flat.length-1);paintP();const s=$('.pr.sel');if(s)s.scrollIntoView({block:'nearest'});e.preventDefault()}
+  else if(e.key==='ArrowUp'){sel=Math.max(sel-1,0);paintP();const s=$('.pr.sel');if(s)s.scrollIntoView({block:'nearest'});e.preventDefault()}
+  else if(e.key==='Enter'){activate(sel);e.preventDefault()}
+});
+$('#openSearch').addEventListener('click',()=>openP());
+document.addEventListener('click',e=>{if(e.target.closest('#bigSearch'))openP()});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='bigSearch')openP()});
+window.addEventListener('hashchange',route);
+route();
+try{const q=new URLSearchParams(location.search).get('q');if(q)openP(q)}catch(e){}
 </script>
 </body>
 </html>
