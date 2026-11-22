@@ -224,6 +224,7 @@ details.case ol li{padding:7px 0}
 .header-search input::placeholder{color:var(--muted)}
 .theme-toggle{flex:none;padding:6px 9px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);font-size:12px}
 .theme-toggle:hover{border-color:var(--brand);color:var(--brand)}
+.menu-toggle{display:none;flex:none;padding:5px 8px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);font-size:16px}
 .hero,.pagewrap{width:min(1200px,calc(100% - 40px))}
 .hero{padding:34px 0 16px}
 .hero-grid{display:block}
@@ -306,9 +307,10 @@ pre.code{border-radius:var(--radius);background:var(--panel-2)}
 @media(max-width:900px){
   .top{position:sticky;top:0;align-items:center;flex-direction:row;flex-wrap:wrap;height:auto;min-height:56px;padding:8px 16px;gap:8px}
   .brand{order:0}
-  .header-search{order:1;margin-left:auto}
-  .theme-toggle{order:2}
-  .tools{order:3;flex:1 0 100%;justify-content:flex-start;overflow-x:auto}
+  .menu-toggle{display:block;order:1}
+  .header-search{order:2;margin-left:auto}
+  .theme-toggle{order:3}
+  .tools{order:4;flex:1 0 100%;justify-content:flex-start;overflow-x:auto}
   .content-nav{top:0}
   .path-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
@@ -319,7 +321,8 @@ pre.code{border-radius:var(--radius);background:var(--panel-2)}
   .brand{min-width:0}
   .header-search{flex:1 1 90px;min-width:80px}
   .theme-toggle{padding:5px 7px}
-  .tools{gap:1px}
+  .tools{display:none;gap:1px}
+  .top.menu-open .tools{display:flex}
   .tools .tab{padding:6px 8px}
   .path-grid{grid-template-columns:minmax(0,1fr)}
   .path-card{padding:9px 0}
@@ -336,12 +339,11 @@ pre.code{border-radius:var(--radius);background:var(--panel-2)}
 <body>
 <header class="top">
 <a class="brand" href="#map" aria-label="Về đầu trang"><span class="brandmark">PC</span><span class="brandname">Proxmox + Ceph<small>Tra cứu vận hành</small></span></a>
-<nav class="tools" aria-label="Điều hướng chính">
-<button id="tabmap" class="tab" type="button" aria-pressed="true">Thư viện lệnh</button>
-<button id="tabpve" class="tab" type="button" aria-pressed="false">Case Proxmox</button>
-<button id="tabceph" class="tab" type="button" aria-pressed="false">Case Ceph</button>
-<button id="tabrun" class="tab" type="button" aria-pressed="false">Runbook</button>
-<button id="tabscr" class="tab" type="button" aria-pressed="false">Script</button>
+<button id="menu-toggle" class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav">☰ <span class="sr-only">Mở menu</span></button>
+<nav id="main-nav" class="tools" aria-label="Điều hướng chính">
+<button id="tabissues" class="tab" type="button" aria-pressed="false">Sự cố</button>
+<button id="tabmap" class="tab" type="button" aria-pressed="true">Lệnh</button>
+<button id="tabrun" class="tab" type="button" aria-pressed="false">Quy trình</button>
 <button id="tabguide" class="tab" type="button" aria-pressed="false">Bài viết</button>
 </nav>
 <label class="header-search"><span class="sr-only">Tìm nhanh</span><input id="header-q" type="search" placeholder="Tìm nhanh…" aria-label="Tìm nhanh"></label>
@@ -366,18 +368,13 @@ pre.code{border-radius:var(--radius);background:var(--panel-2)}
   <div class="stats" aria-label="Số lượng tài liệu">
     <button class="stat" type="button" data-stat="commands"><strong id="stat-commands">—</strong> lệnh</button>
     <span aria-hidden="true">·</span>
-    <button class="stat" type="button" data-stat="cases" aria-controls="stat-case-choices"><strong id="stat-cases">—</strong> sự cố</button>
+    <button class="stat" type="button" data-stat="cases"><strong id="stat-cases">—</strong> sự cố</button>
     <span aria-hidden="true">·</span>
     <button class="stat" type="button" data-stat="runbooks"><strong id="stat-runbooks">—</strong> quy trình</button>
   </div>
   <div class="quick-searches" id="chips" aria-label="Từ khóa gợi ý"></div>
   <div class="topic-row" id="topics" aria-label="Lọc theo chủ đề"><button id="topic-toggle" class="topic-toggle" type="button" aria-expanded="false">Chủ đề ▾</button></div>
 </section>
-<div id="stat-case-choices" class="stat-case-choices" hidden>
-  <strong>Chọn mục case:</strong>
-  <button class="pbtn" type="button" data-case-tab="pve">Case Proxmox</button>
-  <button class="pbtn" type="button" data-case-tab="ceph">Case Ceph</button>
-</div>
 <main class="pagewrap">
 <div id="page-context" class="page-context" hidden>
   <nav aria-label="Breadcrumb"><a id="home-crumb" href="#map">Trang chủ</a><span aria-hidden="true">›</span><span id="section-crumb" class="crumb-current"></span></nav>
@@ -567,7 +564,7 @@ const TOPICS={"topics": [{"id": "cluster", "name": "Cluster & HA", "keywords": "
 const ENGINE=createSearch(SYNONYMS),INDEX=createIndex(ENGINE,{DATA,CASES,SCRIPTS,TRIAGE,GUIDES,TOPICS,LABELS});
 const BN=b=>(LABELS.branches||{})[b.id]||b.name,SN=n=>(LABELS.subs||{})[n]||n;
 const CASE_BY_ID=Object.fromEntries(CASES.map(c=>[c.id,c])),TOPIC_NAME=Object.fromEntries((TOPICS.topics||[]).map(t=>[t.id,t.name]));
-let TOPIC=null;
+let TOPIC=null,ISSUE_SCOPE='all';
 const $=s=>document.querySelector(s);
 const map=$('#map'),wires=$('#wires'),root=$('#root'),q=$('#q'),headerQ=$('#header-q'),themeToggle=$('#theme-toggle');
 const popover=$('#search-popover');
@@ -760,40 +757,45 @@ SCRIPTS.forEach(s=>{
   const pre=el('pre','code');pre.append(el('code',null,s.code));
   d.append(cb,pre);secs.scr.append(d);
 });
-const TAB_LABEL={map:'Thư viện lệnh',ceph:'Case Ceph',pve:'Case Proxmox',run:'Runbook',scr:'Script',guide:'Bài viết'};
-const TAB_HASH={map:'#map',ceph:'#cases-ceph',pve:'#cases-pve',run:'#cases-run',scr:'#cases-scr',guide:'#cases-guide'};
+const TAB_LABEL={map:'Lệnh',issues:'Sự cố',run:'Quy trình',guide:'Bài viết'};
+const TAB_HASH={map:'#map',issues:'#cases',run:'#cases-run',guide:'#cases-guide'};
 function show(tab,focus=false,navigate=false){
-  map.hidden=tab!=='map';Object.keys(secs).forEach(k=>{secs[k].hidden=tab!==k});
-  [['map','#tabmap'],['ceph','#tabceph'],['pve','#tabpve'],['run','#tabrun'],['scr','#tabscr'],['guide','#tabguide']].forEach(([k,id])=>$(id).setAttribute('aria-pressed',String(tab===k)));
+  map.hidden=tab!=='map';
+  Object.keys(secs).forEach(k=>{
+    const inIssues=tab==='issues'&&(k==='ceph'||k==='pve')&&(ISSUE_SCOPE==='all'||ISSUE_SCOPE===k);
+    const inWorkflows=tab==='run'&&(k==='run'||k==='scr');
+    secs[k].hidden=!(inIssues||inWorkflows||tab===k);
+  });
+  [['issues','#tabissues'],['map','#tabmap'],['run','#tabrun'],['guide','#tabguide']].forEach(([k,id])=>$(id).setAttribute('aria-pressed',String(tab===k)));
   $('#expand').hidden=$('#collapse').hidden=tab!=='map';
   $('#command-nav').hidden=tab!=='map';
   document.body.classList.toggle('section-view',tab!=='map');
   $('#page-context').hidden=tab==='map';
-  $('#section-crumb').textContent=TAB_LABEL[tab]||TAB_LABEL.map;
+  $('#section-crumb').textContent=tab==='issues'&&ISSUE_SCOPE!=='all'?'Sự cố · '+(ISSUE_SCOPE==='pve'?'Proxmox':'Ceph'):(TAB_LABEL[tab]||TAB_LABEL.map);
   if(tab==='map')draw();
   if(navigate)history.pushState({tab},'',TAB_HASH[tab]||'#map');
   if(focus)window.scrollTo({top:0,behavior:'smooth'});
 }
+$('#tabissues').addEventListener('click',()=>{ISSUE_SCOPE='all';show('issues',true,true)});
 $('#tabmap').addEventListener('click',()=>show('map',true,true));
-$('#tabceph').addEventListener('click',()=>show('ceph',true,true));
-$('#tabpve').addEventListener('click',()=>show('pve',true,true));
 $('#tabrun').addEventListener('click',()=>show('run',true,true));
-$('#tabscr').addEventListener('click',()=>show('scr',true,true));
 $('#tabguide').addEventListener('click',()=>show('guide',true,true));
+$('#menu-toggle').addEventListener('click',()=>{
+  const open=$('.top').classList.toggle('menu-open');
+  $('#menu-toggle').setAttribute('aria-expanded',String(open));
+});
+document.querySelectorAll('.tools .tab').forEach(button=>button.addEventListener('click',()=>{
+  $('.top').classList.remove('menu-open');
+  $('#menu-toggle').setAttribute('aria-expanded','false');
+}));
 $('#home-crumb').addEventListener('click',e=>{e.preventDefault();show('map',true,true)});
 document.querySelectorAll('.stat[data-stat]').forEach(button=>button.addEventListener('click',()=>{
   const destination=button.dataset.stat;
   if(destination==='cases'){
-    const choices=$('#stat-case-choices');
-    choices.hidden=!choices.hidden;
-    if(!choices.hidden)choices.scrollIntoView({block:'nearest',behavior:'smooth'});
+    ISSUE_SCOPE='all';show('issues',true,true);
     return;
   }
-  show(destination==='commands'?'map':destination==='runbooks'?'run':'scr',true,true);
-}));
-document.querySelectorAll('[data-case-tab]').forEach(button=>button.addEventListener('click',()=>{
-  show(button.dataset.caseTab,true,true);
-  $('#stat-case-choices').hidden=true;
+  show(destination==='commands'?'map':destination==='runbooks'?'run':'run',true,true);
 }));
 function renderTriage(hit){
   const item=hit.item,d=el('details','triage-card');d.open=true;
@@ -966,14 +968,22 @@ function openHash(){
   const id=decodeURIComponent(location.hash.slice(1));
   if(!id){show('map');return}
   if(id==='map'){show('map');window.scrollTo({top:0});return}
-  if(id==='cases'||id==='cases-ceph'){show('ceph');document.getElementById('cases-ceph').scrollIntoView({block:'start'});return}
-  if(id==='cases-pve'){show('pve');document.getElementById('cases-pve').scrollIntoView({block:'start'});return}
+  if(id==='cases'){ISSUE_SCOPE='all';show('issues');document.getElementById('cases-pve').scrollIntoView({block:'start'});return}
+  if(id==='cases-ceph'||id==='cases-pve'){
+    ISSUE_SCOPE=id==='cases-ceph'?'ceph':'pve';show('issues');
+    document.getElementById(id).scrollIntoView({block:'start'});return
+  }
   if(id==='runbooks'||id==='cases-run'){show('run');document.getElementById('cases-run').scrollIntoView({block:'start'});return}
-  if(id==='scripts'||id==='cases-scr'){show('scr');document.getElementById('cases-scr').scrollIntoView({block:'start'});return}
+  if(id==='scripts'||id==='cases-scr'){show('run');document.getElementById('cases-scr').scrollIntoView({block:'start'});return}
   if(id==='guides'||id==='cases-guide'){show('guide');document.getElementById('cases-guide').scrollIntoView({block:'start'});return}
   if(id.startsWith('guide-')){show('guide');const d=document.getElementById(id);if(d){d.hidden=false;d.open=true;d.scrollIntoView({block:'start'})}return}
-  if(id.startsWith('script-')){show('scr');const d=document.getElementById(id);if(d){d.hidden=false;d.open=true;d.scrollIntoView({block:'start'})}return}
-  if(id.startsWith('case-')){const cc=CASES.find(c=>'case-'+c.id===id);show(cc&&cc.kind==='runbook'?'run':cc&&cc.scope==='pve'?'pve':'ceph');const d=document.getElementById(id);if(d){d.hidden=false;d.open=true;d.scrollIntoView({block:'start'})}return}
+  if(id.startsWith('script-')){show('run');const d=document.getElementById(id);if(d){d.hidden=false;d.open=true;d.scrollIntoView({block:'start'})}return}
+  if(id.startsWith('case-')){
+    const cc=CASES.find(c=>'case-'+c.id===id);
+    if(cc&&cc.kind!=='runbook')ISSUE_SCOPE=cc.scope;
+    show(cc&&cc.kind==='runbook'?'run':'issues');
+    const d=document.getElementById(id);if(d){d.hidden=false;d.open=true;d.scrollIntoView({block:'start'})}return
+  }
   show('map');
   const sec=document.getElementById(id);if(!sec||!sec.classList.contains('branch'))return;
   if(!inTopic(id))setTopic(TOPIC);  // nhóm đang bị bộ lọc chủ đề ẩn: bỏ lọc để mở được
