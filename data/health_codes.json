@@ -1,0 +1,122 @@
+{
+  "MON_DOWN": {
+    "severity": "Nghiêm trọng",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "mon-down"
+  },
+  "MON_CLOCK_SKEW": {
+    "severity": "Cảnh báo",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "clock-skew"
+  },
+  "MON_DISK_LOW": {
+    "severity": "Cảnh báo",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "nearfull-full"
+  },
+  "OSD_DOWN": {
+    "severity": "Nghiêm trọng",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "osd-down-flapping"
+  },
+  "OSD_NEARFULL": {
+    "severity": "Cảnh báo",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "nearfull-full"
+  },
+  "OSD_BACKFILLFULL": {
+    "severity": "Nghiêm trọng",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "cluster-full-emergency"
+  },
+  "OSD_FULL": {
+    "severity": "Nghiêm trọng",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "cluster-full-emergency"
+  },
+  "OSDMAP_FLAGS": {
+    "severity": "Cảnh báo",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "maintenance-flags-left"
+  },
+  "OSD_SCRUB_ERRORS": {
+    "severity": "Nghiêm trọng",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "pg-inconsistent"
+  },
+  "PG_DAMAGED": {
+    "severity": "Nghiêm trọng",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "pg-down-incomplete"
+  },
+  "PG_AVAILABILITY": {
+    "severity": "Nghiêm trọng",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "pg-down-incomplete"
+  },
+  "PG_DEGRADED": {
+    "severity": "Cảnh báo",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "pg-degraded-recovery"
+  },
+  "PG_NOT_SCRUBBED": {
+    "severity": "Cảnh báo",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "deep-scrub-late"
+  },
+  "PG_NOT_DEEP_SCRUBBED": {
+    "severity": "Cảnh báo",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "deep-scrub-late"
+  },
+  "POOL_NEARFULL": {
+    "severity": "Cảnh báo",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "nearfull-full"
+  },
+  "SLOW_OPS": {
+    "severity": "Cảnh báo",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "slow-ops"
+  },
+  "BLUESTORE_SLOW_OP_ALERT": {
+    "severity": "Cảnh báo",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "bluefs-spillover"
+  },
+  "LARGE_OMAP_OBJECTS": {
+    "severity": "Cảnh báo",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "large-omap"
+  },
+  "DEVICE_HEALTH": {
+    "severity": "Cảnh báo",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "osd-device-health-warning"
+  },
+  "RECENT_CRASH": {
+    "severity": "Cảnh báo",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "osd-wont-start"
+  },
+  "TOO_MANY_PGS": {
+    "severity": "Cảnh báo",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "pg-count"
+  },
+  "AUTH_INSECURE_CLIENT_KEY_TYPE": {
+    "severity": "Nghiêm trọng",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "clustertamm-su-co-2026-11"
+  },
+  "AUTH_INSECURE_GLOBAL_ID_RECLAIM": {
+    "severity": "Cảnh báo",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "clustertamm-su-co-2026-11"
+  },
+  "AUTH_INSECURE_SERVICE_KEY_TYPE": {
+    "severity": "Nghiêm trọng",
+    "desc": "Mã trạng thái Ceph cần kiểm tra trong cụm",
+    "case_id": "clustertamm-su-co-2026-11"
+  }
+}

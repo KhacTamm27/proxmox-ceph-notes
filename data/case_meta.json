@@ -1,54 +1,647 @@
 {
-  "osd-down-flapping": {"group": "OSD", "severity": "Cảnh báo"},
-  "pg-inconsistent": {"group": "PG", "severity": "Cảnh báo"},
-  "clock-skew": {"group": "MON", "severity": "Cảnh báo"},
-  "pve-quorum-lost": {"group": "Cluster & HA", "severity": "Nghiêm trọng"},
-  "pve-storage-shared-clusters": {"group": "Storage & Backup", "severity": "Cảnh báo"},
-  "nearfull-full": {"group": "Storage & Backup", "severity": "Nghiêm trọng"},
-  "slow-ops": {"group": "OSD", "severity": "Cảnh báo"},
-  "osd-replace-disk": {"group": "OSD", "severity": "Hướng dẫn"},
-  "osd-device-health-warning": {"group": "OSD", "severity": "Cảnh báo"},
-  "node-maintenance": {"group": "Cluster & HA", "severity": "Hướng dẫn"},
-  "pg-degraded-recovery": {"group": "PG", "severity": "Cảnh báo"},
-  "large-omap": {"group": "RGW/S3", "severity": "Cảnh báo"},
-  "rgw-503": {"group": "RGW/S3", "severity": "Cảnh báo"},
-  "mon-down": {"group": "MON", "severity": "Nghiêm trọng"},
-  "vm-locked": {"group": "VM & Container", "severity": "Cảnh báo"},
-  "pve-gui-logout": {"group": "Khác", "severity": "Cảnh báo"},
-  "pve-disk-full": {"group": "Storage & Backup", "severity": "Nghiêm trọng"},
-  "osd-wont-start": {"group": "OSD", "severity": "Cảnh báo"},
-  "rbd-hang": {"group": "VM & Container", "severity": "Nghiêm trọng"},
-  "deep-scrub-late": {"group": "PG", "severity": "Cảnh báo"},
-  "pg-count": {"group": "PG", "severity": "Hướng dẫn"},
-  "network-mtu": {"group": "Mạng", "severity": "Cảnh báo"},
-  "pve-network-bridge-bond-vlan": {"group": "Mạng", "severity": "Hướng dẫn"},
-  "rgw-403": {"group": "RGW/S3", "severity": "Cảnh báo"},
-  "rgw-view-s3-keys": {"group": "RGW/S3", "severity": "Hướng dẫn"},
-  "add-osd-throttle": {"group": "OSD", "severity": "Cảnh báo"},
-  "pg-down-incomplete": {"group": "PG", "severity": "Nghiêm trọng"},
-  "migrate-fail": {"group": "Nâng cấp & di chuyển", "severity": "Cảnh báo"},
-  "vm-wont-start": {"group": "VM & Container", "severity": "Cảnh báo"},
-  "pvestatd-unknown": {"group": "Cluster & HA", "severity": "Cảnh báo"},
-  "ha-no-restart": {"group": "Cluster & HA", "severity": "Nghiêm trọng"},
-  "backup-fail": {"group": "Storage & Backup", "severity": "Cảnh báo"},
-  "lvm-thin-full": {"group": "Storage & Backup", "severity": "Nghiêm trọng"},
-  "bluefs-spillover": {"group": "OSD", "severity": "Cảnh báo"},
-  "cluster-full-emergency": {"group": "Storage & Backup", "severity": "Nghiêm trọng"},
-  "osd-latency-consumer-ssd": {"group": "OSD", "severity": "Cảnh báo"},
-  "ceph-upgrade-pve": {"group": "Nâng cấp & di chuyển", "severity": "Hướng dẫn"},
-  "corosync-flapping": {"group": "Cluster & HA", "severity": "Nghiêm trọng"},
-  "ghost-node-rejoin": {"group": "Cluster & HA", "severity": "Hướng dẫn"},
-  "cfs-lock-timeout": {"group": "Cluster & HA", "severity": "Cảnh báo"},
-  "pve-upgrade-8to9": {"group": "Nâng cấp & di chuyển", "severity": "Hướng dẫn"},
-  "node-dead-recovery": {"group": "Cluster & HA", "severity": "Nghiêm trọng"},
-  "maintenance-flags-left": {"group": "Cluster & HA", "severity": "Cảnh báo"},
-  "ha-domino": {"group": "Cluster & HA", "severity": "Nghiêm trọng"},
-  "cephfs-mds-restart": {"group": "Cluster & HA", "severity": "Cảnh báo"},
-  "pbs-s3-recovery": {"group": "Storage & Backup", "severity": "Cảnh báo"},
-  "lun-not-visible": {"group": "Storage & Backup", "severity": "Cảnh báo"},
-  "nfs-storage-offline": {"group": "Storage & Backup", "severity": "Cảnh báo"},
-  "pbs-s3-permission": {"group": "Storage & Backup", "severity": "Cảnh báo"},
-  "console-proxy-fail": {"group": "VM & Container", "severity": "Cảnh báo"},
-  "pve-host-rebuild-no-config-backup": {"group": "Cluster & HA", "severity": "Nghiêm trọng"},
-  "clustertamm-su-co-2026-11": {"group": "Cluster & HA", "severity": "Cảnh báo"}
+  "osd-down-flapping": {
+    "group": "OSD",
+    "severity": "Cảnh báo",
+    "error_line": "ceph -s báo \"N osds down\", OSD lúc up lúc down, log có \"wrongly marked me down\" hoặc heartbeat_check no reply.",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "slow-ops",
+      "osd-replace-disk",
+      "osd-device-health-warning",
+      "osd-wont-start"
+    ]
+  },
+  "pg-inconsistent": {
+    "group": "PG",
+    "severity": "Cảnh báo",
+    "error_line": "HEALTH_ERR, \"pg x.y is active+clean+inconsistent\", \"N scrub errors\".",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "pg-degraded-recovery",
+      "deep-scrub-late",
+      "pg-count",
+      "pg-down-incomplete"
+    ]
+  },
+  "clock-skew": {
+    "group": "MON",
+    "severity": "Cảnh báo",
+    "error_line": "HEALTH_WARN \"clock skew detected on mon.X\", MON mất quorum chập chờn.",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "mon-down"
+    ]
+  },
+  "pve-quorum-lost": {
+    "group": "Cluster & HA",
+    "severity": "Nghiêm trọng",
+    "error_line": "GUI báo \"cluster not ready - no quorum\", /etc/pve chuyển read-only, không start được VM, node hiện đỏ.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "node-maintenance",
+      "pvestatd-unknown",
+      "ha-no-restart",
+      "corosync-flapping"
+    ]
+  },
+  "pve-storage-shared-clusters": {
+    "group": "Storage & Backup",
+    "severity": "Cảnh báo",
+    "error_line": "VM start/migrate hoặc thao tác storage thất bại bất thường; cùng một NFS export, LUN hoặc Ceph pool đang được cấu hình cho hai cluster Proxmox độc lập; VMID có thể trùng.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "nearfull-full",
+      "pve-disk-full",
+      "backup-fail",
+      "lvm-thin-full"
+    ]
+  },
+  "nearfull-full": {
+    "group": "Storage & Backup",
+    "severity": "Nghiêm trọng",
+    "error_line": "HEALTH_WARN \"N osd(s) nearfull\", HEALTH_ERR \"full osd(s)\", client không ghi được, backfill dừng.",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "pve-storage-shared-clusters",
+      "pve-disk-full",
+      "backup-fail",
+      "lvm-thin-full"
+    ]
+  },
+  "slow-ops": {
+    "group": "OSD",
+    "severity": "Cảnh báo",
+    "error_line": "HEALTH_WARN \"N slow ops\", VM đơ hoặc IO chậm, \"requests are blocked\".",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "osd-down-flapping",
+      "osd-replace-disk",
+      "osd-device-health-warning",
+      "osd-wont-start"
+    ]
+  },
+  "osd-replace-disk": {
+    "group": "OSD",
+    "severity": "Hướng dẫn",
+    "error_line": "OSD down kéo dài, SMART báo lỗi hoặc dmesg có I/O error, cần thay đĩa vật lý.",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "osd-down-flapping",
+      "slow-ops",
+      "osd-device-health-warning",
+      "osd-wont-start"
+    ]
+  },
+  "osd-device-health-warning": {
+    "group": "OSD",
+    "severity": "Cảnh báo",
+    "error_line": "Ceph báo device health hoặc thiết bị có dự đoán tuổi thọ thấp; một OSD vẫn up nhưng SMART/NVMe metrics xấu hoặc thiết bị bị đánh dấu out do dự đoán lỗi.",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "osd-down-flapping",
+      "slow-ops",
+      "osd-replace-disk",
+      "osd-wont-start"
+    ]
+  },
+  "node-maintenance": {
+    "group": "Cluster & HA",
+    "severity": "Hướng dẫn",
+    "error_line": "Cần reboot node để nâng cấp kernel hoặc thay phần cứng mà không làm gián đoạn VM và không kích hoạt rebalance.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "pve-quorum-lost",
+      "pvestatd-unknown",
+      "ha-no-restart",
+      "corosync-flapping"
+    ]
+  },
+  "pg-degraded-recovery": {
+    "group": "PG",
+    "severity": "Cảnh báo",
+    "error_line": "HEALTH_WARN \"Degraded data redundancy\", \"N pgs undersized/degraded\", \"objects misplaced\", recovery chạy lâu.",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "pg-inconsistent",
+      "deep-scrub-late",
+      "pg-count",
+      "pg-down-incomplete"
+    ]
+  },
+  "large-omap": {
+    "group": "RGW/S3",
+    "severity": "Cảnh báo",
+    "error_line": "HEALTH_WARN \"N large omap objects\".",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "rgw-503",
+      "rgw-403",
+      "rgw-view-s3-keys"
+    ]
+  },
+  "rgw-503": {
+    "group": "RGW/S3",
+    "severity": "Cảnh báo",
+    "error_line": "Client S3 nhận 503/timeout, upload thất bại, RGW phản hồi chậm.",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "large-omap",
+      "rgw-403",
+      "rgw-view-s3-keys"
+    ]
+  },
+  "mon-down": {
+    "group": "MON",
+    "severity": "Nghiêm trọng",
+    "error_line": "ceph -s đứng treo hoặc báo \"1/3 mons down\", \"mon.X is down\".",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "clock-skew"
+    ]
+  },
+  "vm-locked": {
+    "group": "VM & Container",
+    "severity": "Cảnh báo",
+    "error_line": "Báo \"VM is locked (backup)\" hoặc \"(snapshot)\", không start, stop, migrate hoặc xóa được.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "rbd-hang",
+      "vm-wont-start",
+      "console-proxy-fail"
+    ]
+  },
+  "pve-gui-logout": {
+    "group": "Khác",
+    "severity": "Cảnh báo",
+    "error_line": "GUI bị đá ra sau một thời gian ngắn, báo \"permission denied\" hoặc \"invalid ticket\", trang tải chậm hoặc treo.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": []
+  },
+  "pve-disk-full": {
+    "group": "Storage & Backup",
+    "severity": "Nghiêm trọng",
+    "error_line": "\"No space left on device\", dịch vụ không start, không ghi được /etc/pve, GUI lỗi.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "pve-storage-shared-clusters",
+      "nearfull-full",
+      "backup-fail",
+      "lvm-thin-full"
+    ]
+  },
+  "osd-wont-start": {
+    "group": "OSD",
+    "severity": "Cảnh báo",
+    "error_line": "Sau reboot một số OSD vẫn down, systemctl báo failed hoặc start-limit-hit.",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "osd-down-flapping",
+      "slow-ops",
+      "osd-replace-disk",
+      "osd-device-health-warning"
+    ]
+  },
+  "rbd-hang": {
+    "group": "VM & Container",
+    "severity": "Nghiêm trọng",
+    "error_line": "VM đơ hoặc không start vì đĩa RBD, lỗi \"image is locked\", \"timeout\" khi mở image.",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "vm-locked",
+      "vm-wont-start",
+      "console-proxy-fail"
+    ]
+  },
+  "deep-scrub-late": {
+    "group": "PG",
+    "severity": "Cảnh báo",
+    "error_line": "HEALTH_WARN \"N pgs not deep-scrubbed in time\" hoặc \"not scrubbed in time\".",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "pg-inconsistent",
+      "pg-degraded-recovery",
+      "pg-count",
+      "pg-down-incomplete"
+    ]
+  },
+  "pg-count": {
+    "group": "PG",
+    "severity": "Hướng dẫn",
+    "error_line": "HEALTH_WARN \"too many PGs per OSD\" hoặc \"pool has too few/many pgs\".",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "pg-inconsistent",
+      "pg-degraded-recovery",
+      "deep-scrub-late",
+      "pg-down-incomplete"
+    ]
+  },
+  "network-mtu": {
+    "group": "Mạng",
+    "severity": "Cảnh báo",
+    "error_line": "Slow ops hoặc OSD flapping chỉ liên quan một vài node, ping thường được nhưng IO lớn bị treo.",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "pve-network-bridge-bond-vlan"
+    ]
+  },
+  "pve-network-bridge-bond-vlan": {
+    "group": "Mạng",
+    "severity": "Hướng dẫn",
+    "error_line": "VM/CT mất mạng hoặc không nhận VLAN; host mất IP quản trị sau khi sửa /etc/network/interfaces; bond chỉ chạy một link hoặc LACP không lên; VLAN tag/trunk không thông suốt.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "network-mtu"
+    ]
+  },
+  "rgw-403": {
+    "group": "RGW/S3",
+    "severity": "Cảnh báo",
+    "error_line": "Client S3 nhận 403 dù cluster khỏe: AccessDenied, SignatureDoesNotMatch hoặc QuotaExceeded.",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "large-omap",
+      "rgw-503",
+      "rgw-view-s3-keys"
+    ]
+  },
+  "rgw-view-s3-keys": {
+    "group": "RGW/S3",
+    "severity": "Hướng dẫn",
+    "error_line": "Cần tra lại Access Key/Secret Key để cấu hình client S3 hoặc kiểm tra lỗi xác thực.",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "large-omap",
+      "rgw-503",
+      "rgw-403"
+    ]
+  },
+  "add-osd-throttle": {
+    "group": "OSD",
+    "severity": "Cảnh báo",
+    "error_line": "Sau khi thêm OSD hoặc node, VM chậm, nhiều PG backfilling, objects misplaced.",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "osd-down-flapping",
+      "slow-ops",
+      "osd-replace-disk",
+      "osd-device-health-warning"
+    ]
+  },
+  "pg-down-incomplete": {
+    "group": "PG",
+    "severity": "Nghiêm trọng",
+    "error_line": "HEALTH_ERR, \"N pgs down\", pg ở trạng thái down+peering, IO vào một số object bị treo; hoặc \"N unfound\" (objects unfound).",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "pg-inconsistent",
+      "pg-degraded-recovery",
+      "deep-scrub-late",
+      "pg-count"
+    ]
+  },
+  "migrate-fail": {
+    "group": "Nâng cấp & di chuyển",
+    "severity": "Cảnh báo",
+    "error_line": "Migrate báo lỗi, treo ở một phần trăm nào đó, hoặc không cho chọn node đích.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "ceph-upgrade-pve",
+      "pve-upgrade-8to9"
+    ]
+  },
+  "vm-wont-start": {
+    "group": "VM & Container",
+    "severity": "Cảnh báo",
+    "error_line": "qm start báo lỗi, task lỗi, VM dừng ngay sau khi bật.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "vm-locked",
+      "rbd-hang",
+      "console-proxy-fail"
+    ]
+  },
+  "pvestatd-unknown": {
+    "group": "Cluster & HA",
+    "severity": "Cảnh báo",
+    "error_line": "Trong GUI node, VM hoặc storage hiện dấu (?) xám, số liệu không cập nhật dù VM vẫn chạy.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "pve-quorum-lost",
+      "node-maintenance",
+      "ha-no-restart",
+      "corosync-flapping"
+    ]
+  },
+  "ha-no-restart": {
+    "group": "Cluster & HA",
+    "severity": "Nghiêm trọng",
+    "error_line": "Node chết nhưng VM HA không tự khởi động ở node khác, hoặc VM HA ở trạng thái error, freeze, fence.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "pve-quorum-lost",
+      "node-maintenance",
+      "pvestatd-unknown",
+      "corosync-flapping"
+    ]
+  },
+  "backup-fail": {
+    "group": "Storage & Backup",
+    "severity": "Cảnh báo",
+    "error_line": "Job backup báo lỗi, chạy rất lâu, hoặc để lại VM bị lock.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "pve-storage-shared-clusters",
+      "nearfull-full",
+      "pve-disk-full",
+      "lvm-thin-full"
+    ]
+  },
+  "lvm-thin-full": {
+    "group": "Storage & Backup",
+    "severity": "Nghiêm trọng",
+    "error_line": "local-lvm gần 100%, VM bị I/O error hoặc treo, log có \"thin pool ... out of space\".",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "pve-storage-shared-clusters",
+      "nearfull-full",
+      "pve-disk-full",
+      "backup-fail"
+    ]
+  },
+  "bluefs-spillover": {
+    "group": "OSD",
+    "severity": "Cảnh báo",
+    "error_line": "HEALTH_WARN \"BlueFS spillover detected on N OSD(s)\", latency của các OSD HDD tăng.",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "osd-down-flapping",
+      "slow-ops",
+      "osd-replace-disk",
+      "osd-device-health-warning"
+    ]
+  },
+  "cluster-full-emergency": {
+    "group": "Storage & Backup",
+    "severity": "Nghiêm trọng",
+    "error_line": "HEALTH_ERR \"full osd(s)\", VM không ghi được, PG có backfill_toofull hoặc recovery_toofull nên recovery không chạy.",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "pve-storage-shared-clusters",
+      "nearfull-full",
+      "pve-disk-full",
+      "backup-fail"
+    ]
+  },
+  "osd-latency-consumer-ssd": {
+    "group": "OSD",
+    "severity": "Cảnh báo",
+    "error_line": "ceph osd perf cho commit/apply latency hàng chục đến hàng trăm ms ở một số OSD, VM chậm, thỉnh thoảng slow ops, benchmark cho IOPS rất thấp.",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "osd-down-flapping",
+      "slow-ops",
+      "osd-replace-disk",
+      "osd-device-health-warning"
+    ]
+  },
+  "ceph-upgrade-pve": {
+    "group": "Nâng cấp & di chuyển",
+    "severity": "Hướng dẫn",
+    "error_line": "Cần nâng cấp phiên bản Ceph mà không làm gián đoạn VM; sau nâng cấp có cảnh báo require-osd-release.",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "migrate-fail",
+      "pve-upgrade-8to9"
+    ]
+  },
+  "corosync-flapping": {
+    "group": "Cluster & HA",
+    "severity": "Nghiêm trọng",
+    "error_line": "Log corosync có \"Retransmit List\", knet link down/up, \"Token has not been received\"; cluster mất quorum rồi phục hồi; các node có HA tự reboot cùng lúc.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "pve-quorum-lost",
+      "node-maintenance",
+      "pvestatd-unknown",
+      "ha-no-restart"
+    ]
+  },
+  "ghost-node-rejoin": {
+    "group": "Cluster & HA",
+    "severity": "Hướng dẫn",
+    "error_line": "Đã pvecm delnode nhưng node vẫn hiện xám trong GUI; cài lại node cùng tên không join được hoặc báo lỗi SSH/chứng chỉ.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "pve-quorum-lost",
+      "node-maintenance",
+      "pvestatd-unknown",
+      "ha-no-restart"
+    ]
+  },
+  "cfs-lock-timeout": {
+    "group": "Cluster & HA",
+    "severity": "Cảnh báo",
+    "error_line": "Log có \"cfs-lock ... error: got lock request timeout\" (từ pvescheduler, pvestatd, ha-crm), tác vụ HA/replication/backup lỗi, GUI báo unknown.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "pve-quorum-lost",
+      "node-maintenance",
+      "pvestatd-unknown",
+      "ha-no-restart"
+    ]
+  },
+  "pve-upgrade-8to9": {
+    "group": "Nâng cấp & di chuyển",
+    "severity": "Hướng dẫn",
+    "error_line": "Cần nâng cấp cluster Proxmox đang chạy production (có Ceph, HA) mà không gián đoạn dịch vụ.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "migrate-fail",
+      "ceph-upgrade-pve"
+    ]
+  },
+  "node-dead-recovery": {
+    "group": "Cluster & HA",
+    "severity": "Nghiêm trọng",
+    "error_line": "Một node mất hoàn toàn (không bật lại được), VM trên node đó ngừng, GUI hiện node đỏ, Ceph báo OSD down và PG degraded.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "pve-quorum-lost",
+      "node-maintenance",
+      "pvestatd-unknown",
+      "ha-no-restart"
+    ]
+  },
+  "maintenance-flags-left": {
+    "group": "Cluster & HA",
+    "severity": "Cảnh báo",
+    "error_line": "HEALTH_WARN \"noout,nobackfill,norecover,norebalance,noscrub,nodeep-scrub flag(s) set\", PG không recover, cảnh báo scrub quá hạn.",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "pve-quorum-lost",
+      "node-maintenance",
+      "pvestatd-unknown",
+      "ha-no-restart"
+    ]
+  },
+  "ha-domino": {
+    "group": "Cluster & HA",
+    "severity": "Nghiêm trọng",
+    "error_line": "Một node dừng hoặc bị fence, VM của nó tự bật lại trên các host còn lại, RAM các host đầy, hệ thống chậm hoặc sập lan sang node khác.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "pve-quorum-lost",
+      "node-maintenance",
+      "pvestatd-unknown",
+      "ha-no-restart"
+    ]
+  },
+  "cephfs-mds-restart": {
+    "group": "Cluster & HA",
+    "severity": "Cảnh báo",
+    "error_line": "Restart ceph-mds.target hoặc nâng cấp làm CephFS gián đoạn ngắn, trạng thái MDS tạm là replay, reconnect hoặc rejoin.",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "pve-quorum-lost",
+      "node-maintenance",
+      "pvestatd-unknown",
+      "ha-no-restart"
+    ]
+  },
+  "pbs-s3-recovery": {
+    "group": "Storage & Backup",
+    "severity": "Cảnh báo",
+    "error_line": "Máy PBS cũ lỗi phần cứng, cháy, hoặc chủ động tắt, cần khôi phục dữ liệu backup đang nằm trên bucket S3.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "pve-storage-shared-clusters",
+      "nearfull-full",
+      "pve-disk-full",
+      "backup-fail"
+    ]
+  },
+  "lun-not-visible": {
+    "group": "Storage & Backup",
+    "severity": "Cảnh báo",
+    "error_line": "Sau khi thêm LUN hoặc mở rộng VG, một số node không thấy thiết bị hoặc không thấy VG, pvesm status báo storage lỗi.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "pve-storage-shared-clusters",
+      "nearfull-full",
+      "pve-disk-full",
+      "backup-fail"
+    ]
+  },
+  "nfs-storage-offline": {
+    "group": "Storage & Backup",
+    "severity": "Cảnh báo",
+    "error_line": "Storage NFS hiện dấu hỏi hoặc offline, không thêm được vào Datacenter > Storage, lệnh pvesm status chậm hoặc treo.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "pve-storage-shared-clusters",
+      "nearfull-full",
+      "pve-disk-full",
+      "backup-fail"
+    ]
+  },
+  "pbs-s3-permission": {
+    "group": "Storage & Backup",
+    "severity": "Cảnh báo",
+    "error_line": "Tạo hoặc mount datastore S3 báo ENOENT hoặc Permission denied, backup lỗi, hoặc PBS mới không thấy bản backup cũ.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "pve-storage-shared-clusters",
+      "nearfull-full",
+      "pve-disk-full",
+      "backup-fail"
+    ]
+  },
+  "console-proxy-fail": {
+    "group": "VM & Container",
+    "severity": "Cảnh báo",
+    "error_line": "Bấm Remote Console trên portal chỉ thấy màn hình đen, báo không kết nối, hoặc F12 > Network thấy vncproxy hoặc vncwebsocket lỗi (401, 403, 404, 502, không lên 101).",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "vm-locked",
+      "rbd-hang",
+      "vm-wont-start"
+    ]
+  },
+  "pve-host-rebuild-no-config-backup": {
+    "group": "Cluster & HA",
+    "severity": "Nghiêm trọng",
+    "error_line": "Node Proxmox không khởi động do hỏng ổ boot, không có bản backup cấu hình node; VM hoặc dịch vụ Ceph trên node cần được khôi phục.",
+    "applies_to": "Proxmox VE 9",
+    "verified": false,
+    "related": [
+      "pve-quorum-lost",
+      "node-maintenance",
+      "pvestatd-unknown",
+      "ha-no-restart"
+    ]
+  },
+  "clustertamm-su-co-2026-11": {
+    "group": "Cluster & HA",
+    "severity": "Cảnh báo",
+    "error_line": "HEALTH_ERR, 1 monitor, insecure key types, PG inconsistent.",
+    "applies_to": "Ceph Squid 19",
+    "verified": false,
+    "related": [
+      "pve-quorum-lost",
+      "node-maintenance",
+      "pvestatd-unknown",
+      "ha-no-restart"
+    ]
+  }
 }

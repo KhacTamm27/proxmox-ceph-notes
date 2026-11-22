@@ -1,0 +1,135 @@
+{
+  "rb-ceph-upgrade-quincy-reef-squid": {
+    "group": "Nâng cấp",
+    "duration": "~30 phút",
+    "risk": "cao",
+    "downtime": "Có",
+    "steps": 12
+  },
+  "rb-prod-maintenance": {
+    "group": "Bảo trì",
+    "duration": "~30 phút",
+    "risk": "tb",
+    "downtime": "Có",
+    "steps": 8
+  },
+  "rb-pbs-s3-datastore": {
+    "group": "ZFS",
+    "duration": "~30 phút",
+    "risk": "tb",
+    "downtime": "Không",
+    "steps": 5
+  },
+  "rb-pve5-to-8-single": {
+    "group": "Nâng cấp",
+    "duration": "~30 phút",
+    "risk": "cao",
+    "downtime": "Có",
+    "steps": 9
+  },
+  "rb-san-iscsi-shared-lvm": {
+    "group": "Storage",
+    "duration": "~30 phút",
+    "risk": "tb",
+    "downtime": "Không",
+    "steps": 11
+  },
+  "rb-nas-nfs-storage": {
+    "group": "Storage",
+    "duration": "~30 phút",
+    "risk": "tb",
+    "downtime": "Không",
+    "steps": 4
+  },
+  "rb-console-proxy-nginx": {
+    "group": "Console",
+    "duration": "~30 phút",
+    "risk": "tb",
+    "downtime": "Không",
+    "steps": 10
+  },
+  "rb-console-ticket-debug": {
+    "group": "Console",
+    "duration": "~30 phút",
+    "risk": "tb",
+    "downtime": "Không",
+    "steps": 7
+  },
+  "rb-zfs-vdev-layout": {
+    "group": "ZFS",
+    "duration": "~30 phút",
+    "risk": "tb",
+    "downtime": "Không",
+    "steps": 4
+  },
+  "rb-zfs-raidz-expansion": {
+    "group": "ZFS",
+    "duration": "~30 phút",
+    "risk": "tb",
+    "downtime": "Không",
+    "steps": 4
+  },
+  "rb-zfs-cache-spare": {
+    "group": "ZFS",
+    "duration": "~30 phút",
+    "risk": "cao",
+    "downtime": "Có",
+    "steps": 4
+  },
+  "rb-zfs-rpool-replace": {
+    "group": "ZFS",
+    "duration": "~30 phút",
+    "risk": "cao",
+    "downtime": "Có",
+    "steps": 4
+  },
+  "rb-pve-zfs-replication": {
+    "group": "ZFS",
+    "duration": "~30 phút",
+    "risk": "tb",
+    "downtime": "Không",
+    "steps": 4
+  },
+  "rb-p2v-linux": {
+    "group": "Di chuyển VM",
+    "duration": "~30 phút",
+    "risk": "tb",
+    "downtime": "Không",
+    "steps": 4
+  },
+  "rb-p2v-windows": {
+    "group": "Di chuyển VM",
+    "duration": "~30 phút",
+    "risk": "tb",
+    "downtime": "Không",
+    "steps": 5
+  },
+  "rb-v2v-hyperv": {
+    "group": "Di chuyển VM",
+    "duration": "~30 phút",
+    "risk": "thap",
+    "downtime": "Có",
+    "steps": 5
+  },
+  "rb-v2v-esxi": {
+    "group": "ZFS",
+    "duration": "~30 phút",
+    "risk": "cao",
+    "downtime": "Không",
+    "steps": 5
+  },
+  "rb-pve-cross-cluster-migrate": {
+    "group": "Storage",
+    "duration": "~30 phút",
+    "risk": "tb",
+    "downtime": "Có",
+    "steps": 5
+  },
+  "rb-pve-remove-node": {
+    "group": "Di chuyển VM",
+    "duration": "~30 phút",
+    "risk": "tb",
+    "downtime": "Có",
+    "steps": 5
+  }
+}

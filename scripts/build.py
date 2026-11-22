@@ -20,10 +20,21 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--repo", default="", help="user/repo, dùng cho link từ mindmap sang file .md")
 args = ap.parse_args()
 
+# Kiểm tra bí mật/IP trước khi đọc và sinh tài liệu.
+secret_check = subprocess.run(
+    [sys.executable, str(ROOT / "scripts/check_secrets.py")],
+    capture_output=False,
+)
+if secret_check.returncode:
+    sys.exit(secret_check.returncode)
+
 data = json.loads((ROOT / "data/commands.json").read_text(encoding="utf-8"))
 vi = json.loads((ROOT / "data/vi.json").read_text(encoding="utf-8"))
 cases = json.loads((ROOT / "data/cases.json").read_text(encoding="utf-8"))
 case_meta = json.loads((ROOT / "data/case_meta.json").read_text(encoding="utf-8"))
+command_risk = json.loads((ROOT / "data/command_risk.json").read_text(encoding="utf-8"))
+runbook_meta = json.loads((ROOT / "data/runbook_meta.json").read_text(encoding="utf-8"))
+health_codes = json.loads((ROOT / "data/health_codes.json").read_text(encoding="utf-8"))
 triage = json.loads((ROOT / "data/triage.json").read_text(encoding="utf-8"))
 synonyms = json.loads((ROOT / "data/synonyms.json").read_text(encoding="utf-8"))
 topics = json.loads((ROOT / "data/topics.json").read_text(encoding="utf-8"))
@@ -355,6 +366,9 @@ search_js = (ROOT / "scripts/search.js").read_text(encoding="utf-8")
 html = (tpl.replace("/*__SEARCH_JS__*/", search_js)
            .replace("/*__SYNONYMS__*/[]", json.dumps(synonyms, ensure_ascii=False))
            .replace("/*__DATA__*/null", json.dumps(data, ensure_ascii=False))
+           .replace("/*__COMMAND_RISK__*/{}", json.dumps(command_risk, ensure_ascii=False).replace("</", "<\\/"))
+           .replace("/*__RUNBOOK_META__*/{}", json.dumps(runbook_meta, ensure_ascii=False).replace("</", "<\\/"))
+           .replace("/*__HEALTH_CODES__*/{}", json.dumps(health_codes, ensure_ascii=False).replace("</", "<\\/"))
            .replace("/*__REPO__*/", args.repo)
            .replace("/*__SLUGS__*/{}", json.dumps(slugs))
            .replace("/*__CASES__*/[]", json.dumps(cases, ensure_ascii=False).replace("</", "<\\/"))
