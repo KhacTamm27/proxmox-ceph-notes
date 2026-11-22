@@ -334,6 +334,34 @@ pre.code{border-radius:var(--radius);background:var(--panel-2)}
   .search-help{align-items:center;flex-direction:row}
   .content-nav{padding-inline:8px}
 }
+.issue-tools{margin:18px 0 0;padding:14px 0;border-bottom:1px solid var(--line)}
+.issue-tools h2{margin:0;font-size:21px}
+.issue-tools-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.issue-count{color:var(--muted);font-size:13px}
+.issue-filter-toggle{display:none}
+.issue-filter-body{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.issue-platforms{display:flex;gap:4px}
+.issue-platforms button{padding:5px 9px;border:1px solid transparent;border-radius:var(--radius);background:transparent;color:var(--muted);font-size:13px}
+.issue-platforms button[aria-pressed=true]{border-color:var(--line);background:var(--panel-2);color:var(--ink);font-weight:650}
+.issue-filter-body select,.issue-filter-body input{min-height:34px;padding:5px 9px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);color:var(--ink);font-size:13px}
+.issue-filter-body input{flex:1 1 220px;min-width:120px}
+.case-list-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:0 0 10px;color:var(--muted);font-size:12px}
+.case-symptom{flex:1 1 100%;min-width:0}
+.case-badge{display:inline-block;padding:1px 6px;border-radius:var(--radius);background:var(--panel-2);color:var(--muted);font-size:11px;line-height:1.55}
+.case-severity[data-severity="Nghiêm trọng"]{background:var(--danger-bg);color:var(--danger)}
+.case-severity[data-severity="Cảnh báo"]{background:var(--warning-bg);color:var(--warning)}
+.case-severity[data-severity="Hướng dẫn"]{background:var(--success-bg);color:var(--success)}
+.issue-empty{margin:12px 0;color:var(--muted);font-size:13px}
+@media(max-width:620px){
+  .issue-tools{padding:12px 0}
+  .issue-tools-head{align-items:center;flex-wrap:wrap}
+  .issue-filter-toggle{display:block;padding:4px 8px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);font-size:12px}
+  .issue-filter-body{display:none;align-items:stretch}
+  .issue-tools.filters-open .issue-filter-body{display:flex}
+  .issue-platforms{flex:1 1 100%}
+  .issue-platforms button{flex:1}
+  .issue-filter-body select,.issue-filter-body input{width:100%;flex-basis:100%}
+}
 </style>
 </head>
 <body>
@@ -410,6 +438,26 @@ pre.code{border-radius:var(--radius);background:var(--panel-2)}
   <button id="collapse" class="pbtn" type="button">Thu gọn</button>
 </div>
 <section id="results" hidden></section>
+<section id="issue-tools" class="issue-tools" hidden aria-labelledby="issue-heading">
+  <div class="issue-tools-head"><h2 id="issue-heading">Sự cố</h2><span id="issue-count" class="issue-count" aria-live="polite"></span>
+    <button id="issue-filter-toggle" class="issue-filter-toggle" type="button" aria-expanded="false">Bộ lọc ▾</button>
+  </div>
+  <div id="issue-filter-body" class="issue-filter-body">
+    <div class="issue-platforms" role="group" aria-label="Lọc theo nền tảng">
+      <button type="button" data-platform="all" aria-pressed="true">Tất cả</button>
+      <button type="button" data-platform="pve" aria-pressed="false">Proxmox</button>
+      <button type="button" data-platform="ceph" aria-pressed="false">Ceph</button>
+    </div>
+    <label><span class="sr-only">Lọc theo nhóm</span><select id="issue-group">
+      <option value="all">Tất cả nhóm</option><option>OSD</option><option>MON</option><option>PG</option><option>RGW/S3</option>
+      <option>Mạng</option><option>VM &amp; Container</option><option>Storage &amp; Backup</option><option>Cluster &amp; HA</option>
+      <option>Nâng cấp &amp; di chuyển</option><option>Khác</option>
+    </select></label>
+    <label class="sr-only" for="issue-q">Lọc tiêu đề, triệu chứng hoặc từ khóa</label>
+    <input id="issue-q" type="search" placeholder="Lọc theo tiêu đề, triệu chứng hoặc từ khóa…">
+  </div>
+  <p id="issue-empty" class="issue-empty" hidden>Không có sự cố phù hợp. Hãy thử đổi bộ lọc hoặc từ khóa.</p>
+</section>
 <section id="cases-ceph" class="casesec content-section" hidden><div class="section-heading"><div><h2 class="sech">Case Ceph</h2><p>Chọn triệu chứng để xem nguyên nhân và các bước kiểm tra an toàn.</p></div></div></section>
 <section id="cases-guide" class="casesec content-section" hidden><div class="section-heading"><div><h2 class="sech">Bài viết chuyên đề</h2><p>Tài liệu dài theo chủ đề: mô hình, cơ chế, triển khai, double check, lỗi thường gặp và tùy biến. Mục lục dẫn thẳng tới từng phần trên GitHub.</p></div></div></section>
 <section id="cases-scr" class="casesec content-section" hidden><div class="section-heading"><div><h2 class="sech">Script tiện ích</h2><p>Công cụ đọc/kiểm tra thông tin cluster. Xem cách dùng và lưu ý trước khi chạy.</p></div></div></section>
@@ -427,7 +475,7 @@ pre.code{border-radius:var(--radius);background:var(--panel-2)}
 <script>/*__SEARCH_JS__*/</script>
 <script>
 const DATA=/*__DATA__*/null;
-const REPO="/*__REPO__*/";const SLUGS=/*__SLUGS__*/{};const CASES=/*__CASES__*/[];const TRIAGE=/*__TRIAGE__*/[];const SCRIPTS=/*__SCRIPTS__*/[];
+const REPO="/*__REPO__*/";const SLUGS=/*__SLUGS__*/{};const CASES=/*__CASES__*/[];const CASE_META=/*__CASE_META__*/{};const TRIAGE=/*__TRIAGE__*/[];const SCRIPTS=/*__SCRIPTS__*/[];
 const SYNONYMS=/*__SYNONYMS__*/[];
 const GUIDES=/*__GUIDES__*/[];
 const TOPICS=/*__TOPICS__*/{},LABELS=/*__LABELS__*/{};
@@ -572,7 +620,20 @@ function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=
 function cmdEl(c){const block=el('div','command-block'),code=el('code','cmdline',c);block.append(code,copyButton(c));return block}
 CASES.forEach(c=>{
   const d=el('details','case');d.id='case-'+c.id;const rb=c.kind==='runbook';
+  if(!rb){
+    const meta=CASE_META[c.id];
+    d.dataset.issuePlatform=c.scope;d.dataset.issueGroup=meta.group;
+    d.dataset.issueText=[c.title,c.symptoms,c.tags,c.causes].join(' ');
+  }
   d.append(el('summary',null,c.title));
+  if(!rb){
+    const meta=CASE_META[c.id],line=el('div','case-list-meta');
+    line.append(el('span','case-symptom',c.symptoms||'Chưa có mô tả triệu chứng.'));
+    line.append(el('span','case-badge',c.scope==='pve'?'Proxmox':'Ceph'));
+    line.append(el('span','case-badge',meta.group));
+    const severity=el('span','case-badge case-severity',meta.severity);severity.dataset.severity=meta.severity;line.append(severity);
+    d.append(line);
+  }
   const p1=el('p');p1.append(el('b',null,rb?'Mục tiêu: ':'Triệu chứng: '),rb?c.goal:c.symptoms);
   const p2=el('p');p2.append(el('b',null,rb?'Điều kiện trước khi làm: ':'Nguyên nhân hay gặp: '),rb?c.prereq:c.causes);
   const ol=el('ol');
@@ -639,13 +700,43 @@ function show(tab,focus=false,navigate=false){
   [['issues','#tabissues'],['map','#tabmap'],['run','#tabrun'],['guide','#tabguide']].forEach(([k,id])=>$(id).setAttribute('aria-pressed',String(tab===k)));
   $('#expand').hidden=$('#collapse').hidden=tab!=='map';
   $('#command-nav').hidden=tab!=='map';
+  $('#issue-tools').hidden=tab!=='issues';
   document.body.classList.toggle('section-view',tab!=='map');
   $('#page-context').hidden=tab==='map';
   $('#section-crumb').textContent=tab==='issues'&&ISSUE_SCOPE!=='all'?'Sự cố · '+(ISSUE_SCOPE==='pve'?'Proxmox':'Ceph'):(TAB_LABEL[tab]||TAB_LABEL.map);
   if(tab==='map')draw();
+  if(tab==='issues')applyIssueFilters();
   if(navigate)history.pushState({tab},'',TAB_HASH[tab]||'#map');
   if(focus)window.scrollTo({top:0,behavior:'smooth'});
 }
+function normalizeIssueText(value){return String(value||'').toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d')}
+function applyIssueFilters(){
+  const platform=ISSUE_SCOPE,group=$('#issue-group').value,query=normalizeIssueText($('#issue-q').value).trim().split(/\s+/).filter(Boolean);
+  let visible=0,total=0;
+  document.querySelectorAll('details.case[data-issue-platform]').forEach(d=>{
+    total++;
+    const matchesPlatform=platform==='all'||d.dataset.issuePlatform===platform;
+    const matchesGroup=group==='all'||d.dataset.issueGroup===group;
+    const text=normalizeIssueText(d.dataset.issueText),matchesText=!query.length||query.every(term=>text.includes(term));
+    const matchesQuery=d.dataset.queryVisible!=='false';
+    d.hidden=!(matchesPlatform&&matchesGroup&&matchesText&&matchesQuery);
+    if(!d.hidden)visible++;
+  });
+  document.querySelectorAll('.issue-platforms button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.platform===platform)));
+  $('#issue-count').textContent='Hiện '+visible+' / '+total+' sự cố';
+  $('#issue-empty').hidden=visible!==0;
+}
+document.querySelectorAll('.issue-platforms button').forEach(button=>button.addEventListener('click',()=>{
+  ISSUE_SCOPE=button.dataset.platform;show('issues');
+  history.pushState({tab:'issues',scope:ISSUE_SCOPE},'',ISSUE_SCOPE==='ceph'?'#cases-ceph':ISSUE_SCOPE==='pve'?'#cases-pve':'#cases');
+}));
+$('#issue-group').addEventListener('change',applyIssueFilters);
+$('#issue-q').addEventListener('input',applyIssueFilters);
+$('#issue-filter-toggle').addEventListener('click',()=>{
+  const open=$('#issue-tools').classList.toggle('filters-open');
+  $('#issue-filter-toggle').setAttribute('aria-expanded',String(open));
+  $('#issue-filter-toggle').textContent=open?'Bộ lọc ▴':'Bộ lọc ▾';
+});
 $('#tabissues').addEventListener('click',()=>{ISSUE_SCOPE='all';show('issues',true,true)});
 $('#tabmap').addEventListener('click',()=>show('map',true,true));
 $('#tabrun').addEventListener('click',()=>show('run',true,true));
@@ -694,7 +785,11 @@ function renderTriage(hit){
 function renderResults(v,r){
   res.replaceChildren();
   const shown=r&&new Set([...r.cases.map(x=>'case-'+x.c.id),...r.scripts.map(x=>'script-'+x.s.id),...r.guides.map(x=>'guide-'+x.g.id)]);
-  casesEl.querySelectorAll('details.case').forEach(d=>{d.hidden=!!r&&!shown.has(d.id)});
+  casesEl.querySelectorAll('details.case').forEach(d=>{
+    if(d.dataset.issuePlatform)d.dataset.queryVisible=String(!r||shown.has(d.id));
+    else d.hidden=!!r&&!shown.has(d.id);
+  });
+  applyIssueFilters();
   if(!r){res.hidden=true;return}
   if(!r.terms.length&&!r.browse){
     res.append(el('p','results-empty','Nhập một từ khóa có ý nghĩa, ví dụ “storage chậm”, “VM crash”, “OSD latency” hoặc một tên lệnh.'));

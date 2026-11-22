@@ -23,11 +23,20 @@ args = ap.parse_args()
 data = json.loads((ROOT / "data/commands.json").read_text(encoding="utf-8"))
 vi = json.loads((ROOT / "data/vi.json").read_text(encoding="utf-8"))
 cases = json.loads((ROOT / "data/cases.json").read_text(encoding="utf-8"))
+case_meta = json.loads((ROOT / "data/case_meta.json").read_text(encoding="utf-8"))
 triage = json.loads((ROOT / "data/triage.json").read_text(encoding="utf-8"))
 synonyms = json.loads((ROOT / "data/synonyms.json").read_text(encoding="utf-8"))
 topics = json.loads((ROOT / "data/topics.json").read_text(encoding="utf-8"))
 labels = json.loads((ROOT / "data/labels_vi.json").read_text(encoding="utf-8"))
 TOPIC_IDS = {t["id"] for t in topics["topics"]}
+case_ids = {c["id"] for c in cases if c.get("kind") != "runbook"}
+if set(case_meta) != case_ids:
+    sys.exit(f"LỖI: data/case_meta.json phải có đúng các case; thiếu={sorted(case_ids - set(case_meta))}, thừa={sorted(set(case_meta) - case_ids)}")
+valid_case_groups = {"OSD", "MON", "PG", "RGW/S3", "Mạng", "VM & Container", "Storage & Backup", "Cluster & HA", "Nâng cấp & di chuyển", "Khác"}
+valid_case_severities = {"Nghiêm trọng", "Cảnh báo", "Hướng dẫn"}
+for case_id, meta in case_meta.items():
+    if meta.get("group") not in valid_case_groups or meta.get("severity") not in valid_case_severities:
+        sys.exit(f"LỖI: data/case_meta.json, case '{case_id}' có group/severity không hợp lệ.")
 
 # Case Markdown/asset tuỳ chỉnh được nạp vào bộ nhớ trước khi docs/cases/
 # được làm sạch, để build có thể khôi phục đúng bài và hình minh hoạ.
@@ -349,6 +358,7 @@ html = (tpl.replace("/*__SEARCH_JS__*/", search_js)
            .replace("/*__REPO__*/", args.repo)
            .replace("/*__SLUGS__*/{}", json.dumps(slugs))
            .replace("/*__CASES__*/[]", json.dumps(cases, ensure_ascii=False).replace("</", "<\\/"))
+           .replace("/*__CASE_META__*/{}", json.dumps(case_meta, ensure_ascii=False).replace("</", "<\\/"))
            .replace("/*__TRIAGE__*/[]", json.dumps(triage, ensure_ascii=False).replace("</", "<\\/"))
            .replace("/*__SCRIPTS__*/[]", json.dumps(scr_list, ensure_ascii=False).replace("</", "<\\/"))
            .replace("/*__TOPICS__*/{}", json.dumps(topics, ensure_ascii=False))
