@@ -43,7 +43,7 @@ if [[ ${#configs[@]} -eq 0 ]]; then
   exit 0
 fi
 
-if matches=$(grep -hP '(tag|trunks)=\K[0-9;]+' "${configs[@]}"); then
+if matches=$(grep -ohP '(tag|trunks)=\K[0-9;]+' "${configs[@]}"); then
   :
 else
   status=$?
